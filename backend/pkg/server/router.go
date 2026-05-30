@@ -144,6 +144,7 @@ func NewRouter(
 	promptService := services.NewPromptService(orm)
 	analyticsService := services.NewAnalyticsService(orm)
 	tokenService := services.NewTokenService(orm, cfg.CookieSigningSalt, tokenCache, subscriptions)
+	shannonService := services.NewShannonService(orm, cfg, subscriptions)
 	graphqlService := services.NewGraphqlService(
 		db, cfg, baseURL, cfg.CorsOrigins, tokenCache, providers, controller, subscriptions,
 	)
@@ -236,6 +237,7 @@ func NewRouter(
 		setScreenshotsGroup(privateGroup, screenshotService)
 		setPromptsGroup(privateGroup, promptService)
 		setAnalyticsGroup(privateGroup, analyticsService)
+		setShannonGroup(privateGroup, shannonService)
 	}
 
 	privateUserGroup := api.Group("/")
@@ -364,6 +366,13 @@ func setFlowsGroup(parent *gin.RouterGroup, svc *services.FlowService) {
 		flowsViewGroup.GET("/", svc.GetFlows)
 		flowsViewGroup.GET("/:flowID", svc.GetFlow)
 		flowsViewGroup.GET("/:flowID/graph", svc.GetFlowGraph)
+	}
+}
+
+func setShannonGroup(parent *gin.RouterGroup, svc *services.ShannonService) {
+	shannonGroup := parent.Group("/flows/:flowID/shannon")
+	{
+		shannonGroup.POST("/scan", svc.RunFlowShannonScan)
 	}
 }
 

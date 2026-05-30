@@ -222,6 +222,12 @@ type Config struct {
 
 	// === Agent Planning Phase Configuration ===
 	AgentPlanningStepEnabled bool `env:"AGENT_PLANNING_STEP_ENABLED" envDefault:"false"`
+
+	// === Shannon White-box Scan Integration ===
+	ShannonEnabled      bool   `env:"SHANNON_ENABLED" envDefault:"false"`
+	ShannonWorkspaceDir string `env:"SHANNON_WORKSPACE_DIR"`
+	ShannonCommand      string `env:"SHANNON_COMMAND" envDefault:"shannon"`
+	ShannonTimeout      int    `env:"SHANNON_TIMEOUT" envDefault:"3600"`
 }
 
 func NewConfig() (*Config, error) {

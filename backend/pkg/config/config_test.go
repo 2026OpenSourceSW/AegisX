@@ -584,3 +584,34 @@ func TestNewConfig_AgentSupervisionOverride(t *testing.T) {
 	assert.Equal(t, 30, config.MaxLimitedAgentToolCalls)
 	assert.Equal(t, true, config.AgentPlanningStepEnabled)
 }
+
+func TestNewConfig_ShannonDefaults(t *testing.T) {
+	clearConfigEnv(t)
+	t.Chdir(t.TempDir())
+
+	config, err := NewConfig()
+	require.NoError(t, err)
+
+	assert.Equal(t, false, config.ShannonEnabled)
+	assert.Equal(t, "", config.ShannonWorkspaceDir)
+	assert.Equal(t, "shannon", config.ShannonCommand)
+	assert.Equal(t, 3600, config.ShannonTimeout)
+}
+
+func TestNewConfig_ShannonOverride(t *testing.T) {
+	clearConfigEnv(t)
+	t.Chdir(t.TempDir())
+
+	t.Setenv("SHANNON_ENABLED", "true")
+	t.Setenv("SHANNON_WORKSPACE_DIR", "/tmp/shannon")
+	t.Setenv("SHANNON_COMMAND", "docker run --rm keygraph/shannon")
+	t.Setenv("SHANNON_TIMEOUT", "120")
+
+	config, err := NewConfig()
+	require.NoError(t, err)
+
+	assert.Equal(t, true, config.ShannonEnabled)
+	assert.Equal(t, "/tmp/shannon", config.ShannonWorkspaceDir)
+	assert.Equal(t, "docker run --rm keygraph/shannon", config.ShannonCommand)
+	assert.Equal(t, 120, config.ShannonTimeout)
+}
