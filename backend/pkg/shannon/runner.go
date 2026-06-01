@@ -36,7 +36,7 @@ func (r *Runner) Run(ctx context.Context, req ScanRequest) (*ScanResult, error) 
 		return nil, err
 	}
 
-	reportPath := filepath.Join(workspace, fmt.Sprintf("shannon-report-%d.md", time.Now().UTC().Unix()))
+	reportPath := filepath.Join(workspace, fmt.Sprintf("shannon-report-%d.md", time.Now().UTC().UnixNano()))
 	command, err := splitCommand(r.cfg.Command)
 	if err != nil {
 		return nil, err
