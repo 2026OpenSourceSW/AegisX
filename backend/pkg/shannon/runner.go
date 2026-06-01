@@ -94,17 +94,14 @@ func (r *Runner) resolveWorkspace(requested string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	workspaceAbs, err := filepath.Abs(workspace)
+	baseReal, err := filepath.EvalSymlinks(baseAbs)
 	if err != nil {
 		return "", err
 	}
 
-	rel, err := filepath.Rel(baseAbs, workspaceAbs)
+	workspaceAbs, err := filepath.Abs(workspace)
 	if err != nil {
 		return "", err
-	}
-	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-		return "", errors.New("workspace path must stay inside SHANNON_WORKSPACE_DIR")
 	}
 
 	if info, err := os.Stat(workspaceAbs); err != nil {
@@ -113,7 +110,20 @@ func (r *Runner) resolveWorkspace(requested string) (string, error) {
 		return "", errors.New("workspace path must be a directory")
 	}
 
-	return workspaceAbs, nil
+	workspaceReal, err := filepath.EvalSymlinks(workspaceAbs)
+	if err != nil {
+		return "", err
+	}
+
+	rel, err := filepath.Rel(baseReal, workspaceReal)
+	if err != nil {
+		return "", err
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", errors.New("workspace path must stay inside SHANNON_WORKSPACE_DIR")
+	}
+
+	return workspaceReal, nil
 }
 
 func splitCommand(raw string) ([]string, error) {
