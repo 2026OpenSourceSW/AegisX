@@ -220,6 +220,7 @@ const ShannonScanDialog = () => {
         >
             <DialogTrigger asChild>
                 <Button
+                    aria-label="Run Shannon white-box scan"
                     className="shrink-0"
                     size="icon"
                     title="Run Shannon white-box scan"
