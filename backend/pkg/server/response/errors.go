@@ -109,6 +109,11 @@ var ErrFlowsInvalidRequest = NewHttpError(400, "Flows.InvalidRequest", "invalid 
 var ErrFlowsNotFound = NewHttpError(404, "Flows.NotFound", "flow not found")
 var ErrFlowsInvalidData = NewHttpError(500, "Flows.InvalidData", "invalid flow data")
 
+// shannon
+
+var ErrShannonInvalidRequest = NewHttpError(400, "Shannon.InvalidRequest", "invalid shannon request data")
+var ErrShannonRunFailed = NewHttpError(500, "Shannon.RunFailed", "shannon scan failed")
+
 // tasks
 
 var ErrTasksInvalidRequest = NewHttpError(400, "Tasks.InvalidRequest", "invalid task request data")
