@@ -102,24 +102,28 @@ export function MainSidebar() {
 
     return (
         <Sidebar collapsible="icon">
-            <SidebarHeader>
+            <SidebarHeader className="border-sidebar-border/70 border-b p-3">
                 <SidebarMenu>
                     <SidebarMenuItem className="flex items-center gap-2">
-                        <div className="flex aspect-square size-8 items-center justify-center">
-                            <Logo className="hover:animate-logo-spin size-6" />
+                        <div className="bg-sidebar-primary/15 ring-sidebar-primary/25 flex aspect-square size-9 items-center justify-center rounded-lg ring-1">
+                            <Logo className="hover:animate-logo-spin text-sidebar-primary size-6" />
                         </div>
                         <div className="grid flex-1 text-left leading-tight">
-                            <span className="truncate font-semibold">PentAGI</span>
+                            <span className="truncate text-base font-semibold">AegisX</span>
                         </div>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
-                <SidebarGroup className="bg-sidebar sticky top-0 z-10">
+                <SidebarGroup className="bg-sidebar border-sidebar-border/70 sticky top-0 z-10 border-b pb-3">
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            <SidebarMenuItem className="group-data-[state=expanded]:hidden">
-                                <SidebarMenuButton asChild>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    className="bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground shadow-sm"
+                                    tooltip="New Flow"
+                                >
                                     <Link to="/flows/new">
                                         <Plus />
                                         New Flow
@@ -130,6 +134,7 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isDashboardActive}
+                                    tooltip="Dashboard"
                                 >
                                     <Link to="/dashboard">
                                         <LayoutDashboard />
@@ -141,6 +146,7 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isFlowsActive}
+                                    tooltip="Flows"
                                 >
                                     <Link to="/flows">
                                         <GitFork />
@@ -161,6 +167,7 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isTemplatesActive}
+                                    tooltip="Templates"
                                 >
                                     <Link to="/templates">
                                         <FileText />
@@ -181,6 +188,7 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isResourcesActive}
+                                    tooltip="Resources"
                                 >
                                     <Link to="/resources">
                                         <Folder />
@@ -201,6 +209,7 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isKnowledgesActive}
+                                    tooltip="Knowledges"
                                 >
                                     <Link to="/knowledges">
                                         <LibraryBig />
@@ -265,12 +274,13 @@ export function MainSidebar() {
                     </SidebarGroup>
                 )}
             </SidebarContent>
-            <SidebarFooter>
+            <SidebarFooter className="border-sidebar-border/70 border-t p-3">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
                             isActive={!!isSettingsActive}
+                            tooltip="Settings"
                         >
                             <Link to="/settings">
                                 <Settings />
@@ -285,7 +295,7 @@ export function MainSidebar() {
                                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                                     size="lg"
                                 >
-                                    <Avatar className="bg-background dark:bg-muted size-8 rounded-lg">
+                                    <Avatar className="bg-sidebar-accent size-8 rounded-lg">
                                         <AvatarFallback className="flex size-8 items-center justify-center">
                                             <UserIcon className="size-4" />
                                         </AvatarFallback>
@@ -417,7 +427,7 @@ function FlowMenuItem({ activeFlowId, flow, isFavorite, onToggleFavorite }: Flow
                     <span className="-mx-2 w-8 shrink-0 text-center text-xs group-data-[state=expanded]:hidden">
                         {flow.id}
                     </span>
-                    <span className="text-muted-foreground bg-background dark:bg-muted -my-0.5 -ml-0.5 h-5 min-w-5 shrink-0 rounded-md px-px py-0.5 text-center text-xs group-data-[state=collapsed]:hidden">
+                    <span className="bg-sidebar-accent text-sidebar-accent-foreground -my-0.5 -ml-0.5 h-5 min-w-5 shrink-0 rounded-md px-px py-0.5 text-center text-xs group-data-[state=collapsed]:hidden">
                         {flow.id}
                     </span>
                     <span className="truncate">{flow.title}</span>
