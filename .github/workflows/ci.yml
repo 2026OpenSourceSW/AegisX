@@ -1,4 +1,4 @@
-name: Docker build and push
+name: AegisX CI
 
 on:
   push:
@@ -123,7 +123,7 @@ jobs:
 
   docker-build:
     needs: lint-and-test
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    if: vars.DOCKER_IMAGE != '' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -180,7 +180,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: vxcontrol/pentagi
+          images: ${{ vars.DOCKER_IMAGE }}
           tags: |
             # For main branch - latest tag
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
