@@ -16,6 +16,21 @@ interface ProvidersContextValue {
 
 const ProvidersContext = createContext<ProvidersContextValue | undefined>(undefined);
 
+export const resolveSelectedProviderName = (
+    providers: readonly Provider[],
+    selectedProviderName: null | string,
+): null | string => {
+    if (providers.length === 0) {
+        return null;
+    }
+
+    if (selectedProviderName && findProviderByName(selectedProviderName, providers)) {
+        return selectedProviderName;
+    }
+
+    return providers[0]?.name ?? null;
+};
+
 interface ProvidersProviderProps {
     children: React.ReactNode;
 }
@@ -33,27 +48,26 @@ export function ProvidersProvider({ children }: ProvidersProviderProps) {
         return localStorage.getItem(SELECTED_PROVIDER_KEY);
     });
 
+    const resolvedProviderName = useMemo(
+        () => resolveSelectedProviderName(providers, selectedProviderName),
+        [providers, selectedProviderName],
+    );
+
     const selectedProvider = useMemo(() => {
-        if (providers.length === 0) {
+        if (!resolvedProviderName) {
             return null;
         }
 
-        if (selectedProviderName) {
-            const savedProvider = findProviderByName(selectedProviderName, providers);
-
-            if (savedProvider) {
-                return savedProvider;
-            }
-        }
-
-        return providers[0] ?? null;
-    }, [providers, selectedProviderName]);
+        return findProviderByName(resolvedProviderName, providers) ?? null;
+    }, [providers, resolvedProviderName]);
 
     useEffect(() => {
-        if (selectedProvider) {
-            localStorage.setItem(SELECTED_PROVIDER_KEY, selectedProvider.name);
+        if (resolvedProviderName) {
+            localStorage.setItem(SELECTED_PROVIDER_KEY, resolvedProviderName);
+        } else {
+            localStorage.removeItem(SELECTED_PROVIDER_KEY);
         }
-    }, [selectedProvider]);
+    }, [resolvedProviderName]);
 
     const setSelectedProvider = (provider: Provider) => {
         setSelectedProviderName(provider.name);

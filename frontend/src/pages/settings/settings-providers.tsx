@@ -81,7 +81,7 @@ function SettingsProviders() {
                 setDeleteErrorMessage(null);
 
                 await deleteProvider({
-                    refetchQueries: ['settingsProviders'],
+                    refetchQueries: ['settingsProviders', 'providers'],
                     variables: { providerId: providerId.toString() },
                 });
 
