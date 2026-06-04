@@ -1,13 +1,24 @@
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import Logo from '@/components/icons/logo';
 import Markdown from '@/components/shared/markdown';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFlowReportQuery } from '@/graphql/types';
 import { Log } from '@/lib/log';
 import { generateFileName, generatePDFFromMarkdown, generateReport } from '@/lib/report';
 
 type PdfPhase = 'done' | 'error' | 'idle';
+
+interface PdfResult {
+    readonly error: null | string;
+    readonly flowId: string;
+    readonly phase: PdfPhase;
+}
+
 type ReportState = 'content' | 'error' | 'generating' | 'loading';
 
 function FlowReport() {
@@ -16,17 +27,8 @@ function FlowReport() {
     const download = searchParams.has('download');
     const silent = searchParams.has('silent');
 
-    const [pdfPhase, setPdfPhase] = useState<PdfPhase>('idle');
-    const [pdfError, setPdfError] = useState<null | string>(null);
-    const pdfTriggered = useRef(false);
-
-    const [prevFlowId, setPrevFlowId] = useState(flowId);
-
-    if (flowId !== prevFlowId) {
-        setPrevFlowId(flowId);
-        setPdfPhase('idle');
-        setPdfError(null);
-    }
+    const [pdfResult, setPdfResult] = useState<null | PdfResult>(null);
+    const pdfTriggeredFlowId = useRef<null | string>(null);
 
     const {
         data,
@@ -35,50 +37,52 @@ function FlowReport() {
     } = useFlowReportQuery({
         errorPolicy: 'all',
         skip: !flowId,
-        variables: { id: flowId! },
+        variables: { id: flowId ?? '' },
     });
 
-    const dataReady = !loading && !queryError && !!data?.flow;
+    const flow = data?.flow ?? null;
+    const dataReady = !loading && !queryError && flow !== null;
 
-    const reportContent = useMemo(
-        () => (dataReady ? generateReport(data.tasks || [], data.flow!) : ''),
-        [dataReady, data],
-    );
+    const reportContent = useMemo(() => {
+        if (!dataReady) {
+            return '';
+        }
+
+        return generateReport(data?.tasks ?? [], flow);
+    }, [dataReady, data?.tasks, flow]);
+
+    const pdfPhase = pdfResult?.flowId === flowId ? pdfResult.phase : 'idle';
+    const pdfError = pdfResult?.flowId === flowId ? pdfResult.error : null;
 
     useEffect(() => {
-        pdfTriggered.current = false;
-    }, [flowId]);
-
-    useEffect(() => {
-        if (!dataReady || !download || pdfTriggered.current || !data?.flow) {
+        if (!dataReady || !download || flow === null || !flowId || pdfTriggeredFlowId.current === flowId) {
             return;
         }
 
-        pdfTriggered.current = true;
+        pdfTriggeredFlowId.current = flowId;
 
-        const fileName = `${generateFileName(data.flow)}.pdf`;
+        const fileName = `${generateFileName(flow)}.pdf`;
 
         generatePDFFromMarkdown(reportContent, fileName)
             .then(() => {
                 if (silent) {
                     setTimeout(() => window.close(), 1000);
                 } else {
-                    setPdfPhase('done');
+                    setPdfResult({ error: null, flowId, phase: 'done' });
                 }
             })
             .catch((err) => {
                 Log.error('PDF generation failed:', err);
-                setPdfError('Failed to generate PDF');
-                setPdfPhase('error');
+                setPdfResult({ error: 'Failed to generate PDF', flowId, phase: 'error' });
             });
-    }, [dataReady, download, silent, reportContent, data]);
+    }, [dataReady, download, silent, reportContent, flow, flowId]);
 
     let state: ReportState;
     let errorMessage: null | string = null;
 
     if (loading) {
         state = 'loading';
-    } else if (queryError || !data?.flow) {
+    } else if (queryError || flow === null) {
         state = 'error';
         errorMessage = 'Failed to load flow data';
     } else if (pdfPhase === 'error') {
@@ -92,20 +96,25 @@ function FlowReport() {
 
     if (state === 'loading' || state === 'generating') {
         return (
-            <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-                <div className="flex min-h-screen flex-col items-center justify-center p-8">
-                    <Logo className="animate-logo-spin mb-8 size-16 text-white" />
-                    <div className="flex flex-col gap-4 text-center">
-                        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-                            {state === 'loading' ? 'Loading Report...' : 'Generating PDF...'}
-                        </h1>
-                        <div className="mx-auto size-8 animate-spin rounded-full border-b-2 border-blue-600" />
-                        <p className="max-w-md text-gray-600 dark:text-gray-400">
-                            {state === 'loading'
-                                ? 'Please wait while we prepare your penetration testing report.'
-                                : 'Creating your PDF document. This may take a few moments.'}
-                        </p>
-                    </div>
+            <div className="bg-muted/30 min-h-screen p-6">
+                <div className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center">
+                    <Card className="w-full max-w-lg">
+                        <CardHeader className="items-center text-center">
+                            <Logo className="text-primary mb-3 size-14" />
+                            <Badge variant="blue">{state === 'loading' ? 'Report' : 'PDF export'}</Badge>
+                            <CardTitle className="text-2xl font-semibold">
+                                {state === 'loading' ? 'Loading report' : 'Generating PDF'}
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-4 text-center">
+                            <Loader2 className="text-primary mx-auto size-8 animate-spin" />
+                            <p className="text-muted-foreground">
+                                {state === 'loading'
+                                    ? 'Preparing the flow evidence and task summary.'
+                                    : 'Creating the PDF document from the current report.'}
+                            </p>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         );
@@ -113,35 +122,51 @@ function FlowReport() {
 
     if (state === 'error') {
         return (
-            <div className="min-h-screen bg-linear-to-br from-red-50 via-white to-orange-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-                <div className="flex min-h-screen flex-col items-center justify-center p-8">
-                    <Logo className="mb-8 size-16" />
-                    <div className="flex flex-col gap-4 text-center">
-                        <h1 className="text-2xl font-semibold text-red-600 dark:text-red-400">Error Loading Report</h1>
-                        <p className="max-w-md text-gray-600 dark:text-gray-400">
-                            {errorMessage || 'An unexpected error occurred while loading the report.'}
-                        </p>
-                        <button
-                            className="mt-4 rounded-md bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
-                            onClick={() => window.close()}
-                        >
-                            Close
-                        </button>
-                    </div>
+            <div className="bg-muted/30 min-h-screen p-6">
+                <div className="mx-auto flex min-h-screen max-w-4xl flex-col items-center justify-center">
+                    <Card className="border-destructive/30 w-full max-w-lg">
+                        <CardHeader className="items-center text-center">
+                            <AlertCircle className="text-destructive mb-3 size-14" />
+                            <Badge variant="destructive">Report error</Badge>
+                            <CardTitle className="text-2xl font-semibold">Error loading report</CardTitle>
+                        </CardHeader>
+                        <CardContent className="grid gap-4 text-center">
+                            <p className="text-muted-foreground">
+                                {errorMessage || 'An unexpected error occurred while loading the report.'}
+                            </p>
+                            <Button
+                                className="mx-auto"
+                                onClick={() => window.close()}
+                                type="button"
+                                variant="secondary"
+                            >
+                                Close
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-white dark:bg-gray-900">
-            <div className="h-screen w-full overflow-auto p-8">
-                <div className="mx-auto max-w-4xl">
+        <div className="bg-muted/30 min-h-screen p-4 md:p-8">
+            <article className="bg-card mx-auto max-w-5xl rounded-xl border shadow-sm">
+                <header className="flex flex-col gap-3 border-b p-5 md:flex-row md:items-center md:justify-between">
+                    <div className="flex min-w-0 items-center gap-3">
+                        <Logo className="text-primary size-10 shrink-0" />
+                        <div className="min-w-0">
+                            <Badge variant="blue">AegisX report</Badge>
+                            <h1 className="mt-2 truncate text-2xl font-semibold">Flow security report</h1>
+                        </div>
+                    </div>
+                </header>
+                <div className="p-5 md:p-8">
                     <div className="prose prose-slate dark:prose-invert max-w-none">
                         <Markdown>{reportContent}</Markdown>
                     </div>
                 </div>
-            </div>
+            </article>
         </div>
     );
 }

@@ -38,9 +38,9 @@ function FlowTabs({ activeTab, onTabChange }: FlowTabsProps) {
             onValueChange={onTabChange}
             value={activeTab}
         >
-            <div className="max-w-full pr-4">
+            <div className="bg-card max-w-full rounded-xl border p-2 shadow-sm">
                 <ScrollArea className="w-full pb-3">
-                    <TabsList className="flex w-fit">
+                    <TabsList className="bg-muted/80 flex w-fit">
                         {!isDesktop && <TabsTrigger value="automation">Automation</TabsTrigger>}
                         {!isDesktop && <TabsTrigger value="assistant">Assistant</TabsTrigger>}
                         {!isDesktop && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
