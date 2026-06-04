@@ -1,300 +1,200 @@
-# 기여 가이드 (Contributing Guide)
+# Contributing Guide
 
-이 문서는 AgiesX 프로젝트의 Git 워크플로우, 브랜치 전략, 커밋 규칙을 정의합니다.
-원활한 협업을 위해 아래 규칙을 준수해 주세요.
+This guide defines the Git workflow, branch strategy, pull request rules, and license checks for AegisX.
 
----
+AegisX is a fork of PentAGI with project-specific changes for beginner-friendly AI-assisted penetration testing and optional Shannon white-box scan integration. Preserve upstream PentAGI attribution and legal notices when changing documentation or code.
 
-## 목차
+## Branch Strategy
 
-1. [브랜치 전략](#1-브랜치-전략)
-2. [작업 흐름](#2-작업-흐름)
-3. [커밋 메시지 규칙](#3-커밋-메시지-규칙)
-4. [Pull Request 가이드](#4-pull-request-가이드)
-5. [브랜치 보호 규칙](#5-브랜치-보호-규칙)
-6. [라이선스 준수 가이드](#6-라이선스-준수-가이드)
+Use this branch flow by default:
 
----
-
-## 1. 브랜치 전략
-
-### 브랜치 구조
-
-| 브랜치 | 역할 | 보호 수준 |
-|--------|------|-----------|
-| `main` | 최종 배포/안정 버전 | 🔒 보호됨 |
-| `develop` | 개발 통합 브랜치 |  -  |
-| `feature/*` | 새 기능 개발 |  -  |
-| `fix/*` | 버그 수정 |  -  |
-| `docs/*` | 문서 작업 |  -  |
-| `refactor/*` | 코드 리팩토링 |  -  |
-| `chore/*` | 기타 작업 (빌드, 설정 등) |  -  |
-
-### 네이밍 규칙
-
-브랜치 이름은 **영어 소문자, 숫자, 하이픈(`-`)**만 사용합니다.
-
-```
-feature/기능명
-fix/버그명
-docs/문서명
-refactor/정리명
-chore/기타작업
+```text
+main <- develop <- docs/* | feature/* | fix/* | chore/*
 ```
 
-**예시:**
-- `feature/ui-guide`
-- `fix/login-error`
-- `docs/readme-update`
-- `refactor/auth-cleanup`
-- `chore/update-dependencies`
+| Branch | Purpose | Rule |
+| --- | --- | --- |
+| `main` | Stable/default branch | Protected; merge by PR only |
+| `develop` | Integration branch for active work | Protected; merge by PR only |
+| `feature/*` | New feature work | Branch from `develop` |
+| `fix/*` | Bug fixes | Branch from `develop` |
+| `docs/*` | Documentation and GitHub community files | Branch from `develop` |
+| `chore/*` | Build, CI, dependency, and configuration work | Branch from `develop` |
 
----
+Branch names must use lowercase English letters, numbers, hyphens, and slashes.
 
-## 2. 작업 흐름
+Examples:
 
-### 기본 워크플로우
-
+```text
+feature/simple-mode-risk-cards
+fix/shannon-scan-validation
+docs/github-community-templates
+chore/ci-workflow-hygiene
 ```
-main ← develop ← feature/* (또는 fix/*, docs/* 등)
-```
 
-### 단계별 가이드
+## Standard Workflow
 
-#### Step 1: 저장소 클론 (최초 1회)
+Clone the repository:
 
 ```bash
-git clone https://github.com/AISWopensource/AgiesX.git
-cd AgiesX
+git clone https://github.com/2026OpenSourceSW/AegisX.git
+cd AegisX
 ```
 
-#### Step 2: develop 브랜치에서 작업 브랜치 생성
-
-작업 시작 전에는 반드시 `develop` 브랜치의 최신 변경사항을 반영한 뒤,
-새 작업 브랜치를 생성합니다.
+Create work from the latest `develop`:
 
 ```bash
 git checkout develop
 git pull origin develop
-git checkout -b feature/ui-guide
+git checkout -b docs/github-community-templates
 ```
 
-#### Step 2-1: 작업 중 최신 develop 반영
-
-작업 중 다른 팀원의 변경사항이 `develop`에 머지되었다면,
-아래 명령으로 현재 작업 브랜치에 최신 develop을 반영합니다.
+If `develop` changes while your branch is open, update your branch before review:
 
 ```bash
 git checkout develop
 git pull origin develop
-git checkout feature/ui-guide
+git checkout docs/github-community-templates
 git merge develop
 ```
-#### Step 3: 작업 및 커밋
+
+Commit focused changes:
 
 ```bash
-# 코드 작업 후
 git add .
-git commit -m "feat: 초보자용 UI 가이드 추가"
+git commit -m "docs: align github community templates"
 ```
 
-#### Step 4: 원격 저장소에 푸시
+Push and open a pull request:
 
 ```bash
-git push origin feature/ui-guide
+git push origin docs/github-community-templates
 ```
 
-#### Step 5: Pull Request 생성
+Pull request defaults:
 
-GitHub에서 PR 생성:
-- **Base:** `develop`
-- **Compare:** `feature/ui-guide`
+- Base: `develop`
+- Compare: your work branch
+- One coherent unit per PR
+- At least one reviewer approval before merge
+- Delete the work branch after merge when it is no longer needed
 
-#### Step 6: 리뷰 및 머지
+Promote to `main` only through a separate `develop -> main` PR after the relevant work is verified.
 
-- 최소 1명의 리뷰어 승인 후 머지
-- 머지 완료 후 feature 브랜치는 삭제해도 됩니다
+## Commit Messages
 
-### 최종 배포 흐름
+Use [Conventional Commits](https://www.conventionalcommits.org/).
 
-```
-develop → main (관리자가 수행)
-```
-
----
-
-## 3. 커밋 메시지 규칙
-
-[Conventional Commits](https://www.conventionalcommits.org/) 양식을 따릅니다.
-
-### 기본 형식
-
-```
+```text
 <type>(<scope>): <subject>
-
-<body>  ← 선택사항
 ```
 
-### 커밋 타입 (Type)
+Common types:
 
-| 타입 | 설명 | 예시 |
-|------|------|------|
-| `feat` | 새로운 기능 추가 | `feat: 로그인 페이지 추가` |
-| `fix` | 버그 수정 | `fix: 인증 토큰 만료 오류 수정` |
-| `docs` | 문서 수정 | `docs: README 업데이트` |
-| `style` | 코드 포맷팅 (기능 변경 없음) | `style: 코드 정렬` |
-| `refactor` | 리팩토링 (기능 변경 없음) | `refactor: 함수 구조 개선` |
-| `test` | 테스트 추가/수정 | `test: 로그인 테스트 추가` |
-| `chore` | 빌드, 설정 등 기타 작업 | `chore: 의존성 업데이트` |
+| Type | Use for |
+| --- | --- |
+| `feat` | New user-visible behavior |
+| `fix` | Bug fixes |
+| `docs` | Documentation-only changes |
+| `style` | Formatting-only changes |
+| `refactor` | Behavior-preserving code cleanup |
+| `test` | Test changes |
+| `chore` | Build, tooling, dependency, or configuration work |
 
-### 작성 규칙
+Examples:
 
-- **제목(subject):** 50자 이내, 명령조로 작성
-- **본문(body):** 선택사항, 상세 설명이 필요할 때만 사용
-- **한글/영어** 모두 가능하나 팀 내 통일 권장
-
-### 예시
-
-```bash
-feat(frontend): 다크모드 토글 버튼 추가
-
-- 헤더에 다크모드 전환 버튼 배치
-- localStorage에 사용자 설정 저장
+```text
+feat(frontend): add simple mode risk cards
+fix(shannon): require non-production confirmation
+docs: align github community templates
+chore(ci): separate docker publish target
 ```
 
-```bash
-fix(backend): JWT 토큰 갱신 로직 수정
-```
+## Pull Request Requirements
 
-```bash
-docs: 기여 가이드 한글화
-```
+Every PR must include:
 
----
+- Clear problem and solution summary
+- Target branch confirmation
+- Verification evidence with exact commands or manual QA steps
+- Documentation impact
+- License and third-party dependency impact
+- Security/safety impact for scanning, target handling, authentication, authorization, or external tools
 
-## 4. Pull Request 가이드
+Reviewer checklist:
 
-### PR 제목 형식
+- The PR targets `develop` unless it is an explicit promotion/release PR.
+- The PR is one coherent unit.
+- The PR body records verification evidence.
+- User-visible behavior has manual QA evidence, not only automated test output.
+- Legal attribution for PentAGI, Shannon, and third-party dependencies is preserved.
+- Scanning features require authorized targets and non-production confirmation where applicable.
 
-커밋 메시지와 동일한 형식을 사용합니다.
+## Branch Protection
 
-```
-feat: 로그인 페이지 추가
-fix: 인증 오류 수정
-docs: README 업데이트
-```
+`main`:
 
-### PR 체크리스트
+- Direct push is not allowed.
+- Pull request review is required.
+- Force push is not allowed.
+- Branch deletion is not allowed.
 
-PR 생성 시 아래 항목을 확인해주세요:
+`develop`:
 
-- [ ] 코드가 정상 동작하는지 확인
-- [ ] 관련 테스트가 있다면 통과하는지 확인
-- [ ] 린터/포맷터 오류 없음
-- [ ] 문서 업데이트 필요 시 반영
+- Direct push is not allowed.
+- Pull request review is required.
+- Force push is not allowed.
+- Branch deletion is not allowed.
 
-### 리뷰 프로세스
+Work branches:
 
-1. PR 생성 후 팀원에게 리뷰 요청
-2. 최소 **1명** 이상의 승인(Approve) 필요
-3. 리뷰어의 피드백 반영 후 재요청
-4. 승인 후 머지
+- Keep changes focused and reviewable.
+- Rebase or merge `develop` before review when needed.
+- Delete after merge unless there is an active reason to keep the branch.
 
----
+## License And Third-Party Checks
 
-## 5. 브랜치 보호 규칙
+AegisX currently inherits upstream PentAGI licensing and attribution. Do not remove or rewrite upstream legal notices casually.
 
-### main 브랜치
+Before adding or changing dependencies, verify license compatibility and update third-party notices when needed.
 
-- ✅ PR 필수 (직접 push 금지)
-- ✅ 최소 1명 승인 필요
-- ✅ Force push 금지
-- ✅ 삭제 금지
-
-### develop 브랜치
-
-- ✅ PR 필수 (직접 push 금지)
-- ✅ Force push 금지
-- ✅ 삭제 금지
-
-### feature/* 브랜치
-
-- 보호 규칙 없음 (자유롭게 작업)
-
----
-
-## 6. 라이선스 준수 가이드
-
-### 개요
-
-AgiesX는 **MIT 라이선스**로 배포되며, 모든 의존성은 MIT 호환 라이선스를 사용합니다.
-
-### 의존성 추가 시 주의사항
-
-새 의존성 추가 시 아래 라이선스 호환성을 확인하세요.
-
-#### ✅ 허용 라이선스
+Generally acceptable licenses:
 
 - MIT
 - Apache-2.0
-- BSD-2-Clause, BSD-3-Clause
+- BSD-2-Clause
+- BSD-3-Clause
 - ISC
-- MPL-2.0 (수정 없이 사용 시)
-- 0BSD (퍼블릭 도메인)
+- MPL-2.0 when used without modifying MPL-covered source
+- 0BSD
 
-#### ❌ 비호환 라이선스
+Licenses requiring explicit maintainer review:
 
-- GPL, LGPL, AGPL (특별한 예외 없이)
-- CC-BY-SA (코드에는 사용 불가, 데이터는 가능)
-- Proprietary/Commercial 라이선스
+- GPL
+- LGPL
+- AGPL
+- CC-BY-SA
+- Proprietary or commercial licenses
 
-### PR 머지 전 체크리스트
+Shannon-related boundary:
 
-1. **의존성 업데이트:**
-   ```bash
-   cd backend && go mod tidy
-   cd ../frontend && pnpm install
-   ```
+- Shannon is AGPL-family software.
+- Do not copy Shannon source into this repository without explicit license review.
+- Treat Shannon integration as external CLI/Docker-worker execution unless a later legal decision changes that boundary.
+- Keep `THIRD_PARTY_NOTICES.md` updated when Shannon integration details change.
 
-2. **라이선스 리포트 생성:**
-   ```bash
-   ./scripts/generate-licenses.sh
-   ```
+Useful checks:
 
-   자세한 내용은 [licenses/README.md](licenses/README.md) 참조
+```bash
+./scripts/generate-licenses.sh
+osv-scanner scan --experimental-licenses="MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0" backend
+osv-scanner scan --experimental-licenses="MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0" frontend
+```
 
-3. **라이선스 스캔:**
-   ```bash
-   osv-scanner scan --experimental-licenses="MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0" backend
-   osv-scanner scan --experimental-licenses="MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0" frontend
-   ```
+Docker builds currently use upstream PentAGI paths and license output locations in some places. Do not rename those paths or image names in documentation unless the implementation and CI have also changed.
 
-### 라이선스 검증 도구
+## Questions And Issues
 
-| 도구 | 용도 |
-|------|------|
-| `osv-scanner` | 보안 및 라이선스 스캔 (권장) |
-| `license-checker` | npm 라이선스 검증 |
-| `go-licenses` | Go 모듈 라이선스 추출 |
-| `go list` | Go 모듈 검사 |
+Use GitHub Issues for project discussion and bug reports:
 
-### Docker 빌드 시
-
-Docker 빌드 시 라이선스 리포트가 자동 생성됩니다:
-
-- **Backend:** `/opt/pentagi/licenses/backend/`
-  - `dependencies.txt` - Go 모듈 목록
-  - `licenses.csv` - 상세 라이선스 정보
-
-- **Frontend:** `/opt/pentagi/licenses/frontend/`
-  - `dependencies.json` - npm 의존성 트리
-  - `licenses.json` - 상세 라이선스 데이터
-  - `licenses.csv` - 라이선스 요약
-
----
-
-## 문의
-
-질문이 있으시면 아래로 연락해주세요:
-
-- **GitHub Issues:** [Issues 페이지](https://github.com/AISWopensource/AgiesX/issues)
+https://github.com/2026OpenSourceSW/AegisX/issues

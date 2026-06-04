@@ -1,120 +1,99 @@
 <!--
-Thank you for your contribution to PentAGI! Please fill out this template completely to help us review your changes effectively.
-Any PR that does not include enough information may be closed at maintainers' discretion.
+Thank you for contributing to AegisX.
+
+Use this template to make the review decision clear. PRs with missing scope,
+verification, or safety information may be returned for updates before review.
 -->
 
-### Description of the Change
-<!--
-We must be able to understand the design of your change from this description. Please provide as much detail as possible.
--->
+## Summary
 
-#### Problem
-<!-- Describe the problem this PR addresses -->
+### Problem
+<!-- What problem does this PR solve? -->
 
-#### Solution
-<!-- Describe your solution and its key aspects -->
+### Solution
+<!-- What changed, and why is this the right scope for this PR? -->
 
-<!-- Enter any applicable Issue number(s) here that will be closed/resolved by this PR. -->
 Closes #
 
-### Type of Change
-<!-- Mark with an `x` all options that apply -->
+## Branch And Scope
 
-- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
-- [ ] 🚀 New feature (non-breaking change which adds functionality)
-- [ ] 💥 Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] 📚 Documentation update
-- [ ] 🔧 Configuration change
-- [ ] 🧪 Test update
-- [ ] 🛡️ Security update
+- [ ] This PR targets `develop`
+- [ ] This PR is one coherent unit of work
+- [ ] This PR does not include unrelated formatting or cleanup
+- [ ] I have updated my branch with the latest `develop` when needed
 
-### Areas Affected
-<!-- Mark with an `x` all components that are affected -->
+## Type Of Change
 
-- [ ] Core Services (Frontend UI/Backend API)
-- [ ] AI Agents (Researcher/Developer/Executor)
-- [ ] Security Tools Integration
-- [ ] Memory System (Vector Store/Knowledge Base)
-- [ ] Monitoring Stack (Grafana/OpenTelemetry)
-- [ ] Analytics Platform (Langfuse)
-- [ ] External Integrations (LLM/Search APIs)
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+- [ ] Configuration or CI change
+- [ ] Test update
+- [ ] Security or safety update
+- [ ] Legal, license, or third-party notice update
+
+## Areas Affected
+
+- [ ] Simple Mode
+- [ ] Advanced Mode
+- [ ] Shannon integration
+- [ ] Frontend UI
+- [ ] Backend API or services
+- [ ] Flow, task, or report handling
+- [ ] Docker, setup, or deployment
+- [ ] CI or GitHub workflow
 - [ ] Documentation
-- [ ] Infrastructure/DevOps
+- [ ] Legal or third-party notices
 
-### Testing and Verification
-<!--
-Please describe the tests that you ran to verify your changes and provide instructions so we can reproduce.
--->
+## Verification
 
-#### Test Configuration
-```yaml
-PentAGI Version:
-Docker Version:
-Host OS:
-LLM Provider:
-Enabled Features: [Langfuse/Grafana/etc]
+List exact commands, manual QA steps, and observable results.
+
+```text
+Commands:
+-
+
+Manual QA:
+-
+
+Result:
+-
 ```
 
-#### Test Steps
-1. 
-2. 
-3. 
+## Security And Safety
 
-#### Test Results
-<!-- Include relevant screenshots, logs, or test outputs -->
+- [ ] I considered authorization and target ownership implications
+- [ ] I considered non-production safeguards for scanning behavior
+- [ ] I did not add secrets, credentials, or sensitive data
+- [ ] I documented any new permissions, external tools, or network behavior
+- [ ] Not applicable
 
-### Security Considerations
-<!-- 
-Describe any security implications of your changes.
-For security-related changes, please note any new dependencies, changed permissions, etc.
--->
+Notes:
 
-### Performance Impact
-<!--
-Describe any performance implications and testing done to verify acceptable performance.
-Especially important for changes affecting AI agents, memory systems, or data processing.
--->
+## License And Third-Party Impact
 
-### Documentation Updates
-<!-- Note any documentation changes required by this PR -->
+- [ ] No dependency or license impact
+- [ ] Dependency changes are listed and licenses were checked
+- [ ] Third-party notices were updated
+- [ ] Upstream PentAGI attribution is preserved
+- [ ] Shannon remains external and no Shannon source was copied into this repository
 
-- [ ] README.md updates
-- [ ] API documentation updates
-- [ ] Configuration documentation updates
-- [ ] GraphQL schema updates
-- [ ] Other: <!-- specify -->
+Notes:
 
-### Deployment Notes
-<!--
-Describe any special considerations for deploying this change.
-Include any new environment variables, configuration changes, or migration steps.
--->
+## Documentation Impact
 
-### Checklist
-<!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
+- [ ] Documentation was updated
+- [ ] Documentation is not needed for this change
+- [ ] README changes are intentionally deferred until final implementation verification
 
-#### Code Quality
-- [ ] My code follows the project's coding standards
-- [ ] I have added/updated necessary documentation
-- [ ] I have added tests to cover my changes
-- [ ] All new and existing tests pass
-- [ ] I have run `go fmt` and `go vet` (for Go code)
-- [ ] I have run `pnpm run lint` (for TypeScript/JavaScript code)
+Notes:
 
-#### Security
-- [ ] I have considered security implications
-- [ ] Changes maintain or improve the security model
-- [ ] Sensitive information has been properly handled
+## Reviewer Checklist
 
-#### Compatibility
-- [ ] Changes are backward compatible
-- [ ] Breaking changes are clearly marked and documented
-- [ ] Dependencies are properly updated
-
-#### Documentation
-- [ ] Documentation is clear and complete
-- [ ] Comments are added for non-obvious code
-- [ ] API changes are documented
-
-### Additional Notes
-<!-- Any additional information that would be helpful for reviewers -->
+- [ ] The base branch is correct
+- [ ] The PR scope is focused
+- [ ] Verification evidence is reproducible
+- [ ] User-visible behavior has manual QA evidence when applicable
+- [ ] Security/safety implications are addressed
+- [ ] Legal attribution and third-party notices are preserved

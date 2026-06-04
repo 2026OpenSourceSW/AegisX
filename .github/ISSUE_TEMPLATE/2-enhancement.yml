@@ -1,115 +1,113 @@
-name: "\U0001F680 Enhancement"
-description: "Suggest an enhancement for PentAGI"
+name: "Enhancement"
+description: "Suggest an improvement for AegisX"
 title: "[Enhancement]: "
 labels: ["enhancement"]
-assignees:
-  - asdek
 body:
   - type: markdown
     attributes:
       value: |
-        Thank you for suggesting an enhancement to make PentAGI better! Please provide as much detail as possible to help us understand your suggestion.
+        Thank you for suggesting an AegisX improvement. Describe the user need, expected behavior, and any safety or license impact.
   - type: dropdown
     id: component
     attributes:
-      label: Target Component
-      description: Which component of PentAGI would this enhancement affect?
+      label: Target component
+      description: Which part of AegisX would this affect?
       multiple: true
       options:
-        - Core Services (Frontend UI/Backend API)
-        - AI Agents (Researcher/Developer/Executor)
-        - Security Tools Integration
-        - Memory System (Vector Store/Knowledge Base)
-        - Monitoring Stack (Grafana/OpenTelemetry)
-        - Analytics Platform (Langfuse)
-        - External Integrations (LLM/Search APIs)
-        - Documentation and User Experience
+        - Simple Mode
+        - Advanced Mode
+        - Shannon integration
+        - Frontend UI
+        - Backend API or services
+        - Flow, task, or report handling
+        - Docker, setup, or deployment
+        - CI or GitHub workflow
+        - Documentation
+        - Security/Safety
+        - Legal or third-party notices
+        - Other
     validations:
       required: true
   - type: textarea
+    id: problem
     attributes:
-      label: Enhancement Description
-      description: Please describe the enhancement you would like to see.
+      label: Problem or user need
+      description: What limitation or user workflow should this improve?
       placeholder: |
-        Problem Statement:
-        - Current Limitation: [describe what's currently missing or could be improved]
-        - Use Case: [describe how you use PentAGI and why this enhancement would help]
-        
-        Proposed Solution:
-        - Feature Description: [detailed description of the enhancement]
-        - Expected Benefits: [how this would improve PentAGI]
-        
-        Example Scenario:
-        [Provide a concrete example of how this enhancement would be used]
+        Current limitation:
+        -
+
+        User affected:
+        -
+
+        Why it matters:
+        -
     validations:
       required: true
   - type: textarea
+    id: proposal
     attributes:
-      label: Technical Details
-      description: If you have technical suggestions for implementation, please share them.
+      label: Proposed solution
+      description: Describe the behavior, UI, API, workflow, or documentation change you want.
       placeholder: |
-        Implementation Approach:
-        - Architecture Changes: [any changes needed to current architecture]
-        - New Components: [any new services or integrations needed]
-        - Dependencies: [new tools or libraries required]
-        
-        Integration Points:
-        - AI Agents: [how it affects agent behavior]
-        - Memory System: [data storage requirements]
-        - Monitoring: [new metrics or traces needed]
-        
-        Security Considerations:
-        - [Any security implications to consider]
+        Proposed behavior:
+        -
+
+        Expected benefit:
+        -
+
+        Example workflow:
+        -
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: List other approaches you considered, if any.
+      placeholder: |
+        Alternative:
+        -
+
+        Tradeoff:
+        -
     validations:
       required: false
   - type: textarea
+    id: implementation
     attributes:
-      label: Designs and Mockups
-      description: |
-        If applicable, provide mockups, diagrams, or examples to illustrate your enhancement.
-        - For UI changes: wireframes or mockups
-        - For architecture changes: system diagrams
-        - For agent behavior: sequence diagrams
+      label: Implementation notes
+      description: Optional technical notes, affected files, dependencies, or migration concerns.
       placeholder: |
-        Drag and drop images here, or provide links to external design tools.
-        
-        For complex diagrams, you can use Mermaid syntax:
-        ```mermaid
-        sequenceDiagram
-            User->>PentAGI: Request
-            PentAGI->>NewComponent: Process
-            NewComponent->>User: Enhanced Response
-        ```
-    validations:
-      required: false
-  - type: textarea
-    attributes:
-      label: Alternative Solutions
-      description: |
-        Please describe any alternative solutions or features you've considered.
-      placeholder: |
-        Alternative Approaches:
-        1. [First alternative approach]
-           - Pros: [benefits]
-           - Cons: [drawbacks]
-        
-        2. [Second alternative approach]
-           - Pros: [benefits]
-           - Cons: [drawbacks]
-        
-        Reason for Preferred Solution:
-        [Explain why your main proposal is better than these alternatives]
+        Possible files or modules:
+        -
+
+        Dependencies:
+        -
+
+        Migration or compatibility concerns:
+        -
     validations:
       required: false
   - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety and license review
+      options:
+        - label: I considered authorization and target ownership implications.
+          required: true
+        - label: I considered whether this affects non-production safeguards for scanning features.
+          required: true
+        - label: I considered whether this adds or changes third-party dependencies or license obligations.
+          required: true
+        - label: If this involves Shannon, I understand Shannon should remain an external integration unless maintainers approve a different license boundary.
+          required: true
+  - type: checkboxes
     id: verification
     attributes:
-      label: Verification
-      description: Please verify the following before submitting
+      label: Pre-submission checks
       options:
-        - label: I have checked that this enhancement hasn't been already proposed
-        - label: This enhancement aligns with PentAGI's goal of autonomous penetration testing
-        - label: I have considered the security implications of this enhancement
-        - label: I have provided clear use cases and benefits
-    validations:
-      required: true
+        - label: I searched existing issues before opening this request.
+          required: true
+        - label: I described the expected benefit and affected workflow.
+          required: true
