@@ -5,9 +5,9 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 
 function MainLayout() {
     return (
-        <SidebarProvider>
+        <SidebarProvider className="bg-background">
             <MainSidebar />
-            <SidebarInset>
+            <SidebarInset className="min-w-0">
                 <Outlet />
             </SidebarInset>
         </SidebarProvider>

@@ -98,14 +98,15 @@ function Dashboard() {
                     onValueChange={handleTabChange}
                     value={activeTab}
                 >
-                    <div className="flex items-center justify-between">
-                        <TabsList>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <TabsList className="w-fit">
                             <TabsTrigger value="analytics">Analytics</TabsTrigger>
                             <TabsTrigger value="overview">Overview</TabsTrigger>
                         </TabsList>
 
                         {activeTab === 'analytics' && (
                             <Tabs
+                                className="w-fit max-w-full overflow-x-auto"
                                 onValueChange={handlePeriodChange}
                                 value={period}
                             >
