@@ -1,5 +1,7 @@
 # PentAGI End User License Agreement
 
+> AegisX fork notice: this EULA is retained from upstream PentAGI for attribution and license-review context. It has not been rewritten as an AegisX-specific EULA. AegisX contributors should not change the legal effect of this document without explicit maintainer/legal review.
+
 ## Introduction
 
 This **End User License Agreement (EULA)** governs the terms and conditions for the use of PentAGI, an advanced AI-powered penetration testing tool. This product is provided by the **PentAGI Development Team**, and is distributed in the form of [source code](https://github.com/vxcontrol/pentagi) available on GitHub under the MIT license as well as [pre-built Docker images](https://hub.docker.com/r/vxcontrol/pentagi) available on Docker Hub.

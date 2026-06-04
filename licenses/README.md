@@ -1,6 +1,6 @@
 # Third-Party Licenses
 
-This directory contains license information for all PentAGI dependencies.
+This directory contains generated license information for AegisX dependencies inherited from the upstream PentAGI codebase and AegisX project changes.
 
 ## Quick Start
 
@@ -27,7 +27,7 @@ Run the generator script to create/update license reports (run from project root
 
 ## License
 
-PentAGI is licensed under **MIT License**.
+AegisX inherits the upstream PentAGI **MIT License**. See `../LICENSE` and `../NOTICE` for upstream and AegisX attribution.
 
 All third-party dependencies use MIT-compatible licenses:
 - MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0, 0BSD
@@ -35,6 +35,8 @@ All third-party dependencies use MIT-compatible licenses:
 ## Docker Builds
 
 License reports are automatically generated during Docker builds and included in the final image at `/opt/pentagi/licenses/`.
+
+The `/opt/pentagi` path is retained while the implementation and Docker packaging still use upstream PentAGI paths.
 
 ## More Information
 
