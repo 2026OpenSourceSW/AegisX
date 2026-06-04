@@ -1,7 +1,19 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
-import { Ellipsis, Eye, GitFork, Loader2, Pause, Pencil, PencilLine, Plus, Star, Trash } from 'lucide-react';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import {
+    CheckCircle2,
+    Ellipsis,
+    Eye,
+    GitFork,
+    Loader2,
+    Pause,
+    Pencil,
+    PencilLine,
+    Plus,
+    Star,
+    Trash,
+    XCircle,
+} from 'lucide-react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -28,6 +40,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { StatusCard } from '@/components/ui/status-card';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { FlowHistoryOverview } from '@/features/flows/flow-history-overview';
 import { ResultType, StatusType, type TerminalFragmentFragment, useRenameFlowMutation } from '@/graphql/types';
 import { useTableState } from '@/hooks/use-table-state';
 import { mergeHrefWithSearchParams } from '@/lib/url-params';
@@ -188,17 +201,15 @@ function Flows() {
 
                     if (isEditing) {
                         return (
-                            <div onClick={(e) => e.stopPropagation()}>
-                                <InlineEditInput
-                                    autoFocus
-                                    busy={isRenameLoading}
-                                    defaultValue={title}
-                                    inputRef={editingInputRef}
-                                    onCancel={handleFlowRenameCancel}
-                                    onSave={handleFlowRenameSave}
-                                    placeholder="Flow title"
-                                />
-                            </div>
+                            <InlineEditInput
+                                autoFocus
+                                busy={isRenameLoading}
+                                defaultValue={title}
+                                inputRef={editingInputRef}
+                                onCancel={handleFlowRenameCancel}
+                                onSave={handleFlowRenameSave}
+                                placeholder="Flow title"
+                            />
                         );
                     }
 
@@ -634,6 +645,7 @@ function Flows() {
         <>
             {pageHeader}
             <div className="flex flex-col gap-4 p-4 pt-0">
+                <FlowHistoryOverview flows={flows} />
                 <DataTable<Flow>
                     columns={columns}
                     data={flows}
