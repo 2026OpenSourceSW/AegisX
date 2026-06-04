@@ -17,6 +17,7 @@ import Ollama from '@/components/icons/ollama';
 import OpenAi from '@/components/icons/open-ai';
 import Qwen from '@/components/icons/qwen';
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { EntityMetricOverview } from '@/components/shared/entity-metric-overview';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,6 +31,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { StatusCard } from '@/components/ui/status-card';
+import { summarizeProviders } from '@/features/supporting-pages/supporting-page-summary';
 import { ProviderType, useDeleteProviderMutation, useSettingsProvidersQuery } from '@/graphql/types';
 import { useTableState } from '@/hooks/use-table-state';
 import { formatDate } from '@/lib/utils/format';
@@ -352,6 +354,9 @@ function SettingsProviders() {
         [deletingProvider, handleProviderClone, handleProviderDeleteDialogOpen, handleProviderEdit, isDeleteLoading],
     );
 
+    const providers = data?.settingsProviders?.userDefined || [];
+    const providerSummary = summarizeProviders(providers);
+
     if (isLoading) {
         return (
             <div className="flex flex-col gap-4">
@@ -378,8 +383,6 @@ function SettingsProviders() {
         );
     }
 
-    const providers = data?.settingsProviders?.userDefined || [];
-
     if (providers.length === 0) {
         return (
             <div className="flex flex-col gap-4">
@@ -405,6 +408,29 @@ function SettingsProviders() {
     return (
         <div className="flex flex-col gap-4">
             <SettingsProvidersHeader />
+            <EntityMetricOverview
+                className="xl:grid-cols-3"
+                metrics={[
+                    {
+                        icon: <Settings className="size-4" />,
+                        label: 'Configured',
+                        tone: 'text-primary',
+                        value: providerSummary.total,
+                    },
+                    {
+                        icon: <DeepSeek className="size-4" />,
+                        label: 'DeepSeek',
+                        tone: 'text-blue-600',
+                        value: providerSummary.deepseek,
+                    },
+                    {
+                        icon: <Copy className="size-4" />,
+                        label: 'Provider types',
+                        tone: 'text-green-600',
+                        value: providerSummary.types,
+                    },
+                ]}
+            />
 
             {/* Delete Error Alert */}
             {(deleteError || deleteErrorMessage) && (

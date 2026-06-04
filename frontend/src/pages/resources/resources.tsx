@@ -2,6 +2,7 @@ import {
     ColumnsSettings,
     Copy,
     FileSymlink,
+    FileText,
     Folder,
     FolderPlus,
     FolderUp,
@@ -16,6 +17,7 @@ import { toast } from 'sonner';
 import type { OverwriteConflict } from '@/components/shared/overwrite';
 
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { EntityMetricOverview } from '@/components/shared/entity-metric-overview';
 import {
     bulkCopyAction,
     bulkCopyPathsAction,
@@ -58,6 +60,7 @@ import { useResourcesDelete } from '@/features/resources/use-resources-delete';
 import { useResourcesMove } from '@/features/resources/use-resources-move';
 import { useResourcesSearch } from '@/features/resources/use-resources-search';
 import { useResourcesUpload } from '@/features/resources/use-resources-upload';
+import { summarizeResources } from '@/features/supporting-pages/supporting-page-summary';
 import { useEffectAfterMount } from '@/hooks/use-effect-after-mount';
 import { useFilesDragAndDrop } from '@/hooks/use-files-drag-and-drop';
 import { usePageStorageKeys } from '@/hooks/use-page-storage-keys';
@@ -179,6 +182,7 @@ function Resources() {
     );
 
     const fileNodes = useMemo<FileNode[]>(() => resources.map(toFileNode), [resources]);
+    const resourceSummary = useMemo(() => summarizeResources(resources), [resources]);
 
     // Snapshot of every existing path in the library — drives the local
     // preflight for the drag-and-drop move workflow.
@@ -482,6 +486,32 @@ function Resources() {
                             <span className="text-sm font-medium">Drop files to upload</span>
                         </div>
                     </div>
+                )}
+
+                {hasResources && (
+                    <EntityMetricOverview
+                        className="xl:grid-cols-3"
+                        metrics={[
+                            {
+                                icon: <FileSymlink className="size-4" />,
+                                label: 'Total resources',
+                                tone: 'text-primary',
+                                value: resourceSummary.total,
+                            },
+                            {
+                                icon: <Folder className="size-4" />,
+                                label: 'Folders',
+                                tone: 'text-blue-600',
+                                value: resourceSummary.folders,
+                            },
+                            {
+                                icon: <FileText className="size-4" />,
+                                label: 'Files',
+                                tone: 'text-green-600',
+                                value: resourceSummary.files,
+                            },
+                        ]}
+                    />
                 )}
 
                 <div className="flex items-center gap-2">
