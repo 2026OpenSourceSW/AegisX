@@ -29,8 +29,19 @@ Run the generator script to create/update license reports (run from project root
 
 AegisX inherits the upstream PentAGI **MIT License**. See `../LICENSE` and `../NOTICE` for upstream and AegisX attribution.
 
-All third-party dependencies use MIT-compatible licenses:
-- MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0, 0BSD
+GitHub may show a sidebar label such as `License` with the detected name `MIT License`. That is expected GitHub UI wording, not a second license. The canonical source license text remains `../LICENSE`.
+
+Generated reports list the licenses detected for packaged dependencies. Review any GPL, LGPL, AGPL, proprietary, or commercial dependency before adding it to AegisX.
+
+Commonly acceptable licenses include:
+
+- MIT
+- Apache-2.0
+- BSD-2-Clause
+- BSD-3-Clause
+- ISC
+- MPL-2.0
+- 0BSD
 
 ## Docker Builds
 
