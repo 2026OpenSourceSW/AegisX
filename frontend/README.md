@@ -6,18 +6,18 @@ Some source identifiers, API types, and package paths still use upstream PentAGI
 
 ## Features
 
--   Real-time chat interface with AI agents
--   Multiple AI agent support and management
--   Real-time terminal output monitoring
--   Task and subtask tracking system
--   Integrated search capabilities
--   Vector store for knowledge base management
--   Screenshot capture and management
--   Dark/light theme support
--   Responsive design for mobile, tablet, and desktop
--   Authentication system with multiple providers
--   Real-time updates via GraphQL subscriptions
--   High-performance React components
+-   💬 Real-time chat interface with AI agents
+-   🤖 Multiple AI agent support and management
+-   📊 Real-time terminal output monitoring
+-   🎯 Task and subtask tracking system
+-   🔍 Integrated search capabilities
+-   📚 Vector store for knowledge base management
+-   📸 Screenshot capture and management
+-   🌓 Dark/light theme support
+-   📱 Responsive design for mobile, tablet, and desktop
+-   🔐 Authentication system with multiple providers
+-   🔄 Real-time updates via GraphQL subscriptions
+-   ⚡ High-performance React components
 
 ## Tech Stack
 
