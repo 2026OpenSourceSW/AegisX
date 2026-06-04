@@ -3723,7 +3723,7 @@ Copyright (c) 2025 PentAGI Development Team
 
 ### Third-Party Dependencies
 
-Generated dependency license reports live in [licenses/](licenses/). New dependencies must be reviewed before merge, especially GPL, LGPL, AGPL, proprietary, or commercial licenses.
+Generated dependency license reports are summarized in [licenses/THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md). New dependencies must be reviewed before merge, especially GPL, LGPL, AGPL, proprietary, or commercial licenses.
 
 ### Shannon Integration
 
