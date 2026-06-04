@@ -1,126 +1,110 @@
-name: "\U0001F41B Bug report"
-description: "Report a bug in PentAGI"
+name: "Bug report"
+description: "Report a reproducible problem in AegisX"
 title: "[Bug]: "
 labels: ["bug"]
-assignees:
-  - asdek
 body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to fill out this bug report! Please provide as much information as possible to help us diagnose and fix the issue.
+        Thank you for reporting a problem in AegisX. Provide enough detail for maintainers to reproduce the issue safely.
   - type: dropdown
     id: component
     attributes:
-      label: Affected Component
-      description: Which component of PentAGI is affected by this bug?
+      label: Affected component
+      description: Which part of AegisX is affected?
       multiple: true
       options:
-        - Core Services (Frontend UI/Backend API)
-        - AI Agents (Researcher/Developer/...)
-        - Security Tools Integration
-        - Memory System (Vector Store/Knowledge Base)
-        - Monitoring Stack Integration (Grafana/OpenTelemetry)
-        - Analytics Platform Integration (Langfuse)
-        - External Integrations (LLM/Search APIs)
-        - Documentation and User Experience
-        - Other (please specify in the description)
+        - Simple Mode
+        - Advanced Mode
+        - Shannon integration
+        - Frontend UI
+        - Backend API or services
+        - Flow, task, or report handling
+        - Docker, setup, or deployment
+        - CI or GitHub workflow
+        - Documentation
+        - Security/Safety
+        - Legal or third-party notices
+        - Other
     validations:
       required: true
   - type: textarea
+    id: description
     attributes:
       label: Describe the bug
-      description: Please provide a clear and concise description of the bug, including expected and actual behavior.
+      description: Include expected behavior, actual behavior, and any visible error.
       placeholder: |
         What happened:
-        - Actual behavior: When executing a penetration test against [target], the AI agent [behavior]
-        
-        What should happen:
-        - Expected behavior: The system should [expected outcome]
-        
-        Additional context:
-        - Task/Flow ID (if applicable): [ID from UI]
-        - Error messages: [any error messages from logs/UI]
+        -
+
+        What should have happened:
+        -
+
+        Error messages or UI state:
+        -
     validations:
       required: true
   - type: textarea
+    id: steps
     attributes:
-      label: Steps to Reproduce
-      description: Please provide detailed steps to reproduce the bug.
+      label: Steps to reproduce
+      description: Provide exact steps from a clean checkout or deployment.
       placeholder: |
-        1. Access PentAGI Web UI at [relative URL]
-        2. Start a new flow with parameters [...] or prompt [...]
-        3. Configure target system as [...]
-        4. Observe AI agent behavior in [...] or log from Langfuse
-        5. Error occurs when [...] or screenshot/export logs from Grafana
+        1. Check out branch or commit:
+        2. Start AegisX with:
+        3. Open:
+        4. Configure:
+        5. Observe:
     validations:
       required: true
   - type: textarea
+    id: environment
     attributes:
-      label: System Configuration
-      description: Please provide details about your setup
+      label: Environment
+      description: Provide setup details with secrets removed.
       placeholder: |
-        PentAGI Version: [e.g., latest from Docker Hub]
-        Deployment Type:
-        - [ ] Docker Compose
-        - [ ] Custom Deployment
-        
-        Environment:
-        - Docker Version: [output of `docker --version`]
-        - Docker Compose Version: [output of `docker compose version`]
-        - Host OS: [e.g., Ubuntu 22.04, macOS 14.0]
-        - Available Resources:
-          - RAM: [e.g., 8GB]
-          - CPU: [e.g., 4 cores]
-          - Disk Space: [e.g., 50GB free]
-        
-        Enabled Features:
-        - [ ] Langfuse Analytics
-        - [ ] Grafana Monitoring
-        - [ ] Custom LLM Server
-        
-        Active Integrations:
-        - LLM Provider: [OpenAI/Anthropic/Custom]
-        - Search Systems: [Google/DuckDuckGo/Tavily/Traversaal/Perplexity]
+        AegisX branch or commit:
+        Deployment type: Docker Compose / custom / development
+        Host OS:
+        Docker version:
+        Docker Compose version:
+        Browser:
+        LLM provider:
+        Enabled integrations:
+        Shannon enabled: yes / no
     validations:
       required: true
   - type: textarea
+    id: logs
     attributes:
-      label: Logs and Artifacts
-      description: |
-        Please provide relevant logs and artifacts. You can find logs using:
-        - Docker logs: `docker logs pentagi`
-        - Grafana dashboards (if enabled)
-        - Langfuse traces (if enabled)
-        - Browser console logs (for UI issues)
+      label: Logs and artifacts
+      description: Paste relevant logs, browser console output, screenshots, or links to artifacts. Remove secrets and sensitive target data.
       placeholder: |
         ```
         Paste logs here
         ```
-        
-        For large logs, please use GitHub Gist and provide the link.
-    validations:
-      required: false
-  - type: textarea
-    attributes:
-      label: Screenshots or Recordings
-      description: |
-        If applicable, add screenshots or recordings to help explain your problem.
-        - For UI issues: Browser screenshots/recordings
-        - For agent behavior: Langfuse trace screenshots
-        - For monitoring: Grafana dashboard screenshots
-      placeholder: Drag and drop images/videos here, or paste links to external storage.
     validations:
       required: false
   - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      description: Required for reports involving scans, targets, exploits, or Shannon integration.
+      options:
+        - label: I own the target or have permission to test it, or this report does not involve a target.
+          required: true
+        - label: I removed secrets, credentials, tokens, private source code, and sensitive target data from this report.
+          required: true
+        - label: If this involves scanning, the target is non-production or explicitly authorized for this test.
+          required: true
+  - type: checkboxes
     id: verification
     attributes:
-      label: Verification
-      description: Please verify the following before submitting
+      label: Pre-submission checks
       options:
-        - label: I have checked that this issue hasn't been already reported
-        - label: I have provided all relevant configuration files (with sensitive data removed)
-        - label: I have included relevant logs and error messages
-        - label: I am running the latest version of PentAGI
-    validations:
-      required: true
+        - label: I searched existing issues before opening this report.
+          required: true
+        - label: I included exact reproduction steps.
+          required: true
+        - label: I included relevant logs or explained why logs are not available.
+          required: true

@@ -1,176 +1,175 @@
 # Saved Replies
 
-These are standardized responses for the PentAGI Development Team to use when responding to Issues and Pull Requests. Using these templates helps maintain consistency in our communications and saves time.
+These are suggested saved replies for AegisX maintainers. GitHub saved replies are personal account settings, so each maintainer can copy the snippets they use most often from <https://github.com/settings/replies>.
 
-Since GitHub currently does not support repository-wide saved replies, team members should maintain these individually. All responses are versioned for easier updates.
-
-While these are templates, please customize them to fit the specific context and:
-- Welcome new contributors
-- Thank them for their contribution
-- Provide context for your response
-- Outline next steps
-
-You can add these saved replies to [your personal GitHub account here](https://github.com/settings/replies).
+Customize each reply before posting. Add concrete file paths, commands, screenshots, logs, or reviewer names when they are relevant.
 
 ## Issue Responses
 
-### Issue: Already Fixed (v1)
-```
-Thank you for reporting this issue! This has been resolved in a recent release. Please update to the latest version (see our [releases page](https://github.com/vxcontrol/pentagi/releases)) and verify if the issue persists.
-
-If you continue experiencing problems after updating, please:
-1. Check your configuration against our documentation
-2. Provide logs from both PentAGI and monitoring systems (Grafana/Langfuse)
-3. Include details about your environment and enabled features
-```
-
 ### Issue: Need More Information (v1)
-```
-Thank you for your report! To help us better understand and address your issue, please provide additional information:
 
-1. PentAGI version and deployment method (Docker Compose/Custom)
-2. Relevant logs from:
-   - Docker containers
-   - Grafana dashboards (if enabled)
-   - Langfuse traces (if enabled)
-3. Steps to reproduce the issue
-4. Expected vs actual behavior
+```text
+Thank you for the report. We need a little more information before we can investigate this.
 
-Please update your issue using our bug report template for consistency.
+Please add:
+
+1. The affected AegisX area: Simple Mode, Advanced Mode, Shannon integration, frontend, backend/API, Docker/setup, CI/workflows, or documentation.
+2. Exact steps to reproduce the issue.
+3. Expected behavior and actual behavior.
+4. Environment details, including OS, Docker version, deployment method, and enabled integrations.
+5. Relevant logs, screenshots, or exported artifacts with sensitive data removed.
+
+After you update the issue, we can triage it against `develop`.
 ```
 
 ### Issue: Cannot Reproduce (v1)
-```
-Thank you for reporting this issue! Unfortunately, I cannot reproduce the problem with the provided information. To help us investigate:
 
-1. Verify you're using the latest version
-2. Provide your complete environment configuration
-3. Share relevant logs and monitoring data
-4. Include step-by-step reproduction instructions
-5. Specify which AI agents were involved (Researcher/Developer/Executor)
+```text
+Thank you for the report. I could not reproduce this with the current information.
 
-Please update your issue with these details so we can better assist you.
+Please update the issue with:
+
+1. A minimal reproduction path from a clean checkout or deployment.
+2. Exact configuration values that affect the behavior, with secrets removed.
+3. Logs or screenshots showing the failure.
+4. Whether the behavior occurs on `main`, `develop`, or a specific branch.
+
+We can reopen active investigation once the reproduction is clear.
 ```
 
 ### Issue: Expected Behavior (v1)
-```
-Thank you for your report! This appears to be the expected behavior because:
 
-[Explanation of why this is working as designed]
+```text
+Thank you for checking this. Based on the current design, this appears to be expected behavior:
 
-If you believe this behavior should be different, please:
-1. Describe your use case in detail
-2. Explain why the current behavior doesn't meet your needs
-3. Suggest alternative behavior that would work better
+[explain the design decision]
 
-We're always open to improving PentAGI's functionality.
+If this behavior does not fit your use case, please open or update an enhancement request with the workflow you expected, why it matters, and any safety or license implications.
 ```
 
-### Issue: Missing Template (v1)
+### Issue: Upstream PentAGI Scope (v1)
+
+```text
+Thank you for the report. This appears to be about upstream PentAGI behavior that AegisX has not modified.
+
+For upstream-only behavior, please check the PentAGI project. For AegisX-specific behavior, please update this issue with the AegisX change, branch, or workflow that causes the problem.
+
+We will keep this issue focused on AegisX-specific work.
 ```
-Thank you for reporting this! To help us process your issue efficiently, please use our issue templates:
 
-- [Bug Report Template](https://github.com/vxcontrol/pentagi/blob/master/.github/ISSUE_TEMPLATE/1-bug-report.md) for problems
-- [Enhancement Template](https://github.com/vxcontrol/pentagi/blob/master/.github/ISSUE_TEMPLATE/2-enhancement.md) for suggestions
+### Issue: Security And Authorization Reminder (v1)
 
-Please edit your issue to include the template information. This helps ensure we have all necessary details to assist you.
+```text
+Thanks for raising this. AegisX is intended only for authorized security testing.
+
+Please confirm that:
+
+1. You own the target or have written permission to test it.
+2. The target is non-production unless a maintainer explicitly approved a production-safe reproduction.
+3. Logs and screenshots do not expose secrets, credentials, tokens, private source code, or sensitive target data.
+
+After that confirmation, we can continue triage.
+```
+
+### Issue: Duplicate (v1)
+
+```text
+Thank you for the report. This appears to duplicate #[issue-number].
+
+Please follow the existing issue for updates. If your case has a different reproduction path or affects a different AegisX area, add those details there so we can keep the discussion together.
 ```
 
 ### Issue: PR Welcome (v1)
-```
-Thank you for raising this issue! We welcome contributions from the community.
 
-If you'd like to implement this yourself:
-1. Check our [contribution guidelines](CONTRIBUTING.md)
-2. Review the architecture documentation
-3. Consider security implications (especially for AI agent modifications)
-4. Include tests and documentation
-5. Update monitoring/analytics as needed
+```text
+Thank you for raising this. A focused PR would be welcome.
 
-Feel free to ask questions if you need guidance. We're here to help!
+Please follow `CONTRIBUTING.md`:
+
+1. Branch from `develop`.
+2. Keep the PR to one coherent unit.
+3. Include tests or verification evidence.
+4. Include manual QA evidence for user-visible behavior.
+5. Document security, safety, license, and third-party impacts.
+
+Open the PR against `develop` when ready.
 ```
 
 ## PR Responses
 
-### PR: Ready to Merge (v1)
-```
-Excellent work! This PR meets our quality standards and I'll proceed with merging it.
+### PR: Ready To Merge (v1)
 
-If you're interested in further contributions, check our:
-- [Help Wanted Issues](https://github.com/vxcontrol/pentagi/labels/help-wanted)
-- [Good First Issues](https://github.com/vxcontrol/pentagi/labels/good-first-issue)
+```text
+This PR has the required scope, review, and verification evidence. I am merging it into `develop`.
 
-Thank you for improving PentAGI!
+After merge, please delete the source branch unless follow-up work still depends on it.
 ```
 
 ### PR: Needs Work (v1)
-```
-Thank you for your contribution! A few items need attention before we can merge:
 
-[List specific items that need addressing]
+```text
+Thank you for the contribution. This needs updates before merge:
 
-Common requirements:
-- Tests for new functionality
-- Documentation updates
-- Security considerations
-- Performance impact assessment
-- Monitoring/analytics integration
+[list required changes]
 
-Please update your PR addressing these points. Let us know if you need any clarification.
+Please update the PR and include the new verification evidence in the PR body.
 ```
 
-### PR: Missing Template (v1)
+### PR: Missing Template Details (v1)
+
+```text
+Thank you for the contribution. Please update the PR body using the repository PR template.
+
+We need:
+
+1. Problem and solution summary.
+2. Target branch and scope confirmation.
+3. Exact verification commands and results.
+4. Manual QA evidence for user-visible behavior, when applicable.
+5. Security/safety notes.
+6. License and third-party impact notes.
+
+This keeps review consistent with `CONTRIBUTING.md`.
 ```
-Thank you for your contribution! Please update your PR to use our [PR template](https://github.com/vxcontrol/pentagi/blob/master/.github/PULL_REQUEST_TEMPLATE.md).
 
-The template helps ensure we have:
-- Clear description of changes
-- Testing information
-- Security considerations
-- Documentation updates
-- Deployment notes
+### PR: Wrong Base Branch (v1)
 
-This helps us review your changes effectively.
+```text
+Thank you for the contribution. Please retarget this PR to `develop`.
+
+AegisX uses this default flow:
+
+`main <- develop <- docs/* | feature/* | fix/* | chore/*`
+
+Changes reach `main` later through a reviewed `develop -> main` promotion PR.
 ```
 
-### PR: Missing Issue (v1)
-```
-Thank you for your contribution! We require an associated issue for each PR to:
-- Discuss approach before implementation
-- Track related changes
-- Maintain clear project history
+### PR: Needs Issue Link (v1)
 
-Please:
-1. [Create an issue](https://github.com/vxcontrol/pentagi/issues/new/choose)
-2. Link it to this PR
-3. Update the PR description with the issue reference
+```text
+Thank you for the contribution. Please link this PR to an issue or explain why an issue is not needed.
 
-This helps us maintain good project organization.
+Linked issues help us keep design decisions, review history, and follow-up work traceable.
 ```
 
 ### PR: Inactive (v1)
-```
-This PR has been inactive for a while. To keep our review process efficient:
 
-1. If you're still working on this:
-   - Let us know your timeline
-   - Update with latest main branch
-   - Address any existing feedback
+```text
+This PR has been inactive for a while.
 
-2. If you're no longer working on this:
-   - We can close it
-   - Someone else can pick it up
-
-Please let us know your preference within the next week.
+Please let us know whether you plan to continue. If so, update the branch with the latest `develop` and respond to the open review comments. If not, we can close this PR and reopen the work later when someone is ready to continue.
 ```
 
-### General: Need Help (v1)
-```
-I need additional expertise on this. Pinging:
-- @asdek for technical review
-- @security-team for security implications
-- @ai-team for AI agent behavior
-- @infra-team for infrastructure changes
+### PR: License Or Third-Party Review Needed (v1)
 
-[Specific questions or concerns that need addressing]
+```text
+Thank you for the contribution. This PR changes dependencies, licensing, attribution, or third-party integration behavior, so it needs an explicit review before merge.
+
+Please add:
+
+1. Dependency names and versions.
+2. License identifiers.
+3. Whether source code was copied into this repository.
+4. Whether `THIRD_PARTY_NOTICES.md`, `NOTICE`, or generated license reports need updates.
+5. Any Shannon or upstream PentAGI attribution impact.
 ```
