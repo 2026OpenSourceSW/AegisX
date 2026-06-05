@@ -29,7 +29,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
             return children;
         }
 
-        const returnUrl = getSafeReturnUrl(searchParams.get('returnUrl'), '/flows/new');
+        const returnUrl = getSafeReturnUrl(searchParams.get('returnUrl'), '/dashboard');
 
         return (
             <Navigate

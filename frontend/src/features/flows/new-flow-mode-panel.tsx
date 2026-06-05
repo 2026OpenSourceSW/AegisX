@@ -27,15 +27,15 @@ interface ModeCardProps {
     title: string;
 }
 
-const simpleHighlights = ['Guided objective prompt', 'Low-friction launch', 'Report-focused output'];
-const expertHighlights = ['Automation or Assistant', 'Provider and context controls', 'Agent execution options'];
+const simpleHighlights = ['목적 기반 안내 프롬프트', '빠른 점검 시작', '보고서 중심 결과'];
+const expertHighlights = ['Automation 또는 Assistant', 'Provider와 자료 제어', 'Agent 실행 옵션'];
 
 export function FlowModeSelector({ disabled, mode, onModeChange }: FlowModeSelectorProps) {
     return (
         <div className="grid min-w-0 gap-4 lg:grid-cols-2">
             <ModeCard
-                cta="Use Simple Mode"
-                description="Guided checks for authorized targets"
+                cta="Simple Mode 사용"
+                description="승인된 대상을 쉽게 점검"
                 disabled={disabled}
                 highlights={simpleHighlights}
                 icon={<Shield className="size-6" />}
@@ -45,8 +45,8 @@ export function FlowModeSelector({ disabled, mode, onModeChange }: FlowModeSelec
                 title="Simple Mode"
             />
             <ModeCard
-                cta="Open Expert Mode"
-                description="Full AegisX controls for advanced runs"
+                cta="Expert Mode 열기"
+                description="고급 실행을 위한 전체 제어"
                 disabled={disabled}
                 highlights={expertHighlights}
                 icon={<Terminal className="size-6" />}
@@ -112,20 +112,20 @@ function ModeCard({ cta, description, disabled, highlights, icon, isSelected, mo
 
 const simpleSteps = [
     {
-        description: 'Name the owned asset, scope, and expected security outcome.',
-        title: 'Authorized target',
+        description: '소유한 자산, 점검 범위, 기대하는 보안 결과를 지정합니다.',
+        title: '승인된 대상',
     },
     {
-        description: 'Frame the run as exposure, web app, admin surface, or broad baseline review.',
-        title: 'Scenario',
+        description: '외부 노출, 웹 앱, 관리자 화면, 기본 점검 중 목적을 선택합니다.',
+        title: '시나리오',
     },
     {
-        description: 'Confirm the prompt, provider, resources, and template context before launch.',
-        title: 'Review launch',
+        description: '실행 전 프롬프트, provider, 자료, 템플릿 맥락을 확인합니다.',
+        title: '실행 전 확인',
     },
     {
-        description: 'Track execution in the flow console, then read the generated report.',
-        title: 'Progress and report',
+        description: '실행 흐름을 추적하고 생성된 보고서를 확인합니다.',
+        title: '진행 및 보고서',
     },
 ];
 
@@ -141,29 +141,29 @@ export function ExpertFlowBrief({ flowType }: ExpertFlowBriefProps) {
                     <Badge variant="secondary">Expert Mode</Badge>
                     <span className="text-muted-foreground text-xs font-medium capitalize">{flowType}</span>
                 </div>
-                <CardTitle>Full control surface</CardTitle>
-                <CardDescription>Use the existing AegisX run controls without hiding advanced choices.</CardDescription>
+                <CardTitle>전체 실행 제어</CardTitle>
+                <CardDescription>고급 선택지를 숨기지 않고 기존 AegisX 실행 기능을 그대로 사용합니다.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
                 <div className="bg-muted/30 flex items-start gap-3 rounded-lg border p-3">
                     <Terminal className="text-primary mt-0.5 size-4 shrink-0" />
                     <div>
-                        <p className="font-medium">Automation or Assistant</p>
-                        <p className="text-muted-foreground">Switch execution style before launching the flow.</p>
+                        <p className="font-medium">Automation 또는 Assistant</p>
+                        <p className="text-muted-foreground">점검 흐름을 시작하기 전에 실행 방식을 선택합니다.</p>
                     </div>
                 </div>
                 <div className="bg-muted/30 flex items-start gap-3 rounded-lg border p-3">
                     <FileText className="text-primary mt-0.5 size-4 shrink-0" />
                     <div>
-                        <p className="font-medium">Templates and resources</p>
-                        <p className="text-muted-foreground">Attach library context through the existing picker.</p>
+                        <p className="font-medium">템플릿 및 자료</p>
+                        <p className="text-muted-foreground">기존 피커로 라이브러리 맥락과 첨부 자료를 연결합니다.</p>
                     </div>
                 </div>
                 <div className="bg-muted/30 flex items-start gap-3 rounded-lg border p-3">
                     <Clock className="text-primary mt-0.5 size-4 shrink-0" />
                     <div>
-                        <p className="font-medium">Detailed execution path</p>
-                        <p className="text-muted-foreground">Continue into flow tabs, logs, dashboard, and reports.</p>
+                        <p className="font-medium">상세 실행 경로</p>
+                        <p className="text-muted-foreground">Flow 탭, 로그, 대시보드, 보고서로 이어서 분석합니다.</p>
                     </div>
                 </div>
             </CardContent>
@@ -179,10 +179,8 @@ export function SimpleFlowBrief() {
                     <Badge variant="blue">Simple Mode</Badge>
                     <span className="text-muted-foreground text-xs font-medium">Step 1 of 4</span>
                 </div>
-                <CardTitle>Guided security check</CardTitle>
-                <CardDescription>
-                    Follow the guided setup order without losing provider or context controls.
-                </CardDescription>
+                <CardTitle>안내형 보안 점검</CardTitle>
+                <CardDescription>Provider와 자료 제어는 유지하면서 안내 순서에 따라 점검을 준비합니다.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
                 <Progress

@@ -4,13 +4,14 @@ import {
     Clock,
     FileText,
     Folder,
-    GitFork,
+    History,
     KeyRound,
     LayoutDashboard,
     LibraryBig,
     LogOut,
     Monitor,
     Moon,
+    PlayCircle,
     Plus,
     Settings,
     Settings2,
@@ -67,6 +68,7 @@ export function MainSidebar() {
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const isDashboardActive = useMatch('/dashboard');
     const isFlowsActive = useMatch('/flows/*');
+    const isNewFlowActive = useMatch('/flows/new');
     const isTemplatesActive = useMatch('/templates/*');
     const isKnowledgesActive = useMatch('/knowledges/*');
     const isResourcesActive = useMatch('/resources/*');
@@ -124,36 +126,36 @@ export function MainSidebar() {
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
-                                    className="bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90 hover:text-sidebar-primary-foreground data-[active=true]:bg-sidebar-primary data-[active=true]:text-sidebar-primary-foreground shadow-sm"
-                                    tooltip="New Flow"
-                                >
-                                    <Link to="/flows/new">
-                                        <Plus />
-                                        New Flow
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
-                            <SidebarMenuItem>
-                                <SidebarMenuButton
-                                    asChild
                                     isActive={!!isDashboardActive}
-                                    tooltip="Dashboard"
+                                    tooltip="대시보드"
                                 >
                                     <Link to="/dashboard">
                                         <LayoutDashboard />
-                                        Dashboard
+                                        대시보드
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
-                                    isActive={!!isFlowsActive}
-                                    tooltip="Flows"
+                                    isActive={!!isNewFlowActive}
+                                    tooltip="점검 시작"
+                                >
+                                    <Link to="/flows/new">
+                                        <PlayCircle />
+                                        점검 시작
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={!!isFlowsActive && !isNewFlowActive}
+                                    tooltip="기록"
                                 >
                                     <Link to="/flows">
-                                        <GitFork />
-                                        Flows
+                                        <History />
+                                        기록
                                     </Link>
                                 </SidebarMenuButton>
                                 <SidebarMenuAction
@@ -170,11 +172,11 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isTemplatesActive}
-                                    tooltip="Templates"
+                                    tooltip="보고서 템플릿"
                                 >
                                     <Link to="/templates">
                                         <FileText />
-                                        Templates
+                                        보고서 템플릿
                                     </Link>
                                 </SidebarMenuButton>
                                 <SidebarMenuAction
@@ -191,18 +193,18 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isResourcesActive}
-                                    tooltip="Resources"
+                                    tooltip="자료"
                                 >
                                     <Link to="/resources">
                                         <Folder />
-                                        Resources
+                                        자료
                                     </Link>
                                 </SidebarMenuButton>
                                 <SidebarMenuAction
                                     className="data-[state=open]:bg-accent rounded-sm"
                                     onClick={resourcesUpload.openFilePicker}
                                     showOnHover
-                                    title="Upload file"
+                                    title="자료 업로드"
                                     type="button"
                                 >
                                     <Plus />
@@ -212,11 +214,11 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isKnowledgesActive}
-                                    tooltip="Knowledges"
+                                    tooltip="지식"
                                 >
                                     <Link to="/knowledges">
                                         <LibraryBig />
-                                        Knowledges
+                                        지식
                                     </Link>
                                 </SidebarMenuButton>
                                 <SidebarMenuAction
@@ -237,7 +239,7 @@ export function MainSidebar() {
                     <SidebarGroup>
                         <SidebarGroupLabel className="flex items-center gap-2">
                             <Clock />
-                            Recent Flows
+                            최근 점검
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
@@ -259,7 +261,7 @@ export function MainSidebar() {
                     <SidebarGroup>
                         <SidebarGroupLabel className="flex items-center gap-2">
                             <Star />
-                            Favorite Flows
+                            즐겨찾기 점검
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
@@ -283,11 +285,11 @@ export function MainSidebar() {
                         <SidebarMenuButton
                             asChild
                             isActive={!!isSettingsActive}
-                            tooltip="Settings"
+                            tooltip="설정"
                         >
                             <Link to="/settings">
                                 <Settings />
-                                Settings
+                                설정
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -338,7 +340,7 @@ export function MainSidebar() {
                                     onSelect={(event) => event.preventDefault()}
                                 >
                                     <Settings2 />
-                                    Theme
+                                    테마
                                     <Tabs
                                         className="-my-1.5 -mr-2 ml-auto"
                                         onValueChange={(value) => setTheme(value as Theme)}
@@ -374,14 +376,14 @@ export function MainSidebar() {
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem onClick={() => setIsPasswordModalOpen(true)}>
                                             <KeyRound className="mr-2 size-4" />
-                                            Change Password
+                                            비밀번호 변경
                                         </DropdownMenuItem>
                                     </>
                                 )}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => logout()}>
                                     <LogOut className="mr-2 size-4" />
-                                    Log out
+                                    로그아웃
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -407,7 +409,7 @@ export function MainSidebar() {
             >
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Change Password</DialogTitle>
+                        <DialogTitle>비밀번호 변경</DialogTitle>
                     </DialogHeader>
                     <PasswordChangeForm
                         onCancel={() => setIsPasswordModalOpen(false)}
