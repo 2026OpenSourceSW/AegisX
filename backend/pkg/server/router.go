@@ -200,6 +200,7 @@ func NewRouter(
 	tokenService := services.NewTokenService(orm, cfg.CookieSigningSalt, tokenCache, subscriptions)
 	knowledgeService := services.NewKnowledgeService(orm, knowledgeStore)
 	anonymizerService := services.NewAnonymizerService(textReplacer)
+	shannonService := services.NewShannonService(orm, cfg, subscriptions)
 	graphqlService := services.NewGraphqlService(
 		db, cfg, baseURL, cfg.CorsOrigins, tokenCache, providers, controller, subscriptions, knowledgeStore, textReplacer,
 	)
@@ -298,6 +299,7 @@ func NewRouter(
 		setPromptsGroup(privateGroup, promptService)
 		setAnonymizeGroup(privateGroup, anonymizerService)
 		setAnalyticsGroup(privateGroup, analyticsService)
+		setShannonGroup(privateGroup, shannonService)
 	}
 
 	privateUserGroup := api.Group("/")
@@ -472,6 +474,13 @@ func setResourcesGroup(parent *gin.RouterGroup, svc *services.ResourceService) {
 		rg.POST("/copy", svc.CopyResource)
 		rg.DELETE("/", svc.DeleteResource)
 		rg.GET("/download", svc.DownloadResource)
+	}
+}
+
+func setShannonGroup(parent *gin.RouterGroup, svc *services.ShannonService) {
+	shannonGroup := parent.Group("/flows/:flowID/shannon")
+	{
+		shannonGroup.POST("/scan", svc.RunFlowShannonScan)
 	}
 }
 

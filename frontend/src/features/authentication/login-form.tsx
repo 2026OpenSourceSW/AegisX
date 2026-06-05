@@ -9,6 +9,7 @@ import type { OAuthProvider } from '@/providers/user-provider';
 import Github from '@/components/icons/github';
 import Google from '@/components/icons/google';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { FormSubmitButton } from '@/components/ui/form-submit-button';
 import { Input } from '@/components/ui/input';
@@ -20,21 +21,21 @@ const formSchema = z.object({
     mail: z
         .string()
         .min(1, {
-            message: 'Login is required',
+            message: '로그인을 입력하세요',
         })
         .refine(
             (value) => z.string().email().safeParse(value).success || ['admin', 'demo'].includes(value.toLowerCase()),
             {
-                message: 'Invalid login',
+                message: '올바른 로그인 형식이 아닙니다',
             },
         ),
     password: z.string().min(1, {
-        message: 'Password is required',
+        message: '비밀번호를 입력하세요',
     }),
 });
 
-const errorMessage = 'Invalid login or password';
-const errorProviderMessage = 'Authentication failed';
+const errorMessage = '로그인 정보가 올바르지 않습니다';
+const errorProviderMessage = '외부 인증에 실패했습니다';
 
 interface AuthProviderAction {
     icon: React.ReactNode;
@@ -60,7 +61,7 @@ interface LoginFormProps {
     returnUrl?: string;
 }
 
-function LoginForm({ providers, returnUrl = '/flows/new' }: LoginFormProps) {
+function LoginForm({ providers, returnUrl = '/dashboard' }: LoginFormProps) {
     const form = useForm<z.infer<typeof formSchema>>({
         defaultValues: {
             mail: '',
@@ -154,28 +155,33 @@ function LoginForm({ providers, returnUrl = '/flows/new' }: LoginFormProps) {
 
     if (shouldShowPasswordChange) {
         return (
-            <div className="mx-auto flex w-[350px] flex-col gap-6">
-                <h1 className="text-center text-3xl font-bold">Update Password</h1>
-                <p className="text-muted-foreground text-center text-sm">
-                    You need to change your password before continuing.
-                </p>
+            <Card className="mx-auto flex w-full max-w-md flex-col gap-6 rounded-xl p-6 shadow-[0px_4px_12px_rgba(26,43,75,0.05)]">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold">비밀번호 변경</h1>
+                    <p className="text-muted-foreground mt-2 text-sm leading-6">
+                        계속 진행하기 전에 새 비밀번호를 설정해야 합니다.
+                    </p>
+                </div>
                 <PasswordChangeForm
                     isModal={false}
                     onSkip={handleSkipPasswordChange}
                     onSuccess={handlePasswordChangeSuccess}
                     showSkip={true}
                 />
-            </div>
+            </Card>
         );
     }
 
     return (
         <Form {...form}>
             <form
-                className="mx-auto grid w-[350px] gap-8"
+                className="bg-card mx-auto grid w-full max-w-md gap-7 rounded-xl border p-6 shadow-[0px_4px_12px_rgba(26,43,75,0.05)] md:p-8"
                 onSubmit={form.handleSubmit(handleSubmit)}
             >
-                <h1 className="text-center text-3xl font-bold">PentAGI</h1>
+                <div className="grid gap-2 text-center">
+                    <h1 className="text-3xl font-bold text-[#1A2B4B]">AegisX</h1>
+                    <p className="text-muted-foreground text-sm leading-6">보안 점검 워크스페이스에 로그인하세요.</p>
+                </div>
 
                 {providers?.length > 0 && (
                     <>
@@ -184,6 +190,7 @@ function LoginForm({ providers, returnUrl = '/flows/new' }: LoginFormProps) {
                                 .filter((provider) => providers.includes(provider.id))
                                 .map((provider) => (
                                     <Button
+                                        className="h-auto min-h-11 text-center whitespace-normal"
                                         disabled={isSubmitting || form.formState.isSubmitting}
                                         key={provider.id}
                                         onClick={() => handleProviderLogin(provider.id)}
@@ -201,7 +208,7 @@ function LoginForm({ providers, returnUrl = '/flows/new' }: LoginFormProps) {
                                 <div className="w-full border-t border-gray-300" />
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="bg-background px-2">or</span>
+                                <span className="bg-card text-muted-foreground px-2">또는</span>
                             </div>
                         </div>
                     </>
@@ -213,12 +220,13 @@ function LoginForm({ providers, returnUrl = '/flows/new' }: LoginFormProps) {
                         name="mail"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Login</FormLabel>
+                                <FormLabel>로그인</FormLabel>
                                 <FormControl>
                                     <Input
                                         {...field}
                                         autoFocus
-                                        placeholder="Enter your email"
+                                        className="h-11"
+                                        placeholder="이메일 또는 관리자 계정"
                                     />
                                 </FormControl>
                                 <FormMessage />
@@ -231,11 +239,12 @@ function LoginForm({ providers, returnUrl = '/flows/new' }: LoginFormProps) {
                         name="password"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Password</FormLabel>
+                                <FormLabel>비밀번호</FormLabel>
                                 <FormControl>
                                     <Input
                                         {...field}
-                                        placeholder="Enter your password"
+                                        className="h-11"
+                                        placeholder="비밀번호 입력"
                                         type="password"
                                     />
                                 </FormControl>
@@ -244,8 +253,8 @@ function LoginForm({ providers, returnUrl = '/flows/new' }: LoginFormProps) {
                         )}
                     />
 
-                    <FormSubmitButton className="w-full">
-                        <span>Sign in</span>
+                    <FormSubmitButton className="h-11 w-full font-bold whitespace-normal">
+                        <span>로그인</span>
                     </FormSubmitButton>
 
                     {error && <FormMessage>{error}</FormMessage>}

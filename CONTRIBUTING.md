@@ -1,300 +1,250 @@
-# 기여 가이드 (Contributing Guide)
+# AegisX 기여 가이드
 
-이 문서는 AgiesX 프로젝트의 Git 워크플로우, 브랜치 전략, 커밋 규칙을 정의합니다.
-원활한 협업을 위해 아래 규칙을 준수해 주세요.
+이 문서는 AegisX 팀원이 작업할 때 따라야 하는 Git 브랜치 전략, Pull Request 규칙, 커밋 메시지, 라이선스 확인 기준을 정리합니다.
+
+AegisX는 **PentAGI를 기반으로 한 fork 프로젝트**입니다. 기존 PentAGI의 Advanced Mode 구조를 유지하면서, 보안 전문 인력이 없는 팀도 이해하기 쉬운 Simple Mode와 Advanced Mode의 Shannon white-box scan 보조 기능을 실험합니다.
+
+> 핵심 원칙: 작업은 작게 나누고, `develop`에 PR로 합치고, 검증 근거를 남깁니다.
 
 ---
 
 ## 목차
 
-1. [브랜치 전략](#1-브랜치-전략)
-2. [작업 흐름](#2-작업-흐름)
-3. [커밋 메시지 규칙](#3-커밋-메시지-규칙)
-4. [Pull Request 가이드](#4-pull-request-가이드)
-5. [브랜치 보호 규칙](#5-브랜치-보호-규칙)
-6. [라이선스 준수 가이드](#6-라이선스-준수-가이드)
+1. [🌿 브랜치 전략](#1--브랜치-전략)
+2. [🔄 작업 흐름](#2--작업-흐름)
+3. [✍️ 커밋 메시지 규칙](#3-️-커밋-메시지-규칙)
+4. [✅ Pull Request 가이드](#4--pull-request-가이드)
+5. [🛡️ 브랜치 보호 규칙](#5-️-브랜치-보호-규칙)
+6. [📄 라이선스 준수 가이드](#6--라이선스-준수-가이드)
+7. [💬 문의](#7--문의)
 
 ---
 
-## 1. 브랜치 전략
+## 1. 🌿 브랜치 전략
 
-### 브랜치 구조
+### 기본 구조
 
-| 브랜치 | 역할 | 보호 수준 |
-|--------|------|-----------|
-| `main` | 최종 배포/안정 버전 | 🔒 보호됨 |
-| `develop` | 개발 통합 브랜치 |  -  |
-| `feature/*` | 새 기능 개발 |  -  |
-| `fix/*` | 버그 수정 |  -  |
-| `docs/*` | 문서 작업 |  -  |
-| `refactor/*` | 코드 리팩토링 |  -  |
-| `chore/*` | 기타 작업 (빌드, 설정 등) |  -  |
-
-### 네이밍 규칙
-
-브랜치 이름은 **영어 소문자, 숫자, 하이픈(`-`)**만 사용합니다.
-
-```
-feature/기능명
-fix/버그명
-docs/문서명
-refactor/정리명
-chore/기타작업
+```text
+main ← develop ← docs/* | feature/* | fix/* | chore/*
 ```
 
-**예시:**
-- `feature/ui-guide`
-- `fix/login-error`
-- `docs/readme-update`
-- `refactor/auth-cleanup`
-- `chore/update-dependencies`
+| 브랜치 | 역할 | 규칙 |
+| --- | --- | --- |
+| `main` | 최종 안정/default 브랜치 | PR로만 반영 |
+| `develop` | 개발 통합 브랜치 | PR로만 반영 |
+| `feature/*` | 새 기능 개발 | `develop`에서 생성 |
+| `fix/*` | 버그 수정 | `develop`에서 생성 |
+| `docs/*` | 문서, GitHub 템플릿 작업 | `develop`에서 생성 |
+| `chore/*` | CI, 설정, 빌드, 의존성 작업 | `develop`에서 생성 |
+
+### 브랜치 이름 규칙
+
+- 영어 소문자, 숫자, 하이픈(`-`), 슬래시(`/`)만 사용합니다.
+- 한 PR은 하나의 목적만 담습니다.
+
+예시:
+
+```text
+feature/simple-mode-risk-cards
+fix/shannon-scan-validation
+docs/korean-contributing-guide
+chore/github-workflow-hygiene
+```
 
 ---
 
-## 2. 작업 흐름
+## 2. 🔄 작업 흐름
 
-### 기본 워크플로우
-
-```
-main ← develop ← feature/* (또는 fix/*, docs/* 등)
-```
-
-### 단계별 가이드
-
-#### Step 1: 저장소 클론 (최초 1회)
+### Step 1. 저장소 클론
 
 ```bash
-git clone https://github.com/AISWopensource/AgiesX.git
-cd AgiesX
+git clone https://github.com/2026OpenSourceSW/AegisX.git
+cd AegisX
 ```
 
-#### Step 2: develop 브랜치에서 작업 브랜치 생성
-
-작업 시작 전에는 반드시 `develop` 브랜치의 최신 변경사항을 반영한 뒤,
-새 작업 브랜치를 생성합니다.
+### Step 2. 최신 `develop`에서 작업 브랜치 생성
 
 ```bash
 git checkout develop
 git pull origin develop
-git checkout -b feature/ui-guide
+git checkout -b docs/korean-contributing-guide
 ```
 
-#### Step 2-1: 작업 중 최신 develop 반영
+### Step 3. 작업 중 `develop` 변경사항 반영
 
-작업 중 다른 팀원의 변경사항이 `develop`에 머지되었다면,
-아래 명령으로 현재 작업 브랜치에 최신 develop을 반영합니다.
+다른 팀원의 PR이 먼저 merge되었다면 작업 브랜치에 최신 `develop`을 반영합니다.
 
 ```bash
 git checkout develop
 git pull origin develop
-git checkout feature/ui-guide
+git checkout docs/korean-contributing-guide
 git merge develop
 ```
-#### Step 3: 작업 및 커밋
+
+### Step 4. 커밋
 
 ```bash
-# 코드 작업 후
 git add .
-git commit -m "feat: 초보자용 UI 가이드 추가"
+git commit -m "docs: update korean contributing guide"
 ```
 
-#### Step 4: 원격 저장소에 푸시
+### Step 5. Pull Request 생성
 
-```bash
-git push origin feature/ui-guide
-```
+GitHub에서 PR을 만듭니다.
 
-#### Step 5: Pull Request 생성
-
-GitHub에서 PR 생성:
 - **Base:** `develop`
-- **Compare:** `feature/ui-guide`
+- **Compare:** 내 작업 브랜치
+- **원칙:** 구현/문서/설정 단위로 PR을 나눕니다.
 
-#### Step 6: 리뷰 및 머지
+### Step 6. 리뷰 후 merge
 
-- 최소 1명의 리뷰어 승인 후 머지
-- 머지 완료 후 feature 브랜치는 삭제해도 됩니다
+- 최소 1명 이상이 확인합니다.
+- PR 본문에 검증한 명령이나 화면 확인 결과를 남깁니다.
+- merge 후 더 필요 없는 작업 브랜치는 삭제합니다.
 
-### 최종 배포 흐름
+### Step 7. `main` 반영
 
-```
-develop → main (관리자가 수행)
+`main`은 최종 안정 브랜치입니다. `develop`에서 충분히 검증한 뒤 별도 PR로 반영합니다.
+
+```text
+develop → main
 ```
 
 ---
 
-## 3. 커밋 메시지 규칙
+## 3. ✍️ 커밋 메시지 규칙
 
-[Conventional Commits](https://www.conventionalcommits.org/) 양식을 따릅니다.
+[Conventional Commits](https://www.conventionalcommits.org/) 형식을 사용합니다.
 
-### 기본 형식
-
-```
+```text
 <type>(<scope>): <subject>
-
-<body>  ← 선택사항
 ```
 
-### 커밋 타입 (Type)
+| 타입 | 사용 시점 | 예시 |
+| --- | --- | --- |
+| `feat` | 새 기능 | `feat(frontend): add simple mode risk cards` |
+| `fix` | 버그 수정 | `fix(shannon): require non-production confirmation` |
+| `docs` | 문서 수정 | `docs: update korean contributing guide` |
+| `style` | 포맷팅만 변경 | `style: format frontend files` |
+| `refactor` | 동작 변경 없는 구조 개선 | `refactor(api): simplify flow service` |
+| `test` | 테스트 추가/수정 | `test: cover shannon request validation` |
+| `chore` | 빌드, 설정, 의존성 | `chore(ci): guard docker publishing` |
 
-| 타입 | 설명 | 예시 |
-|------|------|------|
-| `feat` | 새로운 기능 추가 | `feat: 로그인 페이지 추가` |
-| `fix` | 버그 수정 | `fix: 인증 토큰 만료 오류 수정` |
-| `docs` | 문서 수정 | `docs: README 업데이트` |
-| `style` | 코드 포맷팅 (기능 변경 없음) | `style: 코드 정렬` |
-| `refactor` | 리팩토링 (기능 변경 없음) | `refactor: 함수 구조 개선` |
-| `test` | 테스트 추가/수정 | `test: 로그인 테스트 추가` |
-| `chore` | 빌드, 설정 등 기타 작업 | `chore: 의존성 업데이트` |
+작성 팁:
 
-### 작성 규칙
-
-- **제목(subject):** 50자 이내, 명령조로 작성
-- **본문(body):** 선택사항, 상세 설명이 필요할 때만 사용
-- **한글/영어** 모두 가능하나 팀 내 통일 권장
-
-### 예시
-
-```bash
-feat(frontend): 다크모드 토글 버튼 추가
-
-- 헤더에 다크모드 전환 버튼 배치
-- localStorage에 사용자 설정 저장
-```
-
-```bash
-fix(backend): JWT 토큰 갱신 로직 수정
-```
-
-```bash
-docs: 기여 가이드 한글화
-```
+- 제목은 짧고 명확하게 작성합니다.
+- 가능하면 명령형으로 씁니다.
+- 한글/영어 모두 가능하지만, PR 안에서는 표현을 통일합니다.
 
 ---
 
-## 4. Pull Request 가이드
+## 4. ✅ Pull Request 가이드
 
-### PR 제목 형식
+PR 본문에는 아래 내용을 꼭 남깁니다.
 
-커밋 메시지와 동일한 형식을 사용합니다.
+- 무엇을 바꿨는지
+- 왜 바꿨는지
+- 어떤 파일/기능에 영향이 있는지
+- 어떤 명령으로 확인했는지
+- 화면, 문서, GitHub 설정처럼 사람이 보는 부분은 어떻게 확인했는지
+- 보안/라이선스/외부 도구 영향이 있는지
 
-```
-feat: 로그인 페이지 추가
-fix: 인증 오류 수정
-docs: README 업데이트
-```
+리뷰 체크리스트:
 
-### PR 체크리스트
-
-PR 생성 시 아래 항목을 확인해주세요:
-
-- [ ] 코드가 정상 동작하는지 확인
-- [ ] 관련 테스트가 있다면 통과하는지 확인
-- [ ] 린터/포맷터 오류 없음
-- [ ] 문서 업데이트 필요 시 반영
-
-### 리뷰 프로세스
-
-1. PR 생성 후 팀원에게 리뷰 요청
-2. 최소 **1명** 이상의 승인(Approve) 필요
-3. 리뷰어의 피드백 반영 후 재요청
-4. 승인 후 머지
+- [ ] Base branch가 `develop`인지 확인
+- [ ] PR 범위가 하나의 목적에 집중되어 있는지 확인
+- [ ] 테스트 또는 문서 검증 결과가 있는지 확인
+- [ ] 사용자에게 보이는 변경은 실제 화면/문서로 확인했는지 확인
+- [ ] PentAGI 원 저작권과 라이선스 고지를 유지했는지 확인
+- [ ] Shannon 관련 변경은 외부 CLI/Docker worker 경계를 유지했는지 확인
+- [ ] 스캔 기능은 소유/허가된 대상과 non-production 확인을 고려했는지 확인
 
 ---
 
-## 5. 브랜치 보호 규칙
+## 5. 🛡️ 브랜치 보호 규칙
 
-### main 브랜치
+### `main`
 
-- ✅ PR 필수 (직접 push 금지)
-- ✅ 최소 1명 승인 필요
-- ✅ Force push 금지
-- ✅ 삭제 금지
+- ✅ 직접 push 금지
+- ✅ PR 필수
+- ✅ 리뷰 승인 필요
+- ✅ force push 금지
+- ✅ 브랜치 삭제 금지
 
-### develop 브랜치
+### `develop`
 
-- ✅ PR 필수 (직접 push 금지)
-- ✅ Force push 금지
-- ✅ 삭제 금지
+- ✅ 직접 push 금지
+- ✅ PR 필수
+- ✅ force push 금지
+- ✅ 브랜치 삭제 금지
 
-### feature/* 브랜치
+### 작업 브랜치
 
-- 보호 규칙 없음 (자유롭게 작업)
+- 작업은 자유롭게 진행하되, merge는 PR을 통해 진행합니다.
+- 오래 열린 PR은 최신 `develop`을 반영합니다.
 
 ---
 
-## 6. 라이선스 준수 가이드
+## 6. 📄 라이선스 준수 가이드
 
-### 개요
+### PentAGI가 MIT라면 마음대로 바꿔도 되나요?
 
-AgiesX는 **MIT 라이선스**로 배포되며, 모든 의존성은 MIT 호환 라이선스를 사용합니다.
+대부분의 수정과 재배포가 가능합니다. 하지만 **MIT 라이선스는 "뭐든 마음대로 해도 된다는 뜻은 아닙니다."** 특히 "원 저작권 고지를 지워도 된다"거나 "다른 라이선스 의무가 전혀 없다"는 의미가 아닙니다.
 
-### 의존성 추가 시 주의사항
+MIT 라이선스의 핵심 조건은 다음과 같습니다.
 
-새 의존성 추가 시 아래 라이선스 호환성을 확인하세요.
+- 원 저작권 고지와 MIT 허가 고지를 유지해야 합니다.
+- 소스 코드나 배포물에 포함된 주요 부분에는 `LICENSE` 내용을 함께 보존해야 합니다.
+- 수정한 내용은 우리 프로젝트의 변경사항으로 표시할 수 있습니다.
 
-#### ✅ 허용 라이선스
+따라서 AegisX에서는 다음 원칙을 지킵니다.
+
+- PentAGI 원 저작권과 MIT 라이선스 고지를 삭제하지 않습니다.
+- AegisX 수정사항은 `NOTICE` 등에서 별도로 표시합니다.
+- 코드/이미지/경로 이름이 아직 PentAGI를 사용한다면 문서에서 임의로 AegisX라고 바꾸지 않습니다.
+
+### Shannon 관련 주의사항
+
+Shannon은 AGPL 계열 라이선스입니다. AegisX에서는 Shannon을 내부 코드로 복사하지 않고, **Advanced Mode에서 외부 CLI/Docker worker로 호출하는 보조 엔진**으로 다룹니다.
+
+정리하면:
+
+- ✅ Shannon 실행 결과 markdown report를 AegisX flow/task 결과로 import
+- ✅ `SHANNON_ENABLED=true`일 때 별도 설치된 Shannon 명령 실행
+- ❌ Shannon 소스 코드를 AegisX 저장소에 복사
+- ❌ Shannon을 AegisX 내부 모듈처럼 재라이선싱
+
+### 새 의존성 추가 시 확인
+
+일반적으로 사용 가능한 라이선스:
 
 - MIT
 - Apache-2.0
-- BSD-2-Clause, BSD-3-Clause
+- BSD-2-Clause / BSD-3-Clause
 - ISC
-- MPL-2.0 (수정 없이 사용 시)
-- 0BSD (퍼블릭 도메인)
+- MPL-2.0
+- 0BSD
 
-#### ❌ 비호환 라이선스
+명시적 검토가 필요한 라이선스:
 
-- GPL, LGPL, AGPL (특별한 예외 없이)
-- CC-BY-SA (코드에는 사용 불가, 데이터는 가능)
-- Proprietary/Commercial 라이선스
+- GPL
+- LGPL
+- AGPL
+- CC-BY-SA
+- Proprietary / Commercial
 
-### PR 머지 전 체크리스트
+### 확인 명령
 
-1. **의존성 업데이트:**
-   ```bash
-   cd backend && go mod tidy
-   cd ../frontend && pnpm install
-   ```
-
-2. **라이선스 리포트 생성:**
-   ```bash
-   ./scripts/generate-licenses.sh
-   ```
-
-   자세한 내용은 [licenses/README.md](licenses/README.md) 참조
-
-3. **라이선스 스캔:**
-   ```bash
-   osv-scanner scan --experimental-licenses="MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0" backend
-   osv-scanner scan --experimental-licenses="MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0" frontend
-   ```
-
-### 라이선스 검증 도구
-
-| 도구 | 용도 |
-|------|------|
-| `osv-scanner` | 보안 및 라이선스 스캔 (권장) |
-| `license-checker` | npm 라이선스 검증 |
-| `go-licenses` | Go 모듈 라이선스 추출 |
-| `go list` | Go 모듈 검사 |
-
-### Docker 빌드 시
-
-Docker 빌드 시 라이선스 리포트가 자동 생성됩니다:
-
-- **Backend:** `/opt/pentagi/licenses/backend/`
-  - `dependencies.txt` - Go 모듈 목록
-  - `licenses.csv` - 상세 라이선스 정보
-
-- **Frontend:** `/opt/pentagi/licenses/frontend/`
-  - `dependencies.json` - npm 의존성 트리
-  - `licenses.json` - 상세 라이선스 데이터
-  - `licenses.csv` - 라이선스 요약
+```bash
+./scripts/generate-licenses.sh
+osv-scanner scan --experimental-licenses="MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0" backend
+osv-scanner scan --experimental-licenses="MIT,Apache-2.0,BSD-2-Clause,BSD-3-Clause,ISC,MPL-2.0" frontend
+```
 
 ---
 
-## 문의
+## 7. 💬 문의
 
-질문이 있으시면 아래로 연락해주세요:
+질문이나 제안은 GitHub Issues를 사용합니다.
 
-- **GitHub Issues:** [Issues 페이지](https://github.com/AISWopensource/AgiesX/issues)
+https://github.com/2026OpenSourceSW/AegisX/issues

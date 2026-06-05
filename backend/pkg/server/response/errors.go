@@ -117,6 +117,11 @@ var ErrFlowFilesInvalidData = NewHttpError(400, "FlowFiles.InvalidData", "invali
 var ErrFlowFilesAlreadyExists = NewHttpError(409, "FlowFiles.AlreadyExists", "flow file already exists")
 var ErrFlowFilesContainerNotRunning = NewHttpError(400, "FlowFiles.ContainerNotRunning", "container is not running")
 
+// shannon
+
+var ErrShannonInvalidRequest = NewHttpError(400, "Shannon.InvalidRequest", "invalid shannon request data")
+var ErrShannonRunFailed = NewHttpError(500, "Shannon.RunFailed", "shannon scan failed")
+
 // tasks
 
 var ErrTasksInvalidRequest = NewHttpError(400, "Tasks.InvalidRequest", "invalid task request data")
@@ -154,8 +159,8 @@ var ErrKnowledgeInvalidData = NewHttpError(500, "Knowledge.InvalidData", "invali
 // toolcalls
 
 var ErrToolcallsInvalidRequest = NewHttpError(400, "Toolcalls.InvalidRequest", "invalid toolcall request data")
-var ErrToolcallsNotFound       = NewHttpError(404, "Toolcalls.NotFound", "toolcall not found")
-var ErrToolcallsInvalidData    = NewHttpError(500, "Toolcalls.InvalidData", "invalid toolcall data")
+var ErrToolcallsNotFound = NewHttpError(404, "Toolcalls.NotFound", "toolcall not found")
+var ErrToolcallsInvalidData = NewHttpError(500, "Toolcalls.InvalidData", "invalid toolcall data")
 
 // anonymize
 

@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 
-import { Ellipsis, LibraryBig, Loader2, Pencil, PencilLine, Plus, Trash } from 'lucide-react';
+import { Ellipsis, GitFork, LibraryBig, Loader2, Pencil, PencilLine, Plus, Trash } from 'lucide-react';
 import { useCallback, useRef, useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import type { BadgeVariant } from '@/components/ui/badge';
 
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { EntityMetricOverview } from '@/components/shared/entity-metric-overview';
 import { HeaderButton } from '@/components/shared/header-button';
 import { InlineEditInput } from '@/components/shared/inline-edit';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,7 @@ import { InputSearch } from '@/components/ui/input-search';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { StatusCard } from '@/components/ui/status-card';
+import { summarizeKnowledges } from '@/features/supporting-pages/supporting-page-summary';
 import { KnowledgeDocType } from '@/graphql/types';
 import { useTableState } from '@/hooks/use-table-state';
 import { mergeHrefWithSearchParams, URL_PARAMS } from '@/lib/url-params';
@@ -224,17 +226,15 @@ function Knowledges() {
 
                 if (isEditing) {
                     return (
-                        <div onClick={(e) => e.stopPropagation()}>
-                            <InlineEditInput
-                                autoFocus
-                                busy={isRenameLoading}
-                                defaultValue={question}
-                                inputRef={editingInputRef}
-                                onCancel={handleKnowledgeRenameCancel}
-                                onSave={handleKnowledgeRenameSave}
-                                placeholder="Knowledge question"
-                            />
-                        </div>
+                        <InlineEditInput
+                            autoFocus
+                            busy={isRenameLoading}
+                            defaultValue={question}
+                            inputRef={editingInputRef}
+                            onCancel={handleKnowledgeRenameCancel}
+                            onSave={handleKnowledgeRenameSave}
+                            placeholder="Knowledge question"
+                        />
                     );
                 }
 
@@ -398,6 +398,8 @@ function Knowledges() {
         </>
     );
 
+    const knowledgeSummary = summarizeKnowledges(knowledges);
+
     const pageHeader = (
         <header className="bg-background sticky top-0 z-10 flex h-12 w-full shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
             <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
@@ -481,6 +483,34 @@ function Knowledges() {
         <>
             {pageHeader}
             <div className="flex flex-col gap-4 p-4 pt-0">
+                <EntityMetricOverview
+                    metrics={[
+                        {
+                            icon: <LibraryBig className="size-4" />,
+                            label: 'Total documents',
+                            tone: 'text-primary',
+                            value: knowledgeSummary.total,
+                        },
+                        {
+                            icon: <PencilLine className="size-4" />,
+                            label: 'Manual',
+                            tone: 'text-green-600',
+                            value: knowledgeSummary.manual,
+                        },
+                        {
+                            icon: <LibraryBig className="size-4" />,
+                            label: 'Agent generated',
+                            tone: 'text-blue-600',
+                            value: knowledgeSummary.agent,
+                        },
+                        {
+                            icon: <GitFork className="size-4" />,
+                            label: 'Linked flows',
+                            tone: 'text-yellow-600',
+                            value: knowledgeSummary.linkedFlows,
+                        },
+                    ]}
+                />
                 <DataTable
                     columns={columns}
                     data={knowledges}

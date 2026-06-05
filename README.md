@@ -45,7 +45,7 @@
 - [Function Testing with ftester](#function-testing-with-ftester)
 - [Building](#building)
 - [Credits](#credits)
-- [License](#license)
+- [License and Notices](#license-and-notices)
 
 ## Overview
 
@@ -3715,20 +3715,20 @@ This project is made possible thanks to the following research and developments:
 - [A Survey of Autonomous LLM Agents](https://arxiv.org/abs/2403.08299)
 - [Codel](https://github.com/semanser/codel) by Andriy Semenets - initial architectural inspiration for agent-based automation
 
-## License
+## License and Notices
 
-**PentAGI** is licensed under the [MIT License](LICENSE).
+AegisX is a PentAGI-based fork distributed under the upstream MIT License. See [LICENSE](LICENSE) for the canonical MIT text and [NOTICE](NOTICE) for upstream PentAGI attribution plus AegisX modification notes.
 
 Copyright (c) 2025 PentAGI Development Team
 
 ### Third-Party Dependencies
 
-All third-party dependencies use MIT-compatible licenses. See [licenses/](licenses/) directory for detailed license reports.
+Generated dependency license reports and third-party notices are summarized in [licenses/README.md](licenses/README.md). New dependencies must be reviewed before merge, especially GPL, LGPL, AGPL, proprietary, or commercial licenses.
+
+### Shannon Integration
+
+Shannon is optional AGPL-3.0 software used only through an external CLI/Docker worker boundary. Shannon source code is not copied into this repository; keep Shannon's own license and notices with the installed Shannon distribution. See [licenses/README.md](licenses/README.md#keygraphhq-shannon).
 
 ### VXControl Cloud Services
 
-⚠️ **Note:** While the VXControl Cloud SDK code is MIT licensed, accessing **VXControl Cloud Services** (threat intelligence, AI support, premium features) requires a separate License Key and compliance with [Terms of Service](https://github.com/vxcontrol/cloud#license-and-terms).
-
-The SDK code itself is free to use - service access requires registration.
-
-For questions contact: **info@pentagi.com** or **info@vxcontrol.com**
+⚠️ **Note:** The upstream VXControl Cloud SDK notice and PentAGI-specific exception are retained for attribution and review context. Do not assume that exception automatically applies to AegisX distributions. Accessing VXControl Cloud Services may require a separate license key and compliance with the relevant service terms.

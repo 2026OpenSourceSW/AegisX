@@ -1,6 +1,6 @@
-# Third-Party Licenses
+# Third-Party Licenses and Notices
 
-This directory contains license information for all PentAGI dependencies.
+This directory contains generated license information for AegisX dependencies inherited from the upstream PentAGI codebase and AegisX project changes.
 
 ## Quick Start
 
@@ -13,28 +13,50 @@ Run the generator script to create/update license reports (run from project root
 ## Generated Files
 
 ### Backend (Go)
+
 - `backend-dependencies.txt` - Complete list of Go modules
 - `backend-licenses.csv` - Detailed license information (CSV format)
 
 ### Frontend (pnpm)
+
 - `frontend-dependencies.json` - Complete dependency tree (JSON)
 - `frontend-licenses.json` - Detailed license data (JSON)
 - `frontend-licenses.csv` - License data (CSV)
 
-**Note:** 
+**Note:**
+
 - Backend reports require `go-licenses` tool: `go install github.com/google/go-licenses@latest`
 - Frontend reports require `pnpm install` in the frontend directory first.
 
 ## License
 
-PentAGI is licensed under **MIT License**.
+AegisX inherits the upstream PentAGI **MIT License**. See `../LICENSE` and `../NOTICE` for upstream and AegisX attribution.
 
-All third-party dependencies use MIT-compatible licenses:
-- MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0, 0BSD
+GitHub may show a sidebar label such as `License` with the detected name `MIT License`. That is expected GitHub UI wording, not a second license. The canonical source license text remains `../LICENSE`.
+
+Generated reports list the licenses detected for packaged dependencies. Review any GPL, LGPL, AGPL, proprietary, or commercial dependency before adding it to AegisX.
+
+Commonly acceptable licenses include:
+
+MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0, 0BSD
+
+## Third-Party Notices
+
+AegisX can optionally integrate with KeygraphHQ Shannon as an external white-box pentest helper.
+
+### KeygraphHQ Shannon
+
+- License: AGPL-3.0
+- Integration mode: external CLI or Docker worker only
+- Notes: Shannon source code is not copied into this repository. AegisX executes a separately installed Shannon command when `SHANNON_ENABLED=true`, then imports the generated markdown report as flow/task data.
+
+Keep Shannon's own license and notices with the installed Shannon distribution.
 
 ## Docker Builds
 
 License reports are automatically generated during Docker builds and included in the final image at `/opt/pentagi/licenses/`.
+
+The `/opt/pentagi` path is retained while the implementation and Docker packaging still use upstream PentAGI paths.
 
 ## More Information
 

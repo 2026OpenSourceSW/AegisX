@@ -1070,12 +1070,12 @@ function SettingsProvider() {
 
             if (isNew) {
                 await createProvider({
-                    refetchQueries: ['settingsProviders'],
+                    refetchQueries: ['settingsProviders', 'providers'],
                     variables: mutationData,
                 });
             } else {
                 await updateProvider({
-                    refetchQueries: ['settingsProviders'],
+                    refetchQueries: ['settingsProviders', 'providers'],
                     variables: {
                         ...mutationData,
                         providerId: providerId!,
@@ -1107,7 +1107,7 @@ function SettingsProvider() {
             setSubmitError(null);
 
             await deleteProvider({
-                refetchQueries: ['settingsProviders'],
+                refetchQueries: ['settingsProviders', 'providers'],
                 variables: { providerId },
             });
 

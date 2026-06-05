@@ -1,6 +1,14 @@
 # Contributors
 
-This document recognizes all individuals who have contributed to PentAGI. Their work across 370+ commits over 18 months has shaped this project into what it is today.
+This document preserves upstream PentAGI contributor attribution and records the AegisX fork context. Do not remove upstream contributor credit when updating AegisX documentation.
+
+## AegisX Fork Context
+
+AegisX project changes are tracked through the `2026OpenSourceSW/AegisX` Git history and pull requests. AegisX keeps the upstream PentAGI contributor record below because this repository is derived from PentAGI.
+
+## Upstream PentAGI Contributors
+
+This section recognizes individuals who contributed to PentAGI before or outside the AegisX fork. Their work across 370+ commits over 18 months shaped the upstream project AegisX is based on.
 
 ## Core Team
 

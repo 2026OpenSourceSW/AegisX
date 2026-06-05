@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository. Repository-wide agent rules live in `AGENTS.md`; use `CONTRIBUTING.md` as the source of truth for branch, PR, and verification workflow.
 
 ## Core Interaction Rules
 
@@ -13,7 +13,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**PentAGI** is an automated security testing platform powered by AI agents. It runs autonomous penetration testing workflows using a multi-agent system (Researcher, Developer, Executor agents) that coordinates LLM providers, Docker-sandboxed tool execution, and a persistent vector memory store.
+**AegisX** is a PentAGI-based AI-assisted security testing project. It keeps the inherited PentAGI backend, frontend, Docker, provider, and observability architecture while adding project-specific work for beginner-friendly workflows and optional Shannon white-box scan integration.
+
+Many implementation identifiers still use upstream PentAGI names, paths, package names, and Docker image defaults. Do not rename those identifiers in documentation or code unless the implementation and CI have also changed.
 
 The application is a monorepo with:
 - **`backend/`** — Go REST + GraphQL API server
@@ -60,6 +62,8 @@ docker compose -f docker-compose.yml -f docker-compose-langfuse.yml up -d       
 docker compose -f docker-compose.yml -f docker-compose-graphiti.yml up -d       # + knowledge graph
 docker build -t local/pentagi:latest .                                        # Build image
 ```
+
+The `pentagi` image name is retained while Docker packaging still uses upstream names.
 
 The full stack runs at `https://localhost:8443` when using Docker Compose. Copy `.env.example` to `.env` and fill in at minimum the database and at least one LLM provider key.
 

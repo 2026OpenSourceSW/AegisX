@@ -4,13 +4,14 @@ import {
     Clock,
     FileText,
     Folder,
-    GitFork,
+    History,
     KeyRound,
     LayoutDashboard,
     LibraryBig,
     LogOut,
     Monitor,
     Moon,
+    PlayCircle,
     Plus,
     Settings,
     Settings2,
@@ -67,6 +68,7 @@ export function MainSidebar() {
     const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const isDashboardActive = useMatch('/dashboard');
     const isFlowsActive = useMatch('/flows/*');
+    const isNewFlowActive = useMatch('/flows/new');
     const isTemplatesActive = useMatch('/templates/*');
     const isKnowledgesActive = useMatch('/knowledges/*');
     const isResourcesActive = useMatch('/resources/*');
@@ -102,49 +104,58 @@ export function MainSidebar() {
 
     return (
         <Sidebar collapsible="icon">
-            <SidebarHeader>
+            <SidebarHeader className="border-sidebar-border/70 border-b px-4 py-5">
                 <SidebarMenu>
                     <SidebarMenuItem className="flex items-center gap-2">
-                        <div className="flex aspect-square size-8 items-center justify-center">
-                            <Logo className="hover:animate-logo-spin size-6" />
+                        <div className="bg-sidebar-primary/15 ring-sidebar-primary/25 flex aspect-square size-9 items-center justify-center rounded-lg ring-1">
+                            <Logo className="hover:animate-logo-spin text-sidebar-primary size-6" />
                         </div>
-                        <div className="grid flex-1 text-left leading-tight">
-                            <span className="truncate font-semibold">PentAGI</span>
+                        <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
+                            <span className="truncate text-base font-semibold">AegisX</span>
+                            <span className="text-sidebar-foreground/80 truncate text-[0.68rem] font-semibold uppercase">
+                                Enterprise Security
+                            </span>
                         </div>
                     </SidebarMenuItem>
                 </SidebarMenu>
             </SidebarHeader>
             <SidebarContent>
-                <SidebarGroup className="bg-sidebar sticky top-0 z-10">
+                <SidebarGroup className="bg-sidebar border-sidebar-border/70 sticky top-0 z-10 border-b pb-3">
                     <SidebarGroupContent>
                         <SidebarMenu>
-                            <SidebarMenuItem className="group-data-[state=expanded]:hidden">
-                                <SidebarMenuButton asChild>
-                                    <Link to="/flows/new">
-                                        <Plus />
-                                        New Flow
-                                    </Link>
-                                </SidebarMenuButton>
-                            </SidebarMenuItem>
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isDashboardActive}
+                                    tooltip="대시보드"
                                 >
                                     <Link to="/dashboard">
                                         <LayoutDashboard />
-                                        Dashboard
+                                        대시보드
                                     </Link>
                                 </SidebarMenuButton>
                             </SidebarMenuItem>
                             <SidebarMenuItem>
                                 <SidebarMenuButton
                                     asChild
-                                    isActive={!!isFlowsActive}
+                                    isActive={!!isNewFlowActive}
+                                    tooltip="점검 시작"
+                                >
+                                    <Link to="/flows/new">
+                                        <PlayCircle />
+                                        점검 시작
+                                    </Link>
+                                </SidebarMenuButton>
+                            </SidebarMenuItem>
+                            <SidebarMenuItem>
+                                <SidebarMenuButton
+                                    asChild
+                                    isActive={!!isFlowsActive && !isNewFlowActive}
+                                    tooltip="기록"
                                 >
                                     <Link to="/flows">
-                                        <GitFork />
-                                        Flows
+                                        <History />
+                                        기록
                                     </Link>
                                 </SidebarMenuButton>
                                 <SidebarMenuAction
@@ -161,10 +172,11 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isTemplatesActive}
+                                    tooltip="보고서 템플릿"
                                 >
                                     <Link to="/templates">
                                         <FileText />
-                                        Templates
+                                        보고서 템플릿
                                     </Link>
                                 </SidebarMenuButton>
                                 <SidebarMenuAction
@@ -181,17 +193,18 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isResourcesActive}
+                                    tooltip="자료"
                                 >
                                     <Link to="/resources">
                                         <Folder />
-                                        Resources
+                                        자료
                                     </Link>
                                 </SidebarMenuButton>
                                 <SidebarMenuAction
                                     className="data-[state=open]:bg-accent rounded-sm"
                                     onClick={resourcesUpload.openFilePicker}
                                     showOnHover
-                                    title="Upload file"
+                                    title="자료 업로드"
                                     type="button"
                                 >
                                     <Plus />
@@ -201,10 +214,11 @@ export function MainSidebar() {
                                 <SidebarMenuButton
                                     asChild
                                     isActive={!!isKnowledgesActive}
+                                    tooltip="지식"
                                 >
                                     <Link to="/knowledges">
                                         <LibraryBig />
-                                        Knowledges
+                                        지식
                                     </Link>
                                 </SidebarMenuButton>
                                 <SidebarMenuAction
@@ -225,7 +239,7 @@ export function MainSidebar() {
                     <SidebarGroup>
                         <SidebarGroupLabel className="flex items-center gap-2">
                             <Clock />
-                            Recent Flows
+                            최근 점검
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
@@ -247,7 +261,7 @@ export function MainSidebar() {
                     <SidebarGroup>
                         <SidebarGroupLabel className="flex items-center gap-2">
                             <Star />
-                            Favorite Flows
+                            즐겨찾기 점검
                         </SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
@@ -265,16 +279,17 @@ export function MainSidebar() {
                     </SidebarGroup>
                 )}
             </SidebarContent>
-            <SidebarFooter>
+            <SidebarFooter className="border-sidebar-border/70 border-t p-3">
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton
                             asChild
                             isActive={!!isSettingsActive}
+                            tooltip="설정"
                         >
                             <Link to="/settings">
                                 <Settings />
-                                Settings
+                                설정
                             </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -285,7 +300,7 @@ export function MainSidebar() {
                                     className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                                     size="lg"
                                 >
-                                    <Avatar className="bg-background dark:bg-muted size-8 rounded-lg">
+                                    <Avatar className="bg-sidebar-accent size-8 rounded-lg">
                                         <AvatarFallback className="flex size-8 items-center justify-center">
                                             <UserIcon className="size-4" />
                                         </AvatarFallback>
@@ -325,7 +340,7 @@ export function MainSidebar() {
                                     onSelect={(event) => event.preventDefault()}
                                 >
                                     <Settings2 />
-                                    Theme
+                                    테마
                                     <Tabs
                                         className="-my-1.5 -mr-2 ml-auto"
                                         onValueChange={(value) => setTheme(value as Theme)}
@@ -361,14 +376,14 @@ export function MainSidebar() {
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem onClick={() => setIsPasswordModalOpen(true)}>
                                             <KeyRound className="mr-2 size-4" />
-                                            Change Password
+                                            비밀번호 변경
                                         </DropdownMenuItem>
                                     </>
                                 )}
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => logout()}>
                                     <LogOut className="mr-2 size-4" />
-                                    Log out
+                                    로그아웃
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
@@ -394,7 +409,7 @@ export function MainSidebar() {
             >
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle>Change Password</DialogTitle>
+                        <DialogTitle>비밀번호 변경</DialogTitle>
                     </DialogHeader>
                     <PasswordChangeForm
                         onCancel={() => setIsPasswordModalOpen(false)}
@@ -417,7 +432,7 @@ function FlowMenuItem({ activeFlowId, flow, isFavorite, onToggleFavorite }: Flow
                     <span className="-mx-2 w-8 shrink-0 text-center text-xs group-data-[state=expanded]:hidden">
                         {flow.id}
                     </span>
-                    <span className="text-muted-foreground bg-background dark:bg-muted -my-0.5 -ml-0.5 h-5 min-w-5 shrink-0 rounded-md px-px py-0.5 text-center text-xs group-data-[state=collapsed]:hidden">
+                    <span className="bg-sidebar-accent text-sidebar-accent-foreground -my-0.5 -ml-0.5 h-5 min-w-5 shrink-0 rounded-md px-px py-0.5 text-center text-xs group-data-[state=collapsed]:hidden">
                         {flow.id}
                     </span>
                     <span className="truncate">{flow.title}</span>

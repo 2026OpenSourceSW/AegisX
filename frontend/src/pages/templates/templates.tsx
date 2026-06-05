@@ -6,6 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 import ConfirmationDialog from '@/components/shared/confirmation-dialog';
+import { EntityMetricOverview } from '@/components/shared/entity-metric-overview';
 import { HeaderButton } from '@/components/shared/header-button';
 import { InlineEditInput } from '@/components/shared/inline-edit';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb';
@@ -22,6 +23,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { StatusCard } from '@/components/ui/status-card';
+import { summarizeTemplates } from '@/features/supporting-pages/supporting-page-summary';
 import { useTableState } from '@/hooks/use-table-state';
 import { mergeHrefWithSearchParams } from '@/lib/url-params';
 import { type Template, useTemplates } from '@/providers/templates-provider';
@@ -123,17 +125,15 @@ function Templates() {
 
                 if (isEditing) {
                     return (
-                        <div onClick={(e) => e.stopPropagation()}>
-                            <InlineEditInput
-                                autoFocus
-                                busy={isRenameLoading}
-                                defaultValue={title}
-                                inputRef={editingInputRef}
-                                onCancel={handleTemplateRenameCancel}
-                                onSave={handleTemplateRenameSave}
-                                placeholder="Template title"
-                            />
-                        </div>
+                        <InlineEditInput
+                            autoFocus
+                            busy={isRenameLoading}
+                            defaultValue={title}
+                            inputRef={editingInputRef}
+                            onCancel={handleTemplateRenameCancel}
+                            onSave={handleTemplateRenameSave}
+                            placeholder="Template title"
+                        />
                     );
                 }
 
@@ -243,6 +243,8 @@ function Templates() {
         </>
     );
 
+    const templateSummary = summarizeTemplates(templates);
+
     const pageHeader = (
         <header className="bg-background sticky top-0 z-10 flex h-12 w-full shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
             <div className="flex min-w-0 flex-1 items-center gap-2 px-4">
@@ -299,6 +301,29 @@ function Templates() {
         <>
             {pageHeader}
             <div className="flex flex-col gap-4 p-4 pt-0">
+                <EntityMetricOverview
+                    className="xl:grid-cols-3"
+                    metrics={[
+                        {
+                            icon: <FileText className="size-4" />,
+                            label: 'Total templates',
+                            tone: 'text-primary',
+                            value: templateSummary.total,
+                        },
+                        {
+                            icon: <PencilLine className="size-4" />,
+                            label: 'Ready',
+                            tone: 'text-green-600',
+                            value: templateSummary.ready,
+                        },
+                        {
+                            icon: <FileText className="size-4" />,
+                            label: 'Empty drafts',
+                            tone: 'text-yellow-600',
+                            value: templateSummary.empty,
+                        },
+                    ]}
+                />
                 <DataTable
                     columns={columns}
                     data={templates}

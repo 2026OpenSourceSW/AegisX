@@ -1,6 +1,6 @@
 # Fonts
 
-This directory contains fonts used by the PentAGI frontend application, including web UI and PDF report generation.
+This directory contains fonts used by the AegisX frontend application inherited from PentAGI, including web UI and PDF report generation.
 
 ## Inter
 
@@ -10,6 +10,15 @@ This directory contains fonts used by the PentAGI frontend application, includin
 - **Source**: https://github.com/rsms/inter
 - **Copyright**: Copyright (c) 2016 The Inter Project Authors
 - **Usage**: Main UI font for the web application.
+
+## Pretendard
+
+- **Files**: `PretendardVariable.woff2`
+- **License**: SIL Open Font License 1.1
+- **License File**: [LICENSE-Pretendard.txt](./LICENSE-Pretendard.txt)
+- **Source**: https://github.com/orioncactus/pretendard
+- **Copyright**: Copyright (c) 2021, Kil Hyung-jin
+- **Usage**: Korean UI fallback font for AegisX web screens.
 
 ## Roboto Mono
 
@@ -45,10 +54,10 @@ This directory contains fonts used by the PentAGI frontend application, includin
 - **License File**: [OFL.txt](./OFL.txt)
 - **Source**: https://github.com/notofonts/noto-cjk
 - **Copyright**: Copyright 2014-2021 Adobe Systems Incorporated
-- **Usage**: CJK font for Chinese, Japanese, and Korean characters in PDF reports. Loaded on demand when CJK text is detected.
+- **Usage**: Simplified Chinese fallback in PDF reports. Do not rely on this font for Korean UI text.
 
 ## Notes
 
 All fonts are open source and freely redistributable under their respective licenses (SIL OFL 1.1 and
-Apache 2.0), both compatible with the MIT license of the PentAGI product. Fonts are served from the
+Apache 2.0), both compatible with the MIT license used by the upstream PentAGI project and AegisX fork. Fonts are served from the
 same origin as the application and never loaded from external servers.

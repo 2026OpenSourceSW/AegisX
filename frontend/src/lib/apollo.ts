@@ -19,6 +19,8 @@ const STREAMING_CACHE_MAX_ENTRIES = 500;
 const STREAMING_CACHE_TTL_MS = 1000 * 60 * 5;
 const STREAMING_THROTTLE_MS = 50;
 
+type CacheFieldTarget = readonly string[] | string;
+
 type StreamingLogEntry = {
     message: null | string;
     result: null | string;
@@ -77,7 +79,7 @@ const createInterceptLink = (transform: (result: FetchResult, operation: Operati
             }),
     );
 
-const subscriptionToCacheFieldMap: Record<string, string> = {
+const subscriptionToCacheFieldMap: Record<string, CacheFieldTarget> = {
     agentLogAdded: 'agentLogs',
     apiTokenCreated: 'apiTokens',
     apiTokenDeleted: 'apiTokens',
@@ -101,9 +103,9 @@ const subscriptionToCacheFieldMap: Record<string, string> = {
     knowledgeDocumentUpdated: 'knowledgeDocuments',
     messageLogAdded: 'messageLogs',
     messageLogUpdated: 'messageLogs',
-    providerCreated: 'settingsProviders',
-    providerDeleted: 'settingsProviders',
-    providerUpdated: 'settingsProviders',
+    providerCreated: ['settingsProviders', 'providers'],
+    providerDeleted: ['settingsProviders', 'providers'],
+    providerUpdated: ['settingsProviders', 'providers'],
     resourceAdded: 'resources',
     resourceDeleted: 'resources',
     resourceUpdated: 'resources',
@@ -114,6 +116,14 @@ const subscriptionToCacheFieldMap: Record<string, string> = {
     taskUpdated: 'tasks',
     terminalLogAdded: 'terminalLogs',
     vectorStoreLogAdded: 'vectorStoreLogs',
+};
+
+const toCacheFields = (target: CacheFieldTarget | undefined): readonly string[] => {
+    if (!target) {
+        return [];
+    }
+
+    return Array.isArray(target) ? target : [target];
 };
 
 const matchesCacheVariant = (
@@ -353,7 +363,13 @@ const createSubscriptionCacheLink = (cacheInstance: InMemoryCache): ApolloLink =
 
             try {
                 Object.entries(result.data)
-                    .map(([key, value]) => ({ cacheField: subscriptionToCacheFieldMap[key], key, value }))
+                    .flatMap(([key, value]) =>
+                        toCacheFields(subscriptionToCacheFieldMap[key]).map((cacheField) => ({
+                            cacheField,
+                            key,
+                            value,
+                        })),
+                    )
                     .filter(
                         (entry): entry is { cacheField: string; key: string; value: { id: number | string } } =>
                             !!entry.cacheField && !!entry.value?.id,

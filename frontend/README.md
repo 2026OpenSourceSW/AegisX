@@ -1,6 +1,8 @@
-# PentAGI Frontend
+# AegisX Frontend
 
-A chat application built with React, TypeScript, and GraphQL that enables intelligent conversations with AI agents.
+The AegisX frontend is inherited from the upstream PentAGI React application. It is built with React, TypeScript, and GraphQL, and it provides the web UI for flow management, agent interaction, settings, reports, and project-specific AegisX workflows.
+
+Some source identifiers, API types, and package paths still use upstream PentAGI names. Keep those names unless the implementation changes them too.
 
 ## Features
 
@@ -11,8 +13,8 @@ A chat application built with React, TypeScript, and GraphQL that enables intell
 -   🔍 Integrated search capabilities
 -   📚 Vector store for knowledge base management
 -   📸 Screenshot capture and management
--   🌓 Dark/Light theme support
--   📱 Responsive design (mobile, tablet, desktop)
+-   🌓 Dark/light theme support
+-   📱 Responsive design for mobile, tablet, and desktop
 -   🔐 Authentication system with multiple providers
 -   🔄 Real-time updates via GraphQL subscriptions
 -   ⚡ High-performance React components
@@ -99,26 +101,39 @@ src/
 
 ### Installation
 
-1. Clone the repository
+1. Clone the repository.
 2. Install dependencies:
+
+   ```bash
    pnpm install
+   ```
+
 3. Start the development server:
+
+   ```bash
    pnpm run dev
+   ```
 
 ### Building for Production
 
+```bash
 pnpm run build
+```
 
 ### Environment Variables
 
-Create a .env file in the root directory:
+Create a `.env` file in the root directory:
 
+```bash
 VITE_API_URL=your_api_url
+```
 
 ## Contributing
 
-1. Fork the repository
-2. Create your feature branch (git checkout -b feature/amazing-feature)
-3. Commit your changes (git commit -m 'Add some amazing feature')
-4. Push to the branch (git push origin feature/amazing-feature)
-5. Open a Pull Request
+Follow the root `CONTRIBUTING.md` workflow:
+
+1. Branch from `develop`.
+2. Keep the change to one coherent unit.
+3. Push the branch.
+4. Open a pull request against `develop`.
+5. Include verification evidence and manual QA for user-visible frontend changes.

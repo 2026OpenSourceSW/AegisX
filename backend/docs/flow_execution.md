@@ -41,9 +41,9 @@ This document describes the internal architecture and execution workflow of Flow
   - `terminal` - Command execution (configurable via `TERMINAL_TOOL_TIMEOUT`, default: 1200s; hard limit: 3h/10800s; 0 or negative values are clamped to the hard limit)
   - `file` - Read/write operations with absolute path requirements
   - User-provided flow files are available under `/work/uploads` and `/work/resources`
-  
+
 - **Search Network Tools** - External information sources
-  - `browser` - Web scraping with screenshot capture  
+  - `browser` - Web scraping with screenshot capture
   - `google` - Google Custom Search API integration
   - `duckduckgo` - Anonymous search engine
   - `tavily` - Advanced research with citations
@@ -51,23 +51,23 @@ This document describes the internal architecture and execution workflow of Flow
   - `perplexity` - AI-powered comprehensive research
   - `sploitus` - Search for security exploits and pentest tools
   - `searxng` - Privacy-focused meta search engine
-  
+
 - **Vector Database Tools** - Semantic search in long-term memory
   - `search_in_memory` - General execution memory search
   - `search_guide` / `store_guide` - Installation guides (doc_type: guide)
   - `search_answer` / `store_answer` - Q&A pairs (doc_type: answer)
   - `search_code` / `store_code` - Code samples (doc_type: code)
-  
+
 - **Agent Tools** - Delegation to specialist agents
   - `search`, `maintenance`, `coder`, `pentester`, `advice`, `memorist`
-  
+
 - **Result Storage Tools** - Agent result delivery
   - `maintenance_result`, `code_result`, `hack_result`, `memorist_result`
   - `search_result`, `enricher_result`, `report_result`
   - `subtask_list` (Generator), `subtask_patch` (Refiner)
   - Future signed evidence receipt design is outlined in [evidence_chain.md](../../examples/proposals/evidence_chain.md)
 
-- **Barrier Tools** - Control flow termination  
+- **Barrier Tools** - Control flow termination
   - `done` - Complete subtask, `ask` - Request user input (configurable via ASK_USER env)
 
 - **Flow Management Tools** - Assistant-only; available when FlowWorker is injected into AssistantProvider
@@ -115,7 +115,7 @@ sequenceDiagram
     FP->>FP: Call Flow Descriptor (generate Flow title)
     FW->>Docker: Spawn container from selected image
     Docker-->>FW: Container ready
-    
+
     FW->>TW: Create first Task
     TW->>FP: Get task title from user input
     FP-->>TW: Generated title
@@ -125,48 +125,48 @@ sequenceDiagram
     GA->>GA: Analyze task requirements
     GA-->>STC: Return Subtask list
     STC->>DB: Store Subtasks in database
-    
+
     loop For each Subtask
         TW->>SW: Pop next Subtask
         SW->>FP: Prepare agent chain
         FP->>DB: Store message chain
         SW->>PA: Execute Primary Agent
         PA->>PA: Evaluate Subtask requirements
-        
+
         alt Needs specialist agent
             PA->>Coder/Pentester/etc: Delegate specialized work
             Coder/Pentester/etc-->>PA: Return results
         end
-        
+
         alt Agent returns unstructured text
             PA->>Reflector: Invoke Reflector Agent
             Reflector->>PA: Provide corrective guidance
             Note over Reflector: Acts as user, max 3 iterations
         end
-        
+
         alt Needs user input
             PA->>PA: Call ask tool
             PA-->>U: Ask question
             U-->>PA: Provide answer
         end
-        
+
         alt Subtask completed
             PA->>PA: Call done tool
             PA-->>SW: PerformResultDone
         end
-        
+
         SW->>RA: Invoke Refiner Agent
         RA->>RA: Review completed/planned Subtasks
         RA->>DB: Update Subtask plans
         RA-->>TW: Updated planning
     end
-    
+
     TW->>Rep: Generate final Task report
     Rep->>Rep: Analyze all Subtask results
     Rep-->>TW: Comprehensive report
     TW->>DB: Store Task result
     TW-->>U: Present final results
-    
+
     opt New Task in same Flow
         U->>FW: Submit additional request
         FW->>TW: Create new Task (reuse experience)
@@ -186,7 +186,7 @@ graph TD
         PA --> Searcher[Searcher Agent<br/>Information Retrieval Specialist]
         PA --> Adviser[Adviser Agent<br/>Technical Solution Expert]
     end
-    
+
     subgraph "Assistant Modes"
         AssistantUA[Assistant Agent<br/>UseAgents=true] --> Coder
         AssistantUA --> Pentester
@@ -194,83 +194,83 @@ graph TD
         AssistantUA --> Memorist
         AssistantUA --> Searcher
         AssistantUA --> Adviser
-        
+
         AssistantDirect[Assistant Agent<br/>UseAgents=false] --> DirectTools[Direct Tools Only]
-        
+
         AssistantNote[Operates independently<br/>from Task/Subtask hierarchy]
     end
-    
+
     subgraph "Specialist Agent Tools"
         Coder --> Terminal[Terminal Tool]
         Coder --> File[File Tool]
         Coder --> CodeSearch[Search/Store Code]
-        
+
         Pentester --> Terminal
         Pentester --> File
         Pentester --> Browser[Browser Tool]
         Pentester --> GuideSearch[Search/Store Guides]
-        
+
         Installer --> Terminal
         Installer --> File
         Installer --> Browser
         Installer --> GuideSearch
-        
+
         Memorist --> Terminal
         Memorist --> File
         Memorist --> VectorDB[Vector Database<br/>Memory Search]
     end
-    
+
     subgraph "Search Tool Hierarchy"
         Searcher --> MemoryFirst[Priority 1: Memory Tools]
         MemoryFirst --> AnswerSearch[Search Answers]
         MemoryFirst --> VectorDB
-        
+
         Searcher --> ReconTools[Priority 3-4: Reconnaissance]
         ReconTools --> Google[Google Search]
         ReconTools --> DuckDuckGo[DuckDuckGo Search]
         ReconTools --> Browser
-        
+
         Searcher --> DeepAnalysis[Priority 5: Deep Analysis]
         DeepAnalysis --> Tavily[Tavily Search]
         DeepAnalysis --> Perplexity[Perplexity Search]
         DeepAnalysis --> Traversaal[Traversaal Search]
-        
+
         Searcher --> SecurityTools[Security Research]
         SecurityTools --> Sploitus[Sploitus - Exploit Database]
-        
+
         Searcher --> MetaSearch[Meta Search Engine]
         MetaSearch --> Searxng[Searxng - Privacy Meta Search]
     end
-    
+
     subgraph "Adviser Workflows"
         Adviser[Adviser Agent<br/>Technical Solution Expert]
         Adviser --> Enricher[Enricher Agent<br/>Context Enhancement]
         Enricher --> Memorist
         Enricher --> Searcher
-        
+
         AdviserNote["Also used for:<br/>- Mentor (execution monitoring)<br/>- Planner (task planning)"]
     end
-    
+
     subgraph "Error Correction"
         Reflector[Reflector Agent<br/>Unstructured Response Corrector]
         PA -.->|No tool calls| Reflector
         Reflector -.->|Corrected instruction| PA
     end
-    
+
     subgraph "Barrier Functions"
         Done[done Tool<br/>Complete Subtask]
         Ask[ask Tool<br/>Request User Input]
     end
-    
+
     PA --> Done
     PA --> Ask
-    
+
     subgraph "Execution Environment"
         Terminal --> DockerContainer[Docker Container<br/>Isolated Environment]
         File --> DockerContainer
         Browser --> WebScraper[Web Scraper Container]
     end
-    
+
     subgraph "Vector Storage Types"
         VectorDB --> GuideStore[Guide Storage<br/>doc_type: guide]
         VectorDB --> AnswerStore[Answer Storage<br/>doc_type: answer]
@@ -292,11 +292,11 @@ sequenceDiagram
     participant Specialists as Specialist Agents
     participant DirectTools as Direct Tools
     participant Stream as Message Stream
-    
+
     U->>AW: Interactive request with UseAgents flag
     AW->>AP: Process input
     AP->>AA: Execute with UseAgents configuration
-    
+
     alt UseAgents = true
         Note over AA,Specialists: Full agent delegation enabled
         AA->>Specialists: search, pentester, coder, advice, memorist, maintenance
@@ -304,22 +304,22 @@ sequenceDiagram
         AA->>DirectTools: terminal, file, browser
         DirectTools-->>AA: Direct tool responses
     else UseAgents = false
-        Note over AA,DirectTools: Direct tools only mode  
+        Note over AA,DirectTools: Direct tools only mode
         AA->>DirectTools: terminal, file, browser
         AA->>DirectTools: google, duckduckgo, sploitus, tavily, traversaal, perplexity
         AA->>DirectTools: search_in_memory, search_guide, search_answer, search_code
         DirectTools-->>AA: Tool responses (no agent delegation)
     end
-    
+
     AA->>Stream: Stream response chunks (thinking/content/updates)
     Stream-->>U: Real-time streaming updates
-    
+
     opt Conversation continues
         U->>AW: Follow-up input
         Note over AW: Message chain preserved in DB
         AW->>AP: Continue conversation context
     end
-    
+
     opt FlowWorker injected (flow management enabled)
         Note over AP,AA: get_flow_status / stop_flow / submit_flow_input / patch_flow_subtasks available
         AA->>AP: Call flow management tool
@@ -338,36 +338,36 @@ graph LR
         Code[Code Samples<br/>doc_type: code<br/>code_lang: python/bash/etc]
         Memory[Execution Memory<br/>doc_type: memory<br/>tool_name + results]
     end
-    
+
     subgraph "Vector Operations (threshold: 0.2, limit: 3)"
         SearchOps[search_guide<br/>search_answer<br/>search_code<br/>search_in_memory]
         StoreOps[store_guide<br/>store_answer<br/>store_code<br/>auto-store from 18 tools]
     end
-    
+
     subgraph "Auto-Storage Tools (18 total)"
         EnvTools[terminal, file]
         SearchEngines[google, duckduckgo, tavily,<br/>traversaal, perplexity, sploitus, searxng]
         AgentTools[search, maintenance, coder,<br/>pentester, advice]
     end
-    
+
     SearchOps --> Guides
-    SearchOps --> Answers  
+    SearchOps --> Answers
     SearchOps --> Code
     SearchOps --> Memory
-    
+
     StoreOps --> Guides
     StoreOps --> Answers
     StoreOps --> Code
     StoreOps --> Memory
-    
+
     EnvTools --> Memory
     SearchEngines --> Memory
     AgentTools --> Memory
-    
+
     subgraph "Vector Database"
         PostgreSQL[(PostgreSQL + pgvector<br/>Similarity Search<br/>Metadata Filtering)]
     end
-    
+
     SearchOps --> PostgreSQL
     StoreOps --> PostgreSQL
     Memory --> PostgreSQL
@@ -387,7 +387,7 @@ graph TD
     PC --> Qwen[Alibaba Cloud DashScope Provider]
     PC --> Ollama[Ollama Provider]
     PC --> Custom[Custom Provider]
-    
+
     subgraph "Agent Configurations"
         Simple[Simple Agent]
         JSON[Simple JSON Agent]
@@ -403,7 +403,7 @@ graph TD
         Installer[Installer Agent]
         Pentester[Pentester Agent]
     end
-    
+
     OpenAI --> Simple
     OpenAI --> JSON
     OpenAI --> Primary
@@ -417,7 +417,7 @@ graph TD
     OpenAI --> Coder
     OpenAI --> Installer
     OpenAI --> Pentester
-    
+
     Note1[Each provider supports 13 agent types:<br/>Simple, SimpleJSON, PrimaryAgent, Assistant<br/>Generator, Refiner, Adviser, Reflector<br/>Searcher, Enricher, Coder, Installer, Pentester]
 ```
 
@@ -427,44 +427,44 @@ graph TD
 graph TD
     Agent[AI Agent] --> ContextSetup[Set Agent Context<br/>ParentAgent → CurrentAgent]
     ContextSetup --> ToolCall[Tool Call Execution]
-    
+
     ToolCall --> Logging[Tool Call Logging<br/>Store in database]
     Logging --> MessageLog[Message Log Creation<br/>Thinking + Message]
     MessageLog --> Execution[Execute Handler]
-    
+
     Execution --> Success{Execution<br/>Successful?}
     Success -->|Yes| StoreMemory[Store in Vector DB<br/>If allowed tool type]
     StoreMemory --> UpdateResult[Update Message Result]
     UpdateResult --> Continue[Continue Workflow]
-    
+
     Success -->|No| ErrorType{Error Type?}
-    
+
     ErrorType -->|Invalid JSON| ToolCallFixer[Tool Call Fixer Agent]
     ToolCallFixer --> FixedJSON[Corrected JSON Arguments]
     FixedJSON --> Retry1[Retry Execution]
-    
+
     ErrorType -->|Other Error| Retry2[Direct Retry]
     Retry1 --> RetryCount{Retry Count<br/>< 3?}
     Retry2 --> RetryCount
-    
+
     RetryCount -->|Yes| ToolCall
     RetryCount -->|No| RepeatingDetector[Repeating Detector]
-    
+
     RepeatingDetector --> BlockTool[Block Tool Call]
     BlockTool --> Agent
-    
+
     Agent --> NoToolCalls{Returns<br/>Unstructured Text?}
     NoToolCalls -->|Yes| Reflector[Reflector Agent]
     Reflector --> UserGuidance[User-style Guidance]
     UserGuidance --> Agent
-    
+
     NoToolCalls -->|No| Continue
-    
+
     subgraph "Memory Storage Rules"
         AllowedTools[18 Allowed Tools:<br/>terminal, file, search engines,<br/>agent delegation tools]
         AutoSummarize[Auto Summarize:<br/>terminal, browser > 16KB]
     end
-    
+
     StoreMemory --> AllowedTools
     UpdateResult --> AutoSummarize
 ```
@@ -477,11 +477,11 @@ graph TB
         Flow[Flow Worker] --> Task[Task Worker] --> Subtask[Subtask Worker]
         Flow --> Assistant[Assistant Worker]
     end
-    
+
     subgraph "Controller Layer"
         FlowCtrl[Flow Controller]
         MsgLogCtrl[Message Log Controller]
-        AgentLogCtrl[Agent Log Controller]  
+        AgentLogCtrl[Agent Log Controller]
         SearchLogCtrl[Search Log Controller]
         TermLogCtrl[Terminal Log Controller]
         VectorLogCtrl[Vector Store Log Controller]
@@ -489,18 +489,18 @@ graph TB
         ScreenshotCtrl[Screenshot Controller]
         AssistantLogCtrl[Assistant Log Controller]
     end
-    
+
     subgraph "Worker Layer (per Flow)"
         MsgLogWorker[Flow Message Log Worker]
         AgentLogWorker[Flow Agent Log Worker]
-        SearchLogWorker[Flow Search Log Worker]  
+        SearchLogWorker[Flow Search Log Worker]
         TermLogWorker[Flow Terminal Log Worker]
         VectorLogWorker[Flow Vector Store Log Worker]
         ToolCallLogWorker[Flow Tool Call Log Worker]
         ScreenshotWorker[Flow Screenshot Worker]
         AssistantLogWorker[Flow Assistant Log Worker]
     end
-    
+
     subgraph "Database Logging"
         MsgLogDB[(Message Logs<br/>User interactions)]
         AgentLogDB[(Agent Logs<br/>Initiator → Executor)]
@@ -511,12 +511,12 @@ graph TB
         ScreenshotDB[(Screenshots<br/>Browser captures)]
         AssistantLogDB[(Assistant Logs<br/>Interactive conversation)]
     end
-    
+
     subgraph "Real-time Updates"
         GraphQL[GraphQL Subscriptions]
         Publisher[Flow Publisher]
     end
-    
+
     FlowCtrl --> MsgLogCtrl
     FlowCtrl --> AgentLogCtrl
     FlowCtrl --> SearchLogCtrl
@@ -525,7 +525,7 @@ graph TB
     FlowCtrl --> ToolCallLogCtrl
     FlowCtrl --> ScreenshotCtrl
     FlowCtrl --> AssistantLogCtrl
-    
+
     MsgLogCtrl --> MsgLogWorker
     AgentLogCtrl --> AgentLogWorker
     SearchLogCtrl --> SearchLogWorker
@@ -534,7 +534,7 @@ graph TB
     ToolCallLogCtrl --> ToolCallLogWorker
     ScreenshotCtrl --> ScreenshotWorker
     AssistantLogCtrl --> AssistantLogWorker
-    
+
     MsgLogWorker --> MsgLogDB
     AgentLogWorker --> AgentLogDB
     SearchLogWorker --> SearchLogDB
@@ -543,7 +543,7 @@ graph TB
     ToolCallLogWorker --> ToolCallLogDB
     ScreenshotWorker --> ScreenshotDB
     AssistantLogWorker --> AssistantLogDB
-    
+
     Flow --> MsgLogWorker
     Subtask --> AgentLogWorker
     Subtask --> SearchLogWorker
@@ -552,7 +552,7 @@ graph TB
     Subtask --> ToolCallLogWorker
     Subtask --> ScreenshotWorker
     Assistant --> AssistantLogWorker
-    
+
     MsgLogWorker --> Publisher
     AgentLogWorker --> Publisher
     SearchLogWorker --> Publisher
@@ -561,7 +561,7 @@ graph TB
     ToolCallLogWorker --> Publisher
     ScreenshotWorker --> Publisher
     AssistantLogWorker --> Publisher
-    
+
     Publisher --> GraphQL
 ```
 
@@ -573,14 +573,14 @@ graph TB
         ImageSelection[Image Chooser Agent<br/>Select optimal image]
         ContainerSpawn[Container Creation<br/>With security capabilities]
     end
-    
+
     subgraph "Container Configuration"
         Primary[Primary Container<br/>Main execution environment]
         Ports[Dynamic Port Allocation<br/>Base: 28000 + flowID*2]
         Volumes[Volume Management<br/>Data persistence]
         Network[Network Configuration<br/>Optional custom network]
     end
-    
+
     subgraph "Tool Execution Environment"
         WorkDir[Work Directory<br/>/work in container]
         Uploads[User Uploads<br/>/work/uploads]
@@ -589,11 +589,11 @@ graph TB
         FileOps[File Operations<br/>Absolute paths required]
         WebAccess[Web Access<br/>Separate scraper container]
     end
-    
+
     ImageSelection --> Primary
     ContainerSpawn --> Primary
     Primary --> Ports
-    Primary --> Volumes  
+    Primary --> Volumes
     Primary --> Network
     Primary --> WorkDir
     WorkDir --> Uploads
@@ -601,14 +601,14 @@ graph TB
     WorkDir --> Terminal
     WorkDir --> FileOps
     Primary --> WebAccess
-    
+
     subgraph "Security Capabilities"
         NetRaw[NET_RAW Capability<br/>Network packet access]
         NetAdmin[NET_ADMIN Capability<br/>Optional: Network admin]
         Isolation[Container Isolation<br/>No host access]
         RestartPolicy[Restart Policy<br/>unless-stopped]
     end
-    
+
     Primary --> NetRaw
     Primary --> NetAdmin
     Primary --> Isolation
@@ -622,7 +622,7 @@ Each AI agent interaction is managed through typed message chains that maintain 
 
 **Chain Types by Agent**:
 - `MsgchainTypePrimaryAgent` - Primary Agent orchestration chains
-- `MsgchainTypeGenerator` - Subtask generation chains  
+- `MsgchainTypeGenerator` - Subtask generation chains
 - `MsgchainTypeRefiner` - Subtask refinement chains
 - `MsgchainTypeReporter` - Final report generation chains
 - `MsgchainTypeCoder` - Code development chains
@@ -647,7 +647,7 @@ The system maintains agent execution context through the call chain:
 
 **Agent Context Structure**:
 - **ParentAgentType** - The agent that initiated the current operation
-- **CurrentAgentType** - The agent currently executing  
+- **CurrentAgentType** - The agent currently executing
 
 **Context Propagation**:
 - Set via `PutAgentContext(ctx, agentType)` when invoking agents
@@ -657,7 +657,7 @@ The system maintains agent execution context through the call chain:
 
 **Message Chain Types** (tracks agent interactions):
 - `MsgchainTypePrimaryAgent`, `MsgchainTypeGenerator`, `MsgchainTypeRefiner`
-- `MsgchainTypeReporter`, `MsgchainTypeCoder`, `MsgchainTypePentester` 
+- `MsgchainTypeReporter`, `MsgchainTypeCoder`, `MsgchainTypePentester`
 - `MsgchainTypeInstaller`, `MsgchainTypeMemorist`, `MsgchainTypeSearcher`
 - `MsgchainTypeAdviser`, `MsgchainTypeReflector`, `MsgchainTypeEnricher`
 - `MsgchainTypeAssistant`, `MsgchainTypeSummarizer`, `MsgchainTypeToolCallFixer`
@@ -731,7 +731,7 @@ The system maintains multiple types of persistent knowledge with PostgreSQL + pg
 **Vector Store Types**:
 - **Memory Storage** (`doc_type: memory`) - Tool execution results and agent observations
 - **Guide Storage** (`doc_type: guide`) - Installation and configuration procedures
-- **Answer Storage** (`doc_type: answer`) - Q&A pairs for common scenarios  
+- **Answer Storage** (`doc_type: answer`) - Q&A pairs for common scenarios
 - **Code Storage** (`doc_type: code`) - Programming language-specific code samples
 
 **Lifecycle Guidance**:
@@ -752,11 +752,11 @@ The Searcher Agent follows a strict hierarchy for information retrieval:
 1. **Priority 1-2: Memory Tools** - Always check internal knowledge first
    - `search_answer` - Primary tool for accessing existing knowledge
    - `memorist` - Retrieves task/subtask execution history
-   
+
 2. **Priority 3-4: Reconnaissance Tools** - Fast source discovery
    - `google` and `duckduckgo` - Rapid link collection and basic searches
    - `browser` - Targeted content extraction from specific URLs
-   
+
 3. **Priority 5: Deep Analysis Tools** - Complex research synthesis
    - `traversaal` - Structured answers for common questions
    - `tavily` - Research-grade exploration of technical topics
@@ -781,13 +781,13 @@ A critical system-wide mechanism for context management:
 - **Two Summary Types**:
   1. **Tool Call Summary** - AI message with only `SummarizationToolName` tool call
   2. **Prefixed Summary** - AI message starting with `SummarizedContentPrefix`
-  
+
 - **Agent Handling Rules**:
   - Must treat summaries as **historical records** of actual past events
   - Extract useful information to inform current strategy
   - **Never mimic** summary formats or use summarization tools
   - Continue using structured tool calls for all actions
-  
+
 - **System Benefits**:
   - Prevents context window overflow during long conversations
   - Maintains conversation coherence across system restarts
@@ -805,17 +805,17 @@ graph LR
         StreamID --> FlushChunk[Flush Chunks<br/>Segment Completion]
         StreamID --> ResultChunk[Result Chunks<br/>Final Results]
     end
-    
+
     subgraph "Assistant Streaming"
         AssistantAgent[Assistant Agent] --> StreamCache[Stream Cache<br/>LRU 1000 entries, 2h TTL]
         StreamCache --> StreamWorker[Stream Worker<br/>30s timeout]
         StreamWorker --> AssistantUpdate[Real-time Updates]
     end
-    
+
     subgraph "Real-time Distribution"
         Publisher[Flow Publisher] --> GraphQLSubs[GraphQL Subscriptions]
         GraphQLSubs --> FlowCreated[Flow Created/Updated]
-        GraphQLSubs --> TaskCreated[Task Created/Updated] 
+        GraphQLSubs --> TaskCreated[Task Created/Updated]
         GraphQLSubs --> AgentLogAdded[Agent Log Added]
         GraphQLSubs --> MessageLogAdded[Message Log Added/Updated]
         GraphQLSubs --> TerminalLogAdded[Terminal Log Added]
@@ -825,9 +825,9 @@ graph LR
         GraphQLSubs --> ScreenshotAdded[Screenshot Added]
         GraphQLSubs --> AssistantLogAdded[Assistant Log Added/Updated]
     end
-    
+
     ThinkingChunk --> Publisher
-    ContentChunk --> Publisher  
+    ContentChunk --> Publisher
     UpdateChunk --> Publisher
     FlushChunk --> Publisher
     ResultChunk --> Publisher
@@ -846,9 +846,9 @@ The system uses 25+ dedicated prompt types for specific functions:
 
 **System Function Prompts**:
 - **Image Chooser** - Selects optimal Docker image, fallback to `vxcontrol/kali-linux` for pentest
-- **Language Chooser** - Detects user's preferred language for responses  
+- **Language Chooser** - Detects user's preferred language for responses
 - **Flow Descriptor** - Generates concise Flow titles (max 20 characters)
-- **Task Descriptor** - Creates descriptive Task titles (max 150 characters)  
+- **Task Descriptor** - Creates descriptive Task titles (max 150 characters)
 - **Tool Call Fixer** - Repairs invalid JSON arguments using schema validation
 - **Execution Context** - Templates for full/short context summaries
 - **Execution Logs** - Formats chronological action histories for summarization
@@ -866,7 +866,7 @@ The system uses 25+ dedicated prompt types for specific functions:
 
 **Critical Prompt Features**:
 - **XML Semantic Delimiters** - Structured sections like `<memory_protocol>`, `<terminal_protocol>`
-- **Summarization Awareness** - Universal protocol for handling historical summaries  
+- **Summarization Awareness** - Universal protocol for handling historical summaries
 - **Tool Placeholder System** - `{{.ToolPlaceholder}}` injection at prompt end
 - **Task Materials Section** - `{{.UserFiles}}` lists user uploads/resources when present
 - **Template Variable System** - 50+ variables for dynamic content injection
@@ -884,7 +884,7 @@ Several mechanisms ensure efficient execution:
 
 **Timeout Configuration**:
 - **Terminal Operations** - Configurable via `TERMINAL_TOOL_TIMEOUT` (default: 1200s); hard limit 3h/10800s; 0 or negative values clamped to hard limit
-- **LLM API Calls** - 3 retries with 5-second delays between attempts  
+- **LLM API Calls** - 3 retries with 5-second delays between attempts
 - **Vector Search** - Threshold 0.2, max 3 results per query
 - **Tool Result Summarization** - Triggered at 16KB result size
 - **Flow Input Processing** - 1 second timeout for input queueing
@@ -901,7 +901,7 @@ Several mechanisms ensure efficient execution:
 **Memory Optimization**:
 - **Message summarization** - Prevents context window overflow
 - **Summarizer result cache** - LRU cache per FlowProvider (1000 entries, 4h TTL); keyed by SHA-256 of input; skips LLM call for repeated identical content
-- **Tool argument limits** - 1KB limit for individual argument values  
+- **Tool argument limits** - 1KB limit for individual argument values
 - **Connection pooling** - Database connections are reused
 - **Automatic cleanup** - Containers removed after Flow completion
 
@@ -911,7 +911,7 @@ Critical mechanism for human-in-the-loop operations:
 **Ask User Workflow**:
 1. **Primary Agent** calls `ask` tool with question for user
 2. **PerformResultWaiting** returned to SubtaskWorker
-3. **Subtask status** set to `SubtaskStatusWaiting`  
+3. **Subtask status** set to `SubtaskStatusWaiting`
 4. **Task status** propagated to `TaskStatusWaiting`
 5. **Flow status** propagated to `FlowStatusWaiting`
 6. **User provides input** via Flow interface
@@ -928,7 +928,7 @@ Critical mechanism for human-in-the-loop operations:
 The browser tool provides advanced web interaction capabilities:
 
 **Browser Actions**:
-- **Markdown Extraction** - Clean text content from web pages  
+- **Markdown Extraction** - Clean text content from web pages
 - **HTML Content** - Raw HTML for detailed analysis
 - **Link Extraction** - Collect all URLs from pages for further navigation
 
@@ -1006,7 +1006,7 @@ To prevent runaway executions, each agent has a hard limit on tool calls. The li
   - Default: 100 tool calls
   - Configurable via `MAX_GENERAL_AGENT_TOOL_CALLS`
   - Designed for complex, multi-step workflows requiring extensive tool usage
-  
+
 - **Limited Agents** (Searcher, Enricher, Memorist, Generator, Reporter, Adviser, Reflector, Planner):
   - Default: 20 tool calls
   - Configurable via `MAX_LIMITED_AGENT_TOOL_CALLS`
@@ -1095,21 +1095,21 @@ graph TB
         Analysis[Mentor Analysis]
         EnhancedResp[Enhanced Response]
     end
-    
+
     subgraph "Generation Failure Recovery"
         CallRetries[callWithRetries Loop]
         MaxRetries{Max Retries<br/>Reached?}
         InvokeReflector1[Invoke Reflector]
         Guidance[Corrective Guidance]
     end
-    
+
     subgraph "Hard Limit Termination"
         AgentChain[performAgentChain Loop]
         LimitCheck{Tool Call<br/>Limit?}
         InvokeReflector2[Invoke Reflector]
         GracefulExit[Graceful Termination]
     end
-    
+
     subgraph "Task Planning (Planner)"
         SpecialistStart[Specialist Agent Start]
         PlanCheck{Planning<br/>Enabled?}
@@ -1117,24 +1117,24 @@ graph TB
         WrapPrompt[Wrap with Plan]
         Execute[Execute with Plan]
     end
-    
+
     ToolCall --> EMD
     EMD --> MentorCheck
     MentorCheck -->|Yes| InvokeMentor
     MentorCheck -->|No| Continue[Continue Execution]
     InvokeMentor --> Analysis
     Analysis --> EnhancedResp
-    
+
     CallRetries --> MaxRetries
     MaxRetries -->|Yes| InvokeReflector1
     MaxRetries -->|No| Retry[Retry Call]
     InvokeReflector1 --> Guidance
-    
+
     AgentChain --> LimitCheck
     LimitCheck -->|Limit Exceeded| InvokeReflector2
     LimitCheck -->|Within Limit| Continue
     InvokeReflector2 --> GracefulExit
-    
+
     SpecialistStart --> PlanCheck
     PlanCheck -->|Yes| GetPlan
     PlanCheck -->|No| Execute
@@ -1184,7 +1184,7 @@ The Flow execution system represents a sophisticated orchestration platform that
 
 ### Agent Specialization
 - **Role-based delegation** - Each agent has specific expertise and tool access
-- **Memory-first approach** - All agents check vector storage before external operations  
+- **Memory-first approach** - All agents check vector storage before external operations
 - **Structured communication** - Exclusive use of tool calls except Assistant final responses
 - **Adaptive planning** - Generator creates initial plans, Refiner optimizes based on results
 - **Context propagation** - Parent/Current agent tracking for delegation chains
@@ -1219,7 +1219,7 @@ The Flow execution system represents a sophisticated orchestration platform that
 **Message Chain Consistency**:
 - **AST Processing**: Uses Chain Abstract Syntax Tree for structured message analysis
 - **Fallback Content**: Unresponded tool calls get default responses via `cast.FallbackResponseContent`
-- **Chain Restoration**: Intelligent restoration of conversation context after interruptions  
+- **Chain Restoration**: Intelligent restoration of conversation context after interruptions
 - **Summarization Integration**: Seamless integration with summarization when restoring chains
 
 **Flow Publisher Integration**:
@@ -1256,7 +1256,7 @@ The Flow execution system represents a sophisticated orchestration platform that
 
 **Security & Isolation**:
 - **Container isolation**: Docker-based security boundaries with capability controls
-- **Multi-tenant design**: User-scoped operations with resource isolation  
+- **Multi-tenant design**: User-scoped operations with resource isolation
 - **Network segmentation**: Separate containers for web scraping vs. tool execution
 - **Resource limits**: Comprehensive timeout and resource management
 

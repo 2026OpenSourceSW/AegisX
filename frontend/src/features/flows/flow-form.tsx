@@ -43,14 +43,15 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useResourcesUpload } from '@/features/resources/use-resources-upload';
+import { cn } from '@/lib/utils';
 import { getProviderDisplayName } from '@/models/provider';
 import { useProviders } from '@/providers/providers-provider';
 import { useResources } from '@/providers/resources-provider';
 import { type Template, useTemplates } from '@/providers/templates-provider';
 
 const formSchema = z.object({
-    message: z.string().trim().min(1, { message: 'Message cannot be empty' }),
-    providerName: z.string().trim().min(1, { message: 'Provider must be selected' }),
+    message: z.string().trim().min(1, { message: '메시지를 입력해야 합니다' }),
+    providerName: z.string().trim().min(1, { message: 'Provider를 선택해야 합니다' }),
     resourceIds: z.array(z.string()),
     useAgents: z.boolean(),
 });
@@ -65,6 +66,7 @@ export interface FlowFormProps {
     onCancel?: () => Promise<void> | void;
     onSubmit: (values: FlowFormValues) => Promise<void> | void;
     placeholder?: string;
+    submitLabel?: string;
     type: 'assistant' | 'automation';
 }
 
@@ -79,7 +81,8 @@ export function FlowForm({
     isSubmitting,
     onCancel,
     onSubmit,
-    placeholder = 'Describe what you would like PentAGI to test...',
+    placeholder = 'AegisX가 점검할 내용을 입력하세요...',
+    submitLabel,
     type,
 }: FlowFormProps) {
     const { providers, setSelectedProvider } = useProviders();
@@ -203,7 +206,9 @@ export function FlowForm({
 
             updateResourceIds((current) => {
                 const merged = new Set(current);
-                ids.forEach((id) => merged.add(id));
+                ids.forEach((id) => {
+                    merged.add(id);
+                });
 
                 return Array.from(merged);
             });
@@ -241,7 +246,7 @@ export function FlowForm({
             })
             .forEach(([fieldName, defaultValue]) => {
                 const typedFieldName = fieldName as keyof FlowFormValues;
-                setValue(typedFieldName, defaultValue as never, { shouldDirty: false });
+                setValue(typedFieldName, defaultValue as never, { shouldDirty: false, shouldValidate: true });
             });
     }, [defaultValues, dirtyFields, setValue, getValues]);
 
@@ -341,7 +346,7 @@ export function FlowForm({
                         onChange={(event) => setTemplateSearch(event.target.value)}
                         onClick={(event) => event.stopPropagation()}
                         onKeyDown={(event) => event.stopPropagation()}
-                        placeholder="Search..."
+                        placeholder="검색..."
                         value={templateSearch}
                     />
                     {templateSearch && (
@@ -365,7 +370,7 @@ export function FlowForm({
                         className="min-h-16 justify-center"
                         disabled
                     >
-                        {templateSearch ? 'No results found' : 'No available templates'}
+                        {templateSearch ? '검색 결과가 없습니다' : '사용 가능한 템플릿이 없습니다'}
                     </DropdownMenuItem>
                 ) : (
                     filteredTemplates.map((template) => (
@@ -395,7 +400,7 @@ export function FlowForm({
                         onChange={(event) => setResourceSearch(event.target.value)}
                         onClick={(event) => event.stopPropagation()}
                         onKeyDown={(event) => event.stopPropagation()}
-                        placeholder="Search..."
+                        placeholder="검색..."
                         value={resourceSearch}
                     />
                     {resourceSearch && (
@@ -419,7 +424,7 @@ export function FlowForm({
                         className="min-h-16 justify-center"
                         disabled
                     >
-                        {resourceSearch ? 'No results found' : 'No available resources'}
+                        {resourceSearch ? '검색 결과가 없습니다' : '사용 가능한 자료가 없습니다'}
                     </DropdownMenuItem>
                 ) : (
                     filteredResources.map((resource) => {
@@ -526,7 +531,7 @@ export function FlowForm({
                                 <InputGroupTextareaAutosize
                                     {...field}
                                     autoFocus
-                                    className="min-h-0"
+                                    className={cn('min-h-0', submitLabel && 'pb-12')}
                                     disabled={isFormDisabled}
                                     maxRows={9}
                                     minRows={1}
@@ -559,7 +564,7 @@ export function FlowForm({
                                                             <span className="max-w-40 truncate">
                                                                 {currentProvider
                                                                     ? getProviderDisplayName(currentProvider)
-                                                                    : 'Select Provider'}
+                                                                    : 'Provider 선택'}
                                                             </span>
                                                             <ChevronDown />
                                                         </InputGroupButton>
@@ -576,7 +581,7 @@ export function FlowForm({
                                                                     }
                                                                     onClick={(event) => event.stopPropagation()}
                                                                     onKeyDown={(event) => event.stopPropagation()}
-                                                                    placeholder="Search..."
+                                                                    placeholder="검색..."
                                                                     value={providerSearch}
                                                                 />
                                                                 {providerSearch && (
@@ -601,8 +606,8 @@ export function FlowForm({
                                                                     disabled
                                                                 >
                                                                     {providerSearch
-                                                                        ? 'No results found'
-                                                                        : 'No available providers'}
+                                                                        ? '검색 결과가 없습니다'
+                                                                        : '사용 가능한 provider가 없습니다'}
                                                                 </DropdownMenuItem>
                                                             ) : (
                                                                 filteredProviders.map((provider) => (
@@ -663,13 +668,13 @@ export function FlowForm({
                                                                         useAgentsField.onChange(!useAgentsField.value)
                                                                     }
                                                                 >
-                                                                    Use Agents
+                                                                    Agents 사용
                                                                 </FormLabel>
                                                             </FormItem>
                                                         </TooltipTrigger>
                                                         <TooltipContent>
                                                             <p className="max-w-48">
-                                                                Enable multi-agent collaboration for complex tasks
+                                                                복잡한 작업에 multi-agent 협업을 사용합니다.
                                                             </p>
                                                         </TooltipContent>
                                                     </Tooltip>
@@ -688,7 +693,7 @@ export function FlowForm({
                                     >
                                         <DropdownMenuTrigger asChild>
                                             <InputGroupButton
-                                                aria-label="Templates and resources"
+                                                aria-label="템플릿 및 자료"
                                                 className="ml-auto shrink-0"
                                                 disabled={isFormDisabled}
                                                 size="icon-xs"
@@ -740,14 +745,14 @@ export function FlowForm({
                                                         value="templates"
                                                     >
                                                         <FileText className="size-3.5" />
-                                                        Templates
+                                                        템플릿
                                                     </TabsTrigger>
                                                     <TabsTrigger
                                                         className="gap-1.5"
                                                         value="resources"
                                                     >
                                                         <Paperclip className="size-3.5" />
-                                                        Resources
+                                                        자료
                                                         {flowResources.length > 0 && (
                                                             <span className="bg-muted-foreground/20 text-foreground flex h-4 min-w-4 items-center justify-center rounded px-1 text-[10px] font-medium tabular-nums">
                                                                 {flowResources.length}
@@ -761,14 +766,24 @@ export function FlowForm({
 
                                     {!isLoading || isSubmitting ? (
                                         <InputGroupButton
-                                            aria-label={isSubmitting ? 'Submitting…' : 'Submit'}
-                                            className="shrink-0"
+                                            aria-label={isSubmitting ? '제출 중...' : (submitLabel ?? '제출')}
+                                            className={cn(
+                                                'shrink-0',
+                                                submitLabel &&
+                                                    'h-auto min-h-9 px-4 text-sm font-semibold whitespace-normal',
+                                            )}
                                             disabled={isSubmitting || !isValid || upload.isUploading}
-                                            size="icon-xs"
+                                            size={submitLabel ? 'sm' : 'icon-xs'}
                                             type="submit"
                                             variant="default"
                                         >
-                                            {isSubmitting ? <Spinner variant="circle" /> : <ArrowUp />}
+                                            {isSubmitting ? (
+                                                <Spinner variant="circle" />
+                                            ) : submitLabel ? (
+                                                submitLabel
+                                            ) : (
+                                                <ArrowUp />
+                                            )}
                                         </InputGroupButton>
                                     ) : (
                                         <InputGroupButton

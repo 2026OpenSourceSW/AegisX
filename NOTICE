@@ -1,9 +1,24 @@
+AegisX is a fork of PentAGI with project-specific changes for beginner-friendly AI-assisted penetration testing and optional Shannon white-box scan integration.
+
+Upstream project:
+
 PentAGI, Fully autonomous AI Agent capable of performing complex penetration testing tasks.
 
 Copyright 2025 PentAGI Development Team
 
 Licensed under MIT License. See LICENSE and EULA for terms.
 
+AegisX modification notice:
+
+Copyright 2026 AegisX contributors
+
+PentAGI upstream code remains under the MIT License. AegisX project modifications are tracked in the 2026OpenSourceSW/AegisX Git history and pull requests. The upstream copyright notice and MIT permission notice must stay with copies or substantial portions of the software.
+
 NOTICE: This software integrates VXControl Cloud SDK for enhanced intelligence services.
 VXControl Cloud SDK is licensed under AGPL-3.0 with a special exception for this official PentAGI project.
 For more details, see the License section in README.md and VXControl Cloud SDK license terms.
+AegisX retains this upstream notice for attribution and review context. The VXControl Cloud SDK exception is written for the official PentAGI project and does not automatically apply to AegisX. Maintainers should review whether that exception applies before distributing AegisX builds that include or enable the SDK.
+
+Shannon integration notice:
+
+AegisX can optionally invoke KeygraphHQ Shannon as an external CLI or Docker worker. Shannon source code is not copied into this repository. Keep Shannon's own AGPL-3.0 license and notices with the installed Shannon distribution.
