@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { FlowFormValues } from '@/features/flows/flow-form';
+import type { UserResourceFragmentFragment } from '@/graphql/types';
 
 import { SidebarProvider } from '@/components/ui/sidebar';
 
@@ -15,6 +16,19 @@ const flowMocks = vi.hoisted(() => ({
     setSelectedProvider: vi.fn<(provider: { name: string; type: string }) => void>(),
     uploadFiles: vi.fn<() => Promise<null>>(),
 }));
+
+const resourceFixtures: UserResourceFragmentFragment[] = [
+    {
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        id: '7',
+        isDir: false,
+        name: 'authorized-scope.md',
+        path: 'authorized-scope.md',
+        size: 256,
+        updatedAt: new Date('2026-01-01T00:00:00Z'),
+        userId: 'user-1',
+    },
+];
 
 vi.mock('@/providers/flows-provider', () => ({
     useFlows: () => ({
@@ -54,7 +68,7 @@ vi.mock('@/providers/templates-provider', () => ({
 
 vi.mock('@/providers/resources-provider', () => ({
     useResources: () => ({
-        resources: [],
+        resources: resourceFixtures,
     }),
 }));
 
@@ -137,6 +151,44 @@ describe('NewFlow', () => {
         expect(screen.getByLabelText('current location')).toHaveTextContent('/flows/flow-simple?tab=automation');
     });
 
+    it('keeps simple mode guided while preserving provider, resources, and payload shape', async () => {
+        const user = userEvent.setup();
+
+        renderNewFlow('/flows/new?mode=simple');
+
+        expect(screen.getByText('Authorized target')).toBeInTheDocument();
+        expect(screen.getByText('Scenario')).toBeInTheDocument();
+        expect(screen.getByText('Review launch')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /deepseek/i })).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Templates and resources' }));
+
+        expect(await screen.findByRole('tab', { name: /Templates/ })).toBeInTheDocument();
+        await user.click(screen.getByRole('tab', { name: /Resources/ }));
+        await user.click(await screen.findByText('authorized-scope.md'));
+        await user.keyboard('{Escape}');
+
+        await user.type(
+            screen.getByPlaceholderText('Name the authorized target, scope, and security outcome you want checked...'),
+            'Assess http://host.docker.internal:3000 within owned local staging only',
+        );
+
+        const submitButton = screen.getByRole('button', { name: 'Submit' });
+
+        await waitFor(() => expect(submitButton).toBeEnabled());
+        await user.click(submitButton);
+
+        await waitFor(() => {
+            expect(flowMocks.createFlow).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    message: 'Assess http://host.docker.internal:3000 within owned local staging only',
+                    providerName: 'deepseek',
+                    resourceIds: ['7'],
+                }),
+            );
+        });
+    });
+
     it('preserves assistant creation from expert mode', async () => {
         const user = userEvent.setup();
 
@@ -162,6 +214,23 @@ describe('NewFlow', () => {
         });
         expect(flowMocks.createFlow).not.toHaveBeenCalled();
         expect(screen.getByLabelText('current location')).toHaveTextContent('/flows/flow-assistant?tab=assistant');
+    });
+
+    it('keeps expert mode on the full control surface', async () => {
+        const user = userEvent.setup();
+
+        renderNewFlow('/flows/new?mode=expert');
+
+        expect(screen.getByRole('heading', { name: 'Expert flow configuration' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Full control surface' })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: 'Automation' })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: 'Assistant' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /deepseek/i })).toBeInTheDocument();
+
+        await user.click(screen.getByRole('button', { name: 'Templates and resources' }));
+
+        expect(await screen.findByRole('tab', { name: /Templates/ })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /Resources/ })).toBeInTheDocument();
     });
 
     it('syncs mode selection into the URL', async () => {
