@@ -1,4 +1,4 @@
-# Third-Party Licenses
+# Third-Party Licenses and Notices
 
 This directory contains generated license information for AegisX dependencies inherited from the upstream PentAGI codebase and AegisX project changes.
 
@@ -13,15 +13,18 @@ Run the generator script to create/update license reports (run from project root
 ## Generated Files
 
 ### Backend (Go)
+
 - `backend-dependencies.txt` - Complete list of Go modules
 - `backend-licenses.csv` - Detailed license information (CSV format)
 
 ### Frontend (pnpm)
+
 - `frontend-dependencies.json` - Complete dependency tree (JSON)
 - `frontend-licenses.json` - Detailed license data (JSON)
 - `frontend-licenses.csv` - License data (CSV)
 
-**Note:** 
+**Note:**
+
 - Backend reports require `go-licenses` tool: `go install github.com/google/go-licenses@latest`
 - Frontend reports require `pnpm install` in the frontend directory first.
 
@@ -36,6 +39,18 @@ Generated reports list the licenses detected for packaged dependencies. Review a
 Commonly acceptable licenses include:
 
 MIT, Apache-2.0, BSD-2-Clause, BSD-3-Clause, ISC, MPL-2.0, 0BSD
+
+## Third-Party Notices
+
+AegisX can optionally integrate with KeygraphHQ Shannon as an external white-box pentest helper.
+
+### KeygraphHQ Shannon
+
+- License: AGPL-3.0
+- Integration mode: external CLI or Docker worker only
+- Notes: Shannon source code is not copied into this repository. AegisX executes a separately installed Shannon command when `SHANNON_ENABLED=true`, then imports the generated markdown report as flow/task data.
+
+Keep Shannon's own license and notices with the installed Shannon distribution.
 
 ## Docker Builds
 

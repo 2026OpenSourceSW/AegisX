@@ -170,6 +170,6 @@ Please add:
 1. Dependency names and versions.
 2. License identifiers.
 3. Whether source code was copied into this repository.
-4. Whether `THIRD_PARTY_NOTICES.md`, `NOTICE`, or generated license reports need updates.
+4. Whether `licenses/README.md`, `NOTICE`, or generated license reports need updates.
 5. Any Shannon or upstream PentAGI attribution impact.
 ```
