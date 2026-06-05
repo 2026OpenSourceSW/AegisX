@@ -6,8 +6,17 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import AegisXPageTopbar from '@/components/layouts/aegisx-page-topbar';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FlowForm, type FlowFormValues } from '@/features/flows/flow-form';
@@ -35,7 +44,7 @@ interface ScenarioOption {
 
 const defaultScenario: ScenarioOption = {
     description: '외부에서 접근 가능한 포트 및 서비스 노출 여부를 빠르게 확인합니다.',
-    duration: '3-5 min',
+    duration: '점검 후 산정',
     icon: <Globe2 className="size-5" />,
     id: 'exposure',
     promptIntent: '외부에서 접근 가능한 포트와 서비스를 확인하고, 중요한 노출 위험만 요약합니다.',
@@ -47,7 +56,7 @@ const scenarioOptions: readonly ScenarioOption[] = [
     defaultScenario,
     {
         description: '웹 애플리케이션의 일반적인 보안 취약점을 점검합니다.',
-        duration: '5-10 min',
+        duration: '점검 후 산정',
         icon: <PanelTop className="size-5" />,
         id: 'web-basic',
         promptIntent: '웹 애플리케이션의 기본 보안 상태를 점검하고, 발견 가능성이 높은 문제를 쉽게 설명합니다.',
@@ -56,7 +65,7 @@ const scenarioOptions: readonly ScenarioOption[] = [
     },
     {
         description: '알려진 관리자 경로 및 기본 인증 우회 가능성을 점검합니다.',
-        duration: '3 min',
+        duration: '점검 후 산정',
         icon: <AlertTriangle className="size-5" />,
         id: 'admin-surface',
         promptIntent: '무차별 대입 없이 노출된 관리자 화면과 취약한 기본 접근 경로를 확인합니다.',
@@ -65,7 +74,7 @@ const scenarioOptions: readonly ScenarioOption[] = [
     },
     {
         description: '네트워크 및 웹 애플리케이션 취약점을 포괄적으로 분석합니다.',
-        duration: '10-15 min',
+        duration: '점검 후 산정',
         icon: <ShieldPlus className="size-5" />,
         id: 'baseline',
         promptIntent: '기본 보안 상태를 넓게 검토하고, 바로 조치할 수 있는 핵심 항목 1~2개를 우선 정리합니다.',
@@ -106,15 +115,13 @@ function ExpertModeWorkspace({
     onSubmit,
 }: ExpertModeWorkspaceProps) {
     const placeholder =
-        activeFlowType === 'automation'
-            ? 'AegisX가 점검할 내용을 입력하세요...'
-            : '무엇을 도와드릴까요?';
+        activeFlowType === 'automation' ? 'AegisX가 점검할 내용을 입력하세요...' : '무엇을 도와드릴까요?';
 
     return (
         <main className="bg-background min-h-[calc(100dvh-4rem)] px-4 py-8 md:px-8">
             <div className="mx-auto grid w-full max-w-6xl gap-6">
                 <section>
-                    <h1 className="text-foreground text-3xl leading-10 font-bold">Expert Mode Console</h1>
+                    <h1 className="text-foreground text-3xl leading-10 font-bold">Expert Mode 콘솔</h1>
                     <p className="text-muted-foreground mt-3 text-base leading-7">
                         기존 AegisX 기능과 상세 실행 정보를 그대로 확인할 수 있는 전문가 모드입니다.
                     </p>
@@ -126,7 +133,7 @@ function ExpertModeWorkspace({
                             <div>
                                 <h2 className="text-xl font-bold">전문가 실행 설정</h2>
                                 <p className="text-muted-foreground mt-1 text-sm leading-6">
-                                    실행 방식, provider, resources, templates, agent 설정을 그대로 제어합니다.
+                                    실행 방식, 공급자, 자료, 템플릿, 에이전트 설정을 그대로 제어합니다.
                                 </p>
                             </div>
                             <Tabs
@@ -139,13 +146,13 @@ function ExpertModeWorkspace({
                                         disabled={isLoading}
                                         value="automation"
                                     >
-                                        Automation
+                                        자동 점검
                                     </TabsTrigger>
                                     <TabsTrigger
                                         disabled={isLoading}
                                         value="assistant"
                                     >
-                                        Assistant
+                                        어시스턴트
                                     </TabsTrigger>
                                 </TabsList>
                             </Tabs>
@@ -350,14 +357,30 @@ function SimpleModeWorkspace({
     selectedScenarioId,
     target,
 }: SimpleModeWorkspaceProps) {
+    const [isAuthorizationDialogOpen, setIsAuthorizationDialogOpen] = useState(false);
+
+    const handleOwnershipCheckedChange = (checked: boolean) => {
+        if (checked) {
+            setIsAuthorizationDialogOpen(true);
+
+            return;
+        }
+
+        onOwnershipChange(false);
+    };
+
+    const handleAuthorizationAccept = () => {
+        onOwnershipChange(true);
+        setIsAuthorizationDialogOpen(false);
+    };
+
     return (
         <main className="bg-background min-h-[calc(100dvh-4rem)] px-4 py-8 md:px-8">
             <div className="mx-auto grid w-full max-w-6xl gap-8">
                 <section className="max-w-3xl">
-                    <h1 className="text-foreground text-3xl leading-10 font-bold">쉬운 보안 점검 시작</h1>
+                    <h1 className="text-foreground text-3xl leading-10 font-bold">보안 점검 시작</h1>
                     <p className="text-muted-foreground mt-3 text-base leading-7">
-                        점검할 대상을 입력하고 원하는 점검 목적을 선택하세요. 복잡한 설정 없이 기본 보안 상태를 확인할
-                        수 있습니다.
+                        비교적 빠르고 간편하게 보안 상태를 확인할 수 있습니다.
                     </p>
                 </section>
 
@@ -382,7 +405,7 @@ function SimpleModeWorkspace({
                                 checked={isOwnershipConfirmed}
                                 className="mt-1"
                                 id="simple-ownership-check"
-                                onCheckedChange={(checked) => onOwnershipChange(checked === true)}
+                                onCheckedChange={(checked) => handleOwnershipCheckedChange(checked === true)}
                             />
                             <label
                                 className="cursor-pointer select-none"
@@ -441,6 +464,37 @@ function SimpleModeWorkspace({
                     />
                 </section>
             </div>
+
+            <Dialog
+                onOpenChange={setIsAuthorizationDialogOpen}
+                open={isAuthorizationDialogOpen}
+            >
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>점검 권한 확인</DialogTitle>
+                        <DialogDescription className="leading-6">
+                            본인은 해당 대상의 소유자이거나 정당한 점검 권한을 보유하고 있음을 확인합니다.
+                            <br />
+                            무단 보안 점검은 관련 법령 위반에 해당할 수 있으며, 모든 책임은 사용자 본인에게 있습니다.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            onClick={() => setIsAuthorizationDialogOpen(false)}
+                            type="button"
+                            variant="outline"
+                        >
+                            취소
+                        </Button>
+                        <Button
+                            onClick={handleAuthorizationAccept}
+                            type="button"
+                        >
+                            동의하고 계속하기
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </main>
     );
 }

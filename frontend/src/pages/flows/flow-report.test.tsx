@@ -124,7 +124,7 @@ describe('FlowReport', () => {
         await waitFor(() => {
             expect(reportMocks.generatePDFFromMarkdown).toHaveBeenCalledWith(
                 expect.stringContaining('SQL injection evidence'),
-                expect.stringMatching(/^report_flow_101_aegisx_evidence_flow_\d{14}\.pdf$/),
+                expect.stringMatching(/^report_flow_101_aegisx_evidence_flow_\d{14}$/),
             );
         });
     });

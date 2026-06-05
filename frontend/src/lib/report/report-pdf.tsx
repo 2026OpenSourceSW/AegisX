@@ -23,7 +23,6 @@ Font.register({
     ],
 });
 
-// Register Noto Sans SC (Simplified Chinese, covers CJK + Latin)
 Font.register({
     family: 'NotoSansSC',
     fonts: [
@@ -35,8 +34,8 @@ Font.register({
 // Disable word hyphenation (breaks CJK and Cyrillic incorrectly)
 Font.registerHyphenationCallback((word) => [word]);
 
-// Regex that matches any CJK unified ideographs or CJK punctuation/fullwidth chars
-const CJK_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]+/g;
+const CJK_RE =
+    /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF\u3040-\u30FF\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]+(?:[\u0020\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF\u3040-\u30FF\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]+)*/g;
 
 interface TextSegment {
     isCJK: boolean;
@@ -47,21 +46,22 @@ interface TextSegment {
  * Splits a string into alternating non-CJK and CJK segments so each segment
  * can be rendered with the appropriate font family.
  */
-const splitByCJK = (text: string): TextSegment[] => {
+export const splitTextForPdfFonts = (text: string): TextSegment[] => {
     const segments: TextSegment[] = [];
     let lastIndex = 0;
 
     CJK_RE.lastIndex = 0;
 
-    let match: null | RegExpExecArray;
+    let match = CJK_RE.exec(text);
 
-    while ((match = CJK_RE.exec(text)) !== null) {
+    while (match !== null) {
         if (match.index > lastIndex) {
             segments.push({ isCJK: false, text: text.slice(lastIndex, match.index) });
         }
 
         segments.push({ isCJK: true, text: match[0] });
         lastIndex = match.index + match[0].length;
+        match = CJK_RE.exec(text);
     }
 
     if (lastIndex < text.length) {
@@ -69,6 +69,14 @@ const splitByCJK = (text: string): TextSegment[] => {
     }
 
     return segments.length > 0 ? segments : [{ isCJK: false, text }];
+};
+
+export const createPdfNodeKey = (base: string, occurrences: Map<string, number>): string => {
+    const occurrence = (occurrences.get(base) ?? 0) + 1;
+
+    occurrences.set(base, occurrence);
+
+    return `${base}-${occurrence}`;
 };
 
 const pdfStyles = StyleSheet.create({
@@ -382,7 +390,9 @@ const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
         }
     };
 
-    tokens.forEach((token) => processToken(token as Record<string, unknown>));
+    tokens.forEach((token) => {
+        processToken(token as Record<string, unknown>);
+    });
 
     return result;
 };
@@ -400,13 +410,19 @@ const renderTextWithCJK = (
     bold = false,
     italic = false,
 ) => {
-    const segments = splitByCJK(text);
+    const segments = splitTextForPdfFonts(text);
 
     if (segments.length === 1 && !segments[0]?.isCJK) {
         return text;
     }
 
-    return segments.map((seg, idx) => {
+    const segmentOccurrences = new Map<string, number>();
+
+    return segments.map((seg) => {
+        const segmentKey = createPdfNodeKey(
+            `${keyPrefix}-cjk-${seg.isCJK ? 'cjk' : 'base'}-${seg.text}`,
+            segmentOccurrences,
+        );
         const family = seg.isCJK ? (bold ? 'NotoSansSC' : 'NotoSansSC') : bold ? boldFamily : baseFamily;
         const style: Record<string, string> = { fontFamily: family };
 
@@ -420,7 +436,7 @@ const renderTextWithCJK = (
 
         return (
             <Text
-                key={`${keyPrefix}-cjk-${idx}`}
+                key={segmentKey}
                 style={style}
             >
                 {seg.text}
@@ -430,8 +446,14 @@ const renderTextWithCJK = (
 };
 
 const renderInlineTokens = (tokens: InlineToken[], keyPrefix: string) => {
-    return tokens.map((token, idx) => {
+    const tokenOccurrences = new Map<string, number>();
+
+    return tokens.map((token) => {
         const textContent = token.text;
+        const tokenKey = createPdfNodeKey(
+            `${keyPrefix}-inline-${token.type}-${token.text}-${token.bold ? 'bold' : 'regular'}-${token.italic ? 'italic' : 'upright'}-${token.code ? 'code' : 'text'}-${token.link ?? 'plain'}`,
+            tokenOccurrences,
+        );
 
         const appliedStyles = [];
 
@@ -457,18 +479,11 @@ const renderInlineTokens = (tokens: InlineToken[], keyPrefix: string) => {
             const isCode = !!token.code;
             const rendered = isCode
                 ? textContent
-                : renderTextWithCJK(
-                      textContent,
-                      'NotoSans',
-                      'NotoSans',
-                      `${keyPrefix}-inline-${idx}`,
-                      isBold,
-                      isItalic,
-                  );
+                : renderTextWithCJK(textContent, 'NotoSans', 'NotoSans', tokenKey, isBold, isItalic);
 
             return (
                 <Text
-                    key={`${keyPrefix}-inline-${idx}`}
+                    key={tokenKey}
                     style={appliedStyles}
                 >
                     {rendered}
@@ -476,19 +491,39 @@ const renderInlineTokens = (tokens: InlineToken[], keyPrefix: string) => {
             );
         }
 
-        const rendered = renderTextWithCJK(textContent, 'NotoSans', 'NotoSans', `${keyPrefix}-inline-${idx}`);
+        const rendered = renderTextWithCJK(textContent, 'NotoSans', 'NotoSans', tokenKey);
 
         if (typeof rendered === 'string') {
             return rendered;
         }
 
-        return <Text key={`${keyPrefix}-inline-${idx}`}>{rendered}</Text>;
+        return <Text key={tokenKey}>{rendered}</Text>;
     });
 };
 
+const getContentKey = (item: ParsedContent, fallback: string): string => {
+    if (item.content) {
+        return `${item.type}-${item.content}`;
+    }
+
+    if (item.inlineTokens && item.inlineTokens.length > 0) {
+        return `${item.type}-${item.inlineTokens.map((token) => token.text).join('-')}`;
+    }
+
+    if (item.items && item.items.length > 0) {
+        return `${item.type}-${item.items.map((listItem) => listItem.raw).join('-')}`;
+    }
+
+    return fallback;
+};
+
 const renderPDFContent = (parsed: ParsedContent[]) => {
+    const contentOccurrences = new Map<string, number>();
+
     const elements = parsed
-        .map((item, index) => {
+        .map((item) => {
+            const contentKey = createPdfNodeKey(getContentKey(item, item.type), contentOccurrences);
+
             switch (item.type) {
                 case 'code': {
                     if (!item.content) {
@@ -497,7 +532,7 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
 
                     return (
                         <Text
-                            key={`code-${index}`}
+                            key={contentKey}
                             style={pdfStyles.codeBlock}
                         >
                             {item.content}
@@ -525,10 +560,10 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
 
                     return (
                         <Text
-                            key={`heading-${index}`}
+                            key={contentKey}
                             style={style}
                         >
-                            {renderInlineTokens(item.inlineTokens, `heading-${index}`)}
+                            {renderInlineTokens(item.inlineTokens, contentKey)}
                         </Text>
                     );
                 }
@@ -536,7 +571,7 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
                 case 'hr': {
                     return (
                         <View
-                            key={`hr-${index}`}
+                            key={contentKey}
                             style={pdfStyles.hr}
                         />
                     );
@@ -547,22 +582,31 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
                         return null;
                     }
 
+                    const listItemOccurrences = new Map<string, number>();
+
                     return (
                         <View
-                            key={`list-${index}`}
+                            key={contentKey}
                             style={pdfStyles.list}
                         >
-                            {item.items.map((listItem, li) => (
-                                <View
-                                    key={`li-${index}-${li}`}
-                                    style={pdfStyles.listItem}
-                                >
-                                    <Text style={pdfStyles.listBullet}>{item.ordered ? `${li + 1}.` : '•'}</Text>
-                                    <Text style={pdfStyles.listContent}>
-                                        {renderInlineTokens(listItem.inlineTokens, `li-${index}-${li}`)}
-                                    </Text>
-                                </View>
-                            ))}
+                            {item.items.map((listItem, li) => {
+                                const listItemKey = createPdfNodeKey(
+                                    `${contentKey}-li-${listItem.raw}`,
+                                    listItemOccurrences,
+                                );
+
+                                return (
+                                    <View
+                                        key={listItemKey}
+                                        style={pdfStyles.listItem}
+                                    >
+                                        <Text style={pdfStyles.listBullet}>{item.ordered ? `${li + 1}.` : '•'}</Text>
+                                        <Text style={pdfStyles.listContent}>
+                                            {renderInlineTokens(listItem.inlineTokens, listItemKey)}
+                                        </Text>
+                                    </View>
+                                );
+                            })}
                         </View>
                     );
                 }
@@ -574,10 +618,10 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
 
                     return (
                         <Text
-                            key={`para-${index}`}
+                            key={contentKey}
                             style={pdfStyles.paragraph}
                         >
-                            {renderInlineTokens(item.inlineTokens, `para-${index}`)}
+                            {renderInlineTokens(item.inlineTokens, contentKey)}
                         </Text>
                     );
                 }
@@ -616,12 +660,12 @@ export const generatePDFFromMarkdownNew = async (content: string, fileName: stri
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${fileName}.pdf`;
+        link.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`;
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
         link.remove();
-        URL.revokeObjectURL(url);
+        window.setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (error) {
         Log.error('Failed to generate PDF:', error);
         throw error;

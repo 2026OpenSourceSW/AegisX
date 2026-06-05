@@ -61,7 +61,7 @@ function FlowReport() {
 
         pdfTriggeredFlowId.current = flowId;
 
-        const fileName = `${generateFileName(flow)}.pdf`;
+        const fileName = generateFileName(flow);
 
         generatePDFFromMarkdown(reportContent, fileName)
             .then(() => {

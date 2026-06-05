@@ -17,9 +17,9 @@ function FlowCentralTabs() {
             <div className="bg-card max-w-full rounded-xl border p-2 shadow-sm">
                 <ScrollArea className="w-full pb-3">
                     <TabsList className="bg-muted/80 flex w-fit">
-                        <TabsTrigger value="automation">Automation</TabsTrigger>
-                        <TabsTrigger value="assistant">Assistant</TabsTrigger>
-                        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+                        <TabsTrigger value="automation">자동 점검</TabsTrigger>
+                        <TabsTrigger value="assistant">어시스턴트</TabsTrigger>
+                        <TabsTrigger value="dashboard">요약</TabsTrigger>
                     </TabsList>
                     <ScrollBar orientation="horizontal" />
                 </ScrollArea>

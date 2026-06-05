@@ -1,5 +1,4 @@
 import '@testing-library/jest-dom/vitest';
-
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 
@@ -10,6 +9,23 @@ if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
     Element.prototype.scrollIntoView = function scrollIntoView() {
         /* no-op for jsdom */
     };
+}
+
+if (typeof window !== 'undefined' && !window.matchMedia) {
+    Object.defineProperty(window, 'matchMedia', {
+        configurable: true,
+        value: () => ({
+            addEventListener: () => undefined,
+            addListener: () => undefined,
+            dispatchEvent: () => false,
+            matches: false,
+            media: '',
+            onchange: null,
+            removeEventListener: () => undefined,
+            removeListener: () => undefined,
+        }),
+        writable: true,
+    });
 }
 
 // Radix ScrollArea (used inside the navigation sheet) calls
@@ -38,9 +54,11 @@ if (typeof Element !== 'undefined' && !Element.prototype.hasPointerCapture) {
     Element.prototype.hasPointerCapture = function hasPointerCapture() {
         return false;
     };
+
     Element.prototype.setPointerCapture = function setPointerCapture() {
         /* no-op for jsdom */
     };
+
     Element.prototype.releasePointerCapture = function releasePointerCapture() {
         /* no-op for jsdom */
     };
