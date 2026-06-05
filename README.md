@@ -3723,11 +3723,11 @@ Copyright (c) 2025 PentAGI Development Team
 
 ### Third-Party Dependencies
 
-Generated dependency license reports are summarized in [licenses/THIRD_PARTY_LICENSES.md](licenses/THIRD_PARTY_LICENSES.md). New dependencies must be reviewed before merge, especially GPL, LGPL, AGPL, proprietary, or commercial licenses.
+Generated dependency license reports and third-party notices are summarized in [licenses/README.md](licenses/README.md). New dependencies must be reviewed before merge, especially GPL, LGPL, AGPL, proprietary, or commercial licenses.
 
 ### Shannon Integration
 
-Shannon is optional AGPL-3.0 software used only through an external CLI/Docker worker boundary. Shannon source code is not copied into this repository; keep Shannon's own license and notices with the installed Shannon distribution. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Shannon is optional AGPL-3.0 software used only through an external CLI/Docker worker boundary. Shannon source code is not copied into this repository; keep Shannon's own license and notices with the installed Shannon distribution. See [licenses/README.md](licenses/README.md#keygraphhq-shannon).
 
 ### VXControl Cloud Services
 
