@@ -7,6 +7,7 @@ import type { FlowFormValues } from '@/features/flows/flow-form';
 import type { UserResourceFragmentFragment } from '@/graphql/types';
 
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { ThemeProvider } from '@/providers/theme-provider';
 
 import NewFlow from './new-flow';
 
@@ -88,23 +89,25 @@ function LocationProbe() {
 function renderNewFlow(initialEntry: string) {
     render(
         <MemoryRouter initialEntries={[initialEntry]}>
-            <SidebarProvider>
-                <Routes>
-                    <Route
-                        element={
-                            <>
-                                <NewFlow />
-                                <LocationProbe />
-                            </>
-                        }
-                        path="/flows/new"
-                    />
-                    <Route
-                        element={<LocationProbe />}
-                        path="/flows/:flowId"
-                    />
-                </Routes>
-            </SidebarProvider>
+            <ThemeProvider>
+                <SidebarProvider>
+                    <Routes>
+                        <Route
+                            element={
+                                <>
+                                    <NewFlow />
+                                    <LocationProbe />
+                                </>
+                            }
+                            path="/flows/new"
+                        />
+                        <Route
+                            element={<LocationProbe />}
+                            path="/flows/:flowId"
+                        />
+                    </Routes>
+                </SidebarProvider>
+            </ThemeProvider>
         </MemoryRouter>,
     );
 }
@@ -126,11 +129,14 @@ describe('NewFlow', () => {
 
         renderNewFlow('/flows/new?mode=simple');
 
-        expect(screen.getByRole('heading', { name: '쉬운 보안 점검 시작' })).toBeInTheDocument();
-        expect(screen.queryByRole('tab', { name: 'Assistant' })).not.toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: '보안 점검 시작' })).toBeInTheDocument();
+        expect(screen.getByText(/비교적 빠르고 간편하게 보안 상태를 확인할 수 있습니다/)).toBeInTheDocument();
+        expect(screen.queryByRole('tab', { name: '어시스턴트' })).not.toBeInTheDocument();
 
         await user.type(screen.getByLabelText('점검 대상 (도메인 또는 IP)'), 'example.com');
         await user.click(screen.getByLabelText('본인이 소유하거나 점검 권한이 있는 대상입니다.'));
+        expect(await screen.findByRole('heading', { name: '점검 권한 확인' })).toBeInTheDocument();
+        await user.click(screen.getByRole('button', { name: '동의하고 계속하기' }));
 
         const submitButton = screen.getByRole('button', { name: '점검 실행' });
 
@@ -156,9 +162,12 @@ describe('NewFlow', () => {
 
         await user.type(screen.getByLabelText('점검 대상 (도메인 또는 IP)'), 'host.docker.internal');
         await user.click(screen.getByLabelText('본인이 소유하거나 점검 권한이 있는 대상입니다.'));
+        await user.click(await screen.findByRole('button', { name: '동의하고 계속하기' }));
 
         expect(screen.getByText('점검 요약 정보')).toBeInTheDocument();
         expect(screen.getAllByText('외부 노출 점검')).toHaveLength(2);
+        expect(screen.getAllByText('점검 후 산정').length).toBeGreaterThan(0);
+        expect(screen.queryByText(/3-5 min|5-10 min|10-15 min/)).not.toBeInTheDocument();
         expect(screen.getByText('실행 전 확인')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /deepseek/i })).toBeInTheDocument();
 
@@ -190,8 +199,8 @@ describe('NewFlow', () => {
 
         renderNewFlow('/flows/new?mode=expert');
 
-        expect(screen.getByRole('heading', { name: 'Expert Mode Console' })).toBeInTheDocument();
-        await user.click(screen.getByRole('tab', { name: 'Assistant' }));
+        expect(screen.getByRole('heading', { name: 'Expert Mode 콘솔' })).toBeInTheDocument();
+        await user.click(screen.getByRole('tab', { name: '어시스턴트' }));
         await user.type(screen.getByPlaceholderText('무엇을 도와드릴까요?'), 'Create a plan');
 
         const submitButton = screen.getByRole('button', { name: '실행 시작' });
@@ -219,8 +228,8 @@ describe('NewFlow', () => {
 
         expect(screen.getByRole('heading', { name: '전문가 실행 설정' })).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: '전체 실행 제어' })).toBeInTheDocument();
-        expect(screen.getByRole('tab', { name: 'Automation' })).toBeInTheDocument();
-        expect(screen.getByRole('tab', { name: 'Assistant' })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: '자동 점검' })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: '어시스턴트' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /deepseek/i })).toBeInTheDocument();
 
         await user.click(screen.getByRole('button', { name: '템플릿 및 자료' }));
@@ -237,6 +246,29 @@ describe('NewFlow', () => {
         await user.click(screen.getByRole('button', { name: '간편 모드' }));
 
         expect(screen.getByLabelText('current location')).toHaveTextContent('/flows/new?mode=simple&keep=1');
-        expect(screen.getByRole('heading', { name: '쉬운 보안 점검 시작' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: '보안 점검 시작' })).toBeInTheDocument();
+    });
+
+    it('keeps ownership unchecked unless the user accepts the authorization dialog', async () => {
+        const user = userEvent.setup();
+
+        renderNewFlow('/flows/new?mode=simple');
+
+        const ownershipCheckbox = screen.getByLabelText('본인이 소유하거나 점검 권한이 있는 대상입니다.');
+
+        await user.click(ownershipCheckbox);
+
+        expect(await screen.findByRole('heading', { name: '점검 권한 확인' })).toBeInTheDocument();
+        expect(ownershipCheckbox).not.toBeChecked();
+
+        await user.click(screen.getByRole('button', { name: '취소' }));
+
+        expect(screen.queryByRole('heading', { name: '점검 권한 확인' })).not.toBeInTheDocument();
+        expect(ownershipCheckbox).not.toBeChecked();
+
+        await user.click(ownershipCheckbox);
+        await user.click(await screen.findByRole('button', { name: '동의하고 계속하기' }));
+
+        expect(ownershipCheckbox).toBeChecked();
     });
 });

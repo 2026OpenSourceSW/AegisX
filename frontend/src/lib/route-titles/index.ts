@@ -35,17 +35,17 @@ export type TitleResolver = ((params: RouteParams) => string) | ComponentType<{ 
  */
 export const routeTitles = {
     apiTokens: { title: 'API Tokens' },
-    dashboard: { title: 'Dashboard' },
+    dashboard: { title: '대시보드' },
     flow: {
         title: apolloTitle({
             select: (data, { flowId }) =>
-                data?.flow?.title && flowId ? `Flow #${flowId} — ${data.flow.title}` : 'Flow',
+                data?.flow?.title && flowId ? `점검 #${flowId} — ${data.flow.title}` : '점검',
             useQuery: useFlowQuery,
             variables: ({ flowId }) => (flowId ? { id: flowId } : null),
         }),
     },
-    flowReport: { title: 'Flow report' },
-    flows: { title: 'Flows' },
+    flowReport: { title: '점검 보고서' },
+    flows: { title: '점검 내역' },
     knowledge: {
         title: apolloTitle({
             select: (data, { knowledgeId }) =>
@@ -55,8 +55,8 @@ export const routeTitles = {
         }),
     },
     knowledges: { title: 'Knowledges' },
-    login: { title: 'Login' },
-    newFlow: { title: 'New flow' },
+    login: { title: '로그인' },
+    newFlow: { title: '새 점검' },
     oauth: { title: 'OAuth' },
     prompt: {
         title: (params: RouteParams) => (params.promptId ? formatPromptId(params.promptId) : 'Prompt'),
@@ -83,7 +83,7 @@ export const routeTitles = {
 
     providers: { title: 'Providers' },
 
-    resources: { title: 'Resources' },
+    resources: { title: '자료' },
 
     template: {
         title: apolloTitle({

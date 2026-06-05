@@ -41,9 +41,9 @@ function Login() {
                             </div>
                         </div>
                         <div className="max-w-md">
-                            <p className="text-3xl leading-10 font-bold">보안 점검 워크스페이스</p>
+                            <p className="text-3xl leading-10 font-bold">승인된 대상만 안전하게 점검하세요</p>
                             <p className="mt-4 text-base leading-7 text-slate-300">
-                                간편 모드와 전문가 모드를 분리해 승인된 대상의 점검 흐름을 명확하게 관리합니다.
+                                AegisX는 보안 점검 요청, 실행 과정, 보고서 확인까지 한 곳에서 관리합니다.
                             </p>
                         </div>
                         <p className="text-xs font-semibold text-slate-400">AegisX Secure Assistant</p>

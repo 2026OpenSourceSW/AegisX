@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import debounce from 'lodash/debounce';
 import { ChevronDown, Inbox, ListFilter, Search, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -54,8 +54,8 @@ function FlowAutomationMessages({ className }: FlowAutomationMessagesProps) {
         resolver: zodResolver(searchFormSchema),
     });
 
-    const searchValue = form.watch('search');
-    const filter = form.watch('filter');
+    const searchValue = useWatch({ control: form.control, name: 'search' });
+    const filter = useWatch({ control: form.control, name: 'filter' });
 
     const debouncedUpdateSearch = useMemo(
         () =>
@@ -80,6 +80,7 @@ function FlowAutomationMessages({ className }: FlowAutomationMessagesProps) {
     }, [debouncedUpdateSearch]);
 
     useEffect(() => {
+        void flowId;
         form.reset({
             filter: {
                 subtaskIds: [],
@@ -87,7 +88,7 @@ function FlowAutomationMessages({ className }: FlowAutomationMessagesProps) {
             },
             search: '',
         });
-        setDebouncedSearchValue('');
+        queueMicrotask(() => setDebouncedSearchValue(''));
         debouncedUpdateSearch.cancel();
     }, [flowId, form, debouncedUpdateSearch]);
 
@@ -107,8 +108,8 @@ function FlowAutomationMessages({ className }: FlowAutomationMessagesProps) {
             filtered = filtered.filter(
                 (log) =>
                     log.message.toLowerCase().includes(search) ||
-                    (log.result && log.result.toLowerCase().includes(search)) ||
-                    (log.thinking && log.thinking.toLowerCase().includes(search)),
+                    log.result?.toLowerCase().includes(search) ||
+                    log.thinking?.toLowerCase().includes(search),
             );
         }
 
@@ -134,29 +135,29 @@ function FlowAutomationMessages({ className }: FlowAutomationMessagesProps) {
 
     const placeholder = useMemo(() => {
         if (!flowId) {
-            return 'Select a flow...';
+            return '점검 내역을 선택하세요.';
         }
 
         switch (flowStatus) {
             case StatusType.Created: {
-                return 'The flow is starting...';
+                return '점검을 시작하는 중입니다.';
             }
 
             case StatusType.Failed:
             case StatusType.Finished: {
-                return 'This flow has ended. Create a new one to continue.';
+                return '종료된 점검입니다. 계속하려면 새 점검을 시작하세요.';
             }
 
             case StatusType.Running: {
-                return 'AegisX is working... Click Stop to interrupt';
+                return 'AegisX가 점검 중입니다. 중지하려면 중지 버튼을 누르세요.';
             }
 
             case StatusType.Waiting: {
-                return 'Provide additional context or instructions...';
+                return '추가 설명이나 지시사항을 입력하세요.';
             }
 
             default: {
-                return 'Type your message...';
+                return '메시지를 입력하세요.';
             }
         }
     }, [flowId, flowStatus]);
@@ -214,7 +215,7 @@ function FlowAutomationMessages({ className }: FlowAutomationMessagesProps) {
                                         <InputGroupInput
                                             {...field}
                                             autoComplete="off"
-                                            placeholder="Search messages..."
+                                            placeholder="메시지 검색..."
                                             type="text"
                                         />
                                         {field.value && (
@@ -288,8 +289,8 @@ function FlowAutomationMessages({ className }: FlowAutomationMessagesProps) {
                         <EmptyMedia variant="icon">
                             <ListFilter />
                         </EmptyMedia>
-                        <EmptyTitle>No messages found</EmptyTitle>
-                        <EmptyDescription>Try adjusting your search or filter parameters</EmptyDescription>
+                        <EmptyTitle>검색 결과가 없습니다</EmptyTitle>
+                        <EmptyDescription>검색어나 필터 조건을 조정해 보세요</EmptyDescription>
                     </EmptyHeader>
                     <EmptyContent>
                         <Button
@@ -297,7 +298,7 @@ function FlowAutomationMessages({ className }: FlowAutomationMessagesProps) {
                             variant="outline"
                         >
                             <X />
-                            Reset filters
+                            필터 초기화
                         </Button>
                     </EmptyContent>
                 </Empty>
@@ -307,10 +308,9 @@ function FlowAutomationMessages({ className }: FlowAutomationMessagesProps) {
                         <EmptyMedia variant="icon">
                             <Inbox />
                         </EmptyMedia>
-                        <EmptyTitle>No active tasks</EmptyTitle>
+                        <EmptyTitle>진행 중인 작업이 없습니다</EmptyTitle>
                         <EmptyDescription>
-                            Starting a new task may take some time as the AegisX agent downloads the required Docker
-                            image
+                            새 작업을 시작하면 AegisX 에이전트가 필요한 Docker 이미지를 준비할 수 있습니다
                         </EmptyDescription>
                     </EmptyHeader>
                 </Empty>
