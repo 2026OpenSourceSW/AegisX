@@ -11,6 +11,15 @@ This directory contains fonts used by the AegisX frontend application inherited 
 - **Copyright**: Copyright (c) 2016 The Inter Project Authors
 - **Usage**: Main UI font for the web application.
 
+## Pretendard
+
+- **Files**: `PretendardVariable.woff2`
+- **License**: SIL Open Font License 1.1
+- **License File**: [LICENSE-Pretendard.txt](./LICENSE-Pretendard.txt)
+- **Source**: https://github.com/orioncactus/pretendard
+- **Copyright**: Copyright (c) 2021, Kil Hyung-jin
+- **Usage**: Korean UI fallback font for AegisX web screens.
+
 ## Roboto Mono
 
 - **Files**: `roboto-mono-*.woff2` (8 files)
@@ -45,7 +54,7 @@ This directory contains fonts used by the AegisX frontend application inherited 
 - **License File**: [OFL.txt](./OFL.txt)
 - **Source**: https://github.com/notofonts/noto-cjk
 - **Copyright**: Copyright 2014-2021 Adobe Systems Incorporated
-- **Usage**: CJK font for Chinese, Japanese, and Korean characters in PDF reports. Loaded on demand when CJK text is detected.
+- **Usage**: Simplified Chinese fallback in PDF reports. Do not rely on this font for Korean UI text.
 
 ## Notes
 

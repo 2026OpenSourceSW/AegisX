@@ -78,6 +78,30 @@
 }
 
 @font-face {
+    font-family: 'Pretendard';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fonts/PretendardVariable.woff2') format('woff2');
+}
+
+@font-face {
+    font-family: 'AegisX CJK Fallback';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('/fonts/NotoSansSC-Regular.otf') format('opentype');
+}
+
+@font-face {
+    font-family: 'AegisX CJK Fallback';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('/fonts/NotoSansSC-Bold.otf') format('opentype');
+}
+
+@font-face {
     font-family: 'Roboto Mono';
     font-style: normal;
     font-weight: 400;
@@ -306,8 +330,10 @@
         --sidebar-accent-foreground: #ffffff;
         --sidebar-border: rgb(255 255 255 / 0.1);
         --sidebar-ring: #93b4ff;
-        --font-sans: Inter, 'Inter Fallback', sans-serif;
-        --font-serif: Inter, 'Inter Fallback', serif;
+        --font-sans: Inter, Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR',
+            'AegisX CJK Fallback', 'Inter Fallback', sans-serif;
+        --font-serif: Inter, Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR',
+            'AegisX CJK Fallback', 'Inter Fallback', serif;
         --font-mono: 'Roboto Mono', monospace;
         --radius: 0.5rem;
         --shadow-x: 0;
@@ -361,8 +387,10 @@
         --sidebar-accent-foreground: oklch(0.92 0.02 245);
         --sidebar-border: oklch(0.3 0.04 245);
         --sidebar-ring: oklch(0.5 0.16 245);
-        --font-sans: Inter, 'Inter Fallback', sans-serif;
-        --font-serif: Inter, 'Inter Fallback', serif;
+        --font-sans: Inter, Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR',
+            'AegisX CJK Fallback', 'Inter Fallback', sans-serif;
+        --font-serif: Inter, Pretendard, 'Apple SD Gothic Neo', 'Malgun Gothic', 'Noto Sans CJK KR',
+            'AegisX CJK Fallback', 'Inter Fallback', serif;
         --font-mono: 'Roboto Mono', monospace;
         --radius: 0.5rem;
         --shadow-x: 0;

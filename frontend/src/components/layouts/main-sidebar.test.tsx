@@ -69,11 +69,11 @@ describe('MainSidebar', () => {
         renderMainSidebar('/dashboard');
 
         expect(screen.getByText('AegisX')).toBeInTheDocument();
-        expect(screen.getByRole('link', { name: /New Flow/i })).toHaveAttribute('href', '/flows/new');
-        expect(screen.getByRole('link', { name: /Flows/i })).toHaveAttribute('href', '/flows');
-        expect(screen.getByRole('link', { name: /Resources/i })).toHaveAttribute('href', '/resources');
-        expect(screen.getByRole('link', { name: /Settings/i })).toHaveAttribute('href', '/settings');
-        expect(screen.getByRole('link', { name: /Dashboard/i })).toHaveAttribute('data-active', 'true');
+        expect(screen.getByRole('link', { name: /점검 시작/i })).toHaveAttribute('href', '/flows/new');
+        expect(screen.getByRole('link', { name: /기록/i })).toHaveAttribute('href', '/flows');
+        expect(screen.getByRole('link', { name: /자료/i })).toHaveAttribute('href', '/resources');
+        expect(screen.getByRole('link', { name: /설정/i })).toHaveAttribute('href', '/settings');
+        expect(screen.getByRole('link', { name: /대시보드/i })).toHaveAttribute('data-active', 'true');
     });
 
     it('renders the Stitch enterprise product signal in the brand lockup', () => {

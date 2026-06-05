@@ -126,15 +126,13 @@ describe('NewFlow', () => {
 
         renderNewFlow('/flows/new?mode=simple');
 
-        expect(screen.getByRole('heading', { name: 'Guided launch' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: '쉬운 보안 점검 시작' })).toBeInTheDocument();
         expect(screen.queryByRole('tab', { name: 'Assistant' })).not.toBeInTheDocument();
 
-        await user.type(
-            screen.getByPlaceholderText('Name the authorized target, scope, and security outcome you want checked...'),
-            'Assess local authorized test target for one obvious issue',
-        );
+        await user.type(screen.getByLabelText('점검 대상 (도메인 또는 IP)'), 'example.com');
+        await user.click(screen.getByLabelText('본인이 소유하거나 점검 권한이 있는 대상입니다.'));
 
-        const submitButton = screen.getByRole('button', { name: 'Submit' });
+        const submitButton = screen.getByRole('button', { name: '점검 실행' });
 
         await waitFor(() => expect(submitButton).toBeEnabled());
         await user.click(submitButton);
@@ -142,7 +140,7 @@ describe('NewFlow', () => {
         await waitFor(() => {
             expect(flowMocks.createFlow).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    message: 'Assess local authorized test target for one obvious issue',
+                    message: expect.stringContaining('승인된 보안 점검 대상: example.com'),
                     providerName: 'deepseek',
                 }),
             );
@@ -156,24 +154,22 @@ describe('NewFlow', () => {
 
         renderNewFlow('/flows/new?mode=simple');
 
-        expect(screen.getByText('Authorized target')).toBeInTheDocument();
-        expect(screen.getByText('Scenario')).toBeInTheDocument();
-        expect(screen.getByText('Review launch')).toBeInTheDocument();
+        await user.type(screen.getByLabelText('점검 대상 (도메인 또는 IP)'), 'host.docker.internal');
+        await user.click(screen.getByLabelText('본인이 소유하거나 점검 권한이 있는 대상입니다.'));
+
+        expect(screen.getByText('점검 요약 정보')).toBeInTheDocument();
+        expect(screen.getAllByText('외부 노출 점검')).toHaveLength(2);
+        expect(screen.getByText('실행 전 확인')).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /deepseek/i })).toBeInTheDocument();
 
-        await user.click(screen.getByRole('button', { name: 'Templates and resources' }));
+        await user.click(screen.getByRole('button', { name: '템플릿 및 자료' }));
 
-        expect(await screen.findByRole('tab', { name: /Templates/ })).toBeInTheDocument();
-        await user.click(screen.getByRole('tab', { name: /Resources/ }));
+        expect(await screen.findByRole('tab', { name: /템플릿/ })).toBeInTheDocument();
+        await user.click(screen.getByRole('tab', { name: /자료/ }));
         await user.click(await screen.findByText('authorized-scope.md'));
         await user.keyboard('{Escape}');
 
-        await user.type(
-            screen.getByPlaceholderText('Name the authorized target, scope, and security outcome you want checked...'),
-            'Assess http://host.docker.internal:3000 within owned local staging only',
-        );
-
-        const submitButton = screen.getByRole('button', { name: 'Submit' });
+        const submitButton = screen.getByRole('button', { name: '점검 실행' });
 
         await waitFor(() => expect(submitButton).toBeEnabled());
         await user.click(submitButton);
@@ -181,7 +177,7 @@ describe('NewFlow', () => {
         await waitFor(() => {
             expect(flowMocks.createFlow).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    message: 'Assess http://host.docker.internal:3000 within owned local staging only',
+                    message: expect.stringContaining('승인된 보안 점검 대상: host.docker.internal'),
                     providerName: 'deepseek',
                     resourceIds: ['7'],
                 }),
@@ -194,11 +190,11 @@ describe('NewFlow', () => {
 
         renderNewFlow('/flows/new?mode=expert');
 
-        expect(screen.getByRole('heading', { name: 'Expert flow configuration' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Expert Mode Console' })).toBeInTheDocument();
         await user.click(screen.getByRole('tab', { name: 'Assistant' }));
-        await user.type(screen.getByPlaceholderText('What would you like me to help you with?'), 'Create a plan');
+        await user.type(screen.getByPlaceholderText('무엇을 도와드릴까요?'), 'Create a plan');
 
-        const submitButton = screen.getByRole('button', { name: 'Submit' });
+        const submitButton = screen.getByRole('button', { name: '실행 시작' });
 
         await waitFor(() => expect(submitButton).toBeEnabled());
         await user.click(submitButton);
@@ -221,16 +217,16 @@ describe('NewFlow', () => {
 
         renderNewFlow('/flows/new?mode=expert');
 
-        expect(screen.getByRole('heading', { name: 'Expert flow configuration' })).toBeInTheDocument();
-        expect(screen.getByRole('heading', { name: 'Full control surface' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: '전문가 실행 설정' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: '전체 실행 제어' })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: 'Automation' })).toBeInTheDocument();
         expect(screen.getByRole('tab', { name: 'Assistant' })).toBeInTheDocument();
         expect(screen.getByRole('button', { name: /deepseek/i })).toBeInTheDocument();
 
-        await user.click(screen.getByRole('button', { name: 'Templates and resources' }));
+        await user.click(screen.getByRole('button', { name: '템플릿 및 자료' }));
 
-        expect(await screen.findByRole('tab', { name: /Templates/ })).toBeInTheDocument();
-        expect(screen.getByRole('tab', { name: /Resources/ })).toBeInTheDocument();
+        expect(await screen.findByRole('tab', { name: /템플릿/ })).toBeInTheDocument();
+        expect(screen.getByRole('tab', { name: /자료/ })).toBeInTheDocument();
     });
 
     it('syncs mode selection into the URL', async () => {
@@ -238,9 +234,9 @@ describe('NewFlow', () => {
 
         renderNewFlow('/flows/new?mode=expert&keep=1');
 
-        await user.click(screen.getByRole('button', { name: /Use Simple Mode/ }));
+        await user.click(screen.getByRole('button', { name: '간편 모드' }));
 
         expect(screen.getByLabelText('current location')).toHaveTextContent('/flows/new?mode=simple&keep=1');
-        expect(screen.getByRole('heading', { name: 'Guided launch' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: '쉬운 보안 점검 시작' })).toBeInTheDocument();
     });
 });
