@@ -150,7 +150,7 @@ function Sidebar({
                 {...props}
             >
                 <div
-                    className="bg-sidebar border-sidebar-border flex h-full w-full flex-col border-r shadow-[10px_0_30px_-24px_hsl(219_48%_20%/0.55)] group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm"
+                    className="bg-sidebar border-sidebar-border flex h-full w-full flex-col border-r shadow-[10px_0_30px_-24px_rgb(26_43_75_/_0.55)] group-data-[variant=floating]:rounded-lg group-data-[variant=floating]:border group-data-[variant=floating]:shadow-sm"
                     data-sidebar="sidebar"
                 >
                     {children}
