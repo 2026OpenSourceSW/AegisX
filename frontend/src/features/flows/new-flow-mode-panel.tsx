@@ -64,7 +64,7 @@ function ModeCard({ cta, description, disabled, highlights, icon, isSelected, mo
         <button
             aria-pressed={isSelected}
             className={cn(
-                'group bg-card hover:border-primary/60 focus-visible:ring-ring flex min-h-56 w-full min-w-0 flex-col rounded-xl border p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-60',
+                'group bg-card hover:border-primary/60 focus-visible:ring-ring flex min-h-56 w-full min-w-0 flex-col rounded-lg border p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-60',
                 isSelected && 'border-primary bg-primary/5 ring-primary/20 shadow-md ring-1',
             )}
             disabled={disabled}
@@ -73,7 +73,7 @@ function ModeCard({ cta, description, disabled, highlights, icon, isSelected, mo
         >
             <div
                 className={cn(
-                    'bg-muted text-muted-foreground mb-4 flex size-12 items-center justify-center rounded-xl',
+                    'bg-muted text-muted-foreground mb-4 flex size-12 items-center justify-center rounded-lg',
                     isSelected && 'bg-primary/10 text-primary',
                 )}
             >
@@ -97,7 +97,7 @@ function ModeCard({ cta, description, disabled, highlights, icon, isSelected, mo
                 </ul>
                 <span
                     className={cn(
-                        'mt-auto inline-flex h-9 w-full min-w-0 items-center justify-center rounded-md border px-3 text-sm font-semibold',
+                        'mt-auto inline-flex h-9 w-full min-w-0 items-center justify-center rounded-lg border px-3 text-sm font-semibold',
                         isSelected
                             ? 'border-primary bg-primary text-primary-foreground'
                             : 'border-primary/40 text-primary group-hover:bg-primary/10',
@@ -111,10 +111,22 @@ function ModeCard({ cta, description, disabled, highlights, icon, isSelected, mo
 }
 
 const simpleSteps = [
-    { description: 'Name the authorized asset and outcome.', title: 'Target and objective' },
-    { description: 'Attach files or apply a template when needed.', title: 'Context' },
-    { description: 'Review the prompt, provider, and resources.', title: 'Launch' },
-    { description: 'Track progress and read the generated report.', title: 'Report' },
+    {
+        description: 'Name the owned asset, scope, and expected security outcome.',
+        title: 'Authorized target',
+    },
+    {
+        description: 'Frame the run as exposure, web app, admin surface, or broad baseline review.',
+        title: 'Scenario',
+    },
+    {
+        description: 'Confirm the prompt, provider, resources, and template context before launch.',
+        title: 'Review launch',
+    },
+    {
+        description: 'Track execution in the flow console, then read the generated report.',
+        title: 'Progress and report',
+    },
 ];
 
 interface ExpertFlowBriefProps {
@@ -168,7 +180,9 @@ export function SimpleFlowBrief() {
                     <span className="text-muted-foreground text-xs font-medium">Step 1 of 4</span>
                 </div>
                 <CardTitle>Guided security check</CardTitle>
-                <CardDescription>Keep the request narrow, authorized, and report-oriented.</CardDescription>
+                <CardDescription>
+                    Follow the guided setup order without losing provider or context controls.
+                </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
                 <Progress
