@@ -10,11 +10,27 @@ import {
 } from './supporting-page-summary';
 
 describe('supporting page summaries', () => {
+    it('returns zero counts for empty resource state', () => {
+        expect(summarizeResources([])).toEqual({
+            files: 0,
+            folders: 0,
+            total: 0,
+        });
+    });
+
     it('counts resources by file and folder', () => {
         expect(summarizeResources([{ isDir: true }, { isDir: false }, { isDir: false }])).toEqual({
             files: 2,
             folders: 1,
             total: 3,
+        });
+    });
+
+    it('returns zero counts for empty provider state', () => {
+        expect(summarizeProviders([])).toEqual({
+            deepseek: 0,
+            total: 0,
+            types: 0,
         });
     });
 
