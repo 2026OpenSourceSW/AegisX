@@ -102,14 +102,17 @@ export function MainSidebar() {
 
     return (
         <Sidebar collapsible="icon">
-            <SidebarHeader className="border-sidebar-border/70 border-b p-3">
+            <SidebarHeader className="border-sidebar-border/70 border-b px-4 py-5">
                 <SidebarMenu>
                     <SidebarMenuItem className="flex items-center gap-2">
                         <div className="bg-sidebar-primary/15 ring-sidebar-primary/25 flex aspect-square size-9 items-center justify-center rounded-lg ring-1">
                             <Logo className="hover:animate-logo-spin text-sidebar-primary size-6" />
                         </div>
-                        <div className="grid flex-1 text-left leading-tight">
+                        <div className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
                             <span className="truncate text-base font-semibold">AegisX</span>
+                            <span className="text-sidebar-foreground/80 truncate text-[0.68rem] font-semibold uppercase">
+                                Enterprise Security
+                            </span>
                         </div>
                     </SidebarMenuItem>
                 </SidebarMenu>
