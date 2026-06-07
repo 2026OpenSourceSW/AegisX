@@ -271,7 +271,8 @@ func clearConfigEnv(t *testing.T) {
 	envVars := []string{
 		"DATABASE_URL", "DEBUG", "DATA_DIR", "ASK_USER", "INSTALLATION_ID", "LICENSE_KEY",
 		"DOCKER_INSIDE", "DOCKER_NET_ADMIN", "DOCKER_SOCKET", "DOCKER_NETWORK",
-		"DOCKER_PUBLIC_IP", "DOCKER_WORK_DIR", "DOCKER_DEFAULT_IMAGE", "DOCKER_DEFAULT_IMAGE_FOR_PENTEST", "TERMINAL_TOOL_TIMEOUT",
+		"DOCKER_PUBLIC_IP", "DOCKER_WORK_DIR", "DOCKER_DEFAULT_IMAGE", "DOCKER_DEFAULT_IMAGE_FOR_PENTEST",
+		"TERMINAL_TOOL_TIMEOUT", "QUICK_SCAN_TERMINAL_TOOL_TIMEOUT",
 		"SERVER_PORT", "SERVER_HOST", "SERVER_USE_SSL", "SERVER_SSL_KEY", "SERVER_SSL_CRT",
 		"STATIC_URL", "STATIC_DIR", "CORS_ORIGINS", "COOKIE_SIGNING_SALT",
 		"SCRAPER_PUBLIC_URL", "SCRAPER_PRIVATE_URL",
@@ -307,12 +308,14 @@ func clearConfigEnv(t *testing.T) {
 		"ASSISTANT_SUMMARIZER_LAST_SEC_BYTES", "ASSISTANT_SUMMARIZER_MAX_BP_BYTES",
 		"ASSISTANT_SUMMARIZER_MAX_QA_SECTIONS", "ASSISTANT_SUMMARIZER_MAX_QA_BYTES",
 		"ASSISTANT_SUMMARIZER_KEEP_QA_SECTIONS",
-		"PROXY_URL", "EXTERNAL_SSL_CA_PATH", "EXTERNAL_SSL_INSECURE", "HTTP_CLIENT_TIMEOUT",
+		"PROXY_URL", "EXTERNAL_SSL_CA_PATH", "EXTERNAL_SSL_INSECURE", "HTTP_CLIENT_TIMEOUT", "QUICK_SCAN_HTTP_CLIENT_TIMEOUT",
 		"OTEL_HOST", "LANGFUSE_BASE_URL", "LANGFUSE_PROJECT_ID", "LANGFUSE_PUBLIC_KEY", "LANGFUSE_SECRET_KEY",
 		"GRAPHITI_ENABLED", "GRAPHITI_TIMEOUT", "GRAPHITI_URL",
 		"EXECUTION_MONITOR_ENABLED", "EXECUTION_MONITOR_SAME_TOOL_LIMIT", "EXECUTION_MONITOR_TOTAL_TOOL_LIMIT",
 		"MAX_GENERAL_AGENT_TOOL_CALLS", "MAX_LIMITED_AGENT_TOOL_CALLS",
-		"AGENT_PLANNING_STEP_ENABLED",
+		"QUICK_SCAN_MAX_SUBTASKS", "QUICK_SCAN_MAX_GENERAL_AGENT_TOOL_CALLS",
+		"QUICK_SCAN_MAX_LIMITED_AGENT_TOOL_CALLS",
+		"AGENT_PLANNING_STEP_ENABLED", "QUICK_SCAN_DISABLE_AGENT_PLANNER",
 	}
 	for _, v := range envVars {
 		t.Setenv(v, "")
@@ -571,6 +574,70 @@ func TestNewConfig_TerminalToolTimeout(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, 0, config.TerminalToolTimeout)
 	})
+}
+
+func TestNewConfig_QuickScanTimeouts(t *testing.T) {
+	clearConfigEnv(t)
+	t.Chdir(t.TempDir())
+
+	t.Run("default quick-scan timeouts", func(t *testing.T) {
+		config, err := NewConfig()
+		require.NoError(t, err)
+		assert.Equal(t, 120, config.QuickScanTerminalToolTimeout)
+		assert.Equal(t, 30, config.QuickScanHTTPClientTimeout)
+	})
+
+	t.Run("custom quick-scan timeouts", func(t *testing.T) {
+		t.Setenv("QUICK_SCAN_TERMINAL_TOOL_TIMEOUT", "120")
+		t.Setenv("QUICK_SCAN_HTTP_CLIENT_TIMEOUT", "90")
+		config, err := NewConfig()
+		require.NoError(t, err)
+		assert.Equal(t, 120, config.QuickScanTerminalToolTimeout)
+		assert.Equal(t, 90, config.QuickScanHTTPClientTimeout)
+	})
+
+	t.Run("zero quick-scan timeouts", func(t *testing.T) {
+		t.Setenv("QUICK_SCAN_TERMINAL_TOOL_TIMEOUT", "0")
+		t.Setenv("QUICK_SCAN_HTTP_CLIENT_TIMEOUT", "0")
+		config, err := NewConfig()
+		require.NoError(t, err)
+		assert.Equal(t, 0, config.QuickScanTerminalToolTimeout)
+		assert.Equal(t, 0, config.QuickScanHTTPClientTimeout)
+	})
+}
+
+func TestNewConfig_QuickScanProfileDefaults(t *testing.T) {
+	clearConfigEnv(t)
+	t.Chdir(t.TempDir())
+
+	config, err := NewConfig()
+	require.NoError(t, err)
+
+	assert.Equal(t, 1, config.QuickScanMaxSubtasks)
+	assert.Equal(t, 8, config.QuickScanMaxGeneralAgentToolCalls)
+	assert.Equal(t, 6, config.QuickScanMaxLimitedAgentToolCalls)
+	assert.Equal(t, true, config.QuickScanDisableAgentPlanner)
+	assert.Equal(t, 100, config.MaxGeneralAgentToolCalls)
+	assert.Equal(t, 20, config.MaxLimitedAgentToolCalls)
+	assert.Equal(t, false, config.AgentPlanningStepEnabled)
+}
+
+func TestNewConfig_QuickScanProfileOverrides(t *testing.T) {
+	clearConfigEnv(t)
+	t.Chdir(t.TempDir())
+
+	t.Setenv("QUICK_SCAN_MAX_SUBTASKS", "2")
+	t.Setenv("QUICK_SCAN_MAX_GENERAL_AGENT_TOOL_CALLS", "9")
+	t.Setenv("QUICK_SCAN_MAX_LIMITED_AGENT_TOOL_CALLS", "5")
+	t.Setenv("QUICK_SCAN_DISABLE_AGENT_PLANNER", "false")
+
+	config, err := NewConfig()
+	require.NoError(t, err)
+
+	assert.Equal(t, 2, config.QuickScanMaxSubtasks)
+	assert.Equal(t, 9, config.QuickScanMaxGeneralAgentToolCalls)
+	assert.Equal(t, 5, config.QuickScanMaxLimitedAgentToolCalls)
+	assert.Equal(t, false, config.QuickScanDisableAgentPlanner)
 }
 
 func TestNewConfig_AgentSupervisionDefaults(t *testing.T) {

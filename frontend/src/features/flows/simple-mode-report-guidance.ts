@@ -12,6 +12,7 @@ export const owaspTopTen2025Categories = [
 ] as const;
 
 interface SimpleModeMessageInput {
+    readonly promptMarker?: string;
     readonly scenarioIntent: string;
     readonly scenarioTitle: string;
     readonly target: string;
@@ -29,11 +30,23 @@ export function buildOwaspTopTen2025ReportGuidance(): readonly string[] {
     ];
 }
 
-export function buildSimpleModeMessage({ scenarioIntent, scenarioTitle, target }: SimpleModeMessageInput): string {
+export function buildSimpleModeMessage({
+    promptMarker,
+    scenarioIntent,
+    scenarioTitle,
+    target,
+}: SimpleModeMessageInput): string {
     return [
+        ...(promptMarker ? [promptMarker] : []),
         `승인된 보안 점검 대상: ${target}`,
         `점검 시나리오: ${scenarioTitle}`,
         `점검 목적: ${scenarioIntent}`,
+        ...(promptMarker
+            ? [
+                  '빠른 점검 제한: 병렬 가능한 확인은 한 번에 묶어 실행하고, 긴 정밀 스캔/무차별 대입/권한 범위 밖 탐색은 수행하지 않습니다.',
+                  '도구 실행 기준: 단일 terminal 명령은 120초 안에 끝나도록 timeout을 함께 사용하고, 외부 검색/API 호출이 지연되면 "추가 확인 필요"로 표시합니다.',
+              ]
+            : []),
         '안전 범위: 사용자가 선언한 대상만 점검하고, 승인 범위 밖으로 이동하거나 확장하지 않습니다.',
         '결과 형식: 발견 내용을 쉬운 말로 설명하고, 근거와 구체적인 조치 방법을 함께 제안합니다.',
         ...buildOwaspTopTen2025ReportGuidance(),

@@ -490,6 +490,40 @@ type ToolsPrompts struct {
 	TaskAssignmentWrapper    Prompt
 }
 
+var quickScanPromptVariables = []string{
+	"QuickScanEnabled",
+	"QuickScanMarker",
+	"QuickScanBudgetMinutes",
+	"QuickScanMaxSubtasks",
+	"QuickScanMaxGeneralAgentToolCalls",
+	"QuickScanMaxLimitedAgentToolCalls",
+	"QuickScanDisablePostExploit",
+	"QuickScanRules",
+}
+
+func init() {
+	quickScanPromptTypes := []PromptType{
+		PromptTypePrimaryAgent,
+		PromptTypePentester,
+		PromptTypeCoder,
+		PromptTypeInstaller,
+		PromptTypeSearcher,
+		PromptTypeMemorist,
+		PromptTypeAdviser,
+		PromptTypeGenerator,
+		PromptTypeSubtasksGenerator,
+		PromptTypeRefiner,
+		PromptTypeSubtasksRefiner,
+		PromptTypeReporter,
+		PromptTypeTaskReporter,
+		PromptTypeEnricher,
+	}
+
+	for _, promptType := range quickScanPromptTypes {
+		PromptVariables[promptType] = append(PromptVariables[promptType], quickScanPromptVariables...)
+	}
+}
+
 type DefaultPrompts struct {
 	AgentsPrompts AgentsPrompts
 	ToolsPrompts  ToolsPrompts

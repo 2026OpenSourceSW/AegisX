@@ -5,14 +5,11 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
-	"regexp"
-	"strings"
 
 	"github.com/caarlos0/env/v10"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
-	"github.com/vxcontrol/cloud/anonymizer/patterns"
 	"github.com/vxcontrol/cloud/sdk"
 )
 
@@ -37,6 +34,8 @@ type Config struct {
 	DockerDefaultImage           string `env:"DOCKER_DEFAULT_IMAGE" envDefault:"debian:latest"`
 	DockerDefaultImageForPentest string `env:"DOCKER_DEFAULT_IMAGE_FOR_PENTEST" envDefault:"vxcontrol/kali-linux"`
 	TerminalToolTimeout          int    `env:"TERMINAL_TOOL_TIMEOUT" envDefault:"1200"`
+	QuickScanTerminalToolTimeout int    `env:"QUICK_SCAN_TERMINAL_TOOL_TIMEOUT" envDefault:"120"`
+	QuickScanMaxSubtasks         int    `env:"QUICK_SCAN_MAX_SUBTASKS" envDefault:"1"`
 
 	// === API Server Configuration ===
 	ServerPort   int    `env:"SERVER_PORT" envDefault:"8080"`
@@ -198,7 +197,8 @@ type Config struct {
 
 	// HTTP client timeout in seconds for external API calls (LLM providers, search tools, etc.)
 	// A value of 0 means no timeout (not recommended).
-	HTTPClientTimeout int `env:"HTTP_CLIENT_TIMEOUT" envDefault:"600"`
+	HTTPClientTimeout          int `env:"HTTP_CLIENT_TIMEOUT" envDefault:"600"`
+	QuickScanHTTPClientTimeout int `env:"QUICK_SCAN_HTTP_CLIENT_TIMEOUT" envDefault:"30"`
 
 	// === Observability: OpenTelemetry Collector ===
 	TelemetryEndpoint string `env:"OTEL_HOST"`
@@ -220,11 +220,14 @@ type Config struct {
 	ExecutionMonitorTotalToolLimit int  `env:"EXECUTION_MONITOR_TOTAL_TOOL_LIMIT" envDefault:"10"`
 
 	// === Agent Tool Execution Limits ===
-	MaxGeneralAgentToolCalls int `env:"MAX_GENERAL_AGENT_TOOL_CALLS" envDefault:"100"`
-	MaxLimitedAgentToolCalls int `env:"MAX_LIMITED_AGENT_TOOL_CALLS" envDefault:"20"`
+	MaxGeneralAgentToolCalls          int `env:"MAX_GENERAL_AGENT_TOOL_CALLS" envDefault:"100"`
+	MaxLimitedAgentToolCalls          int `env:"MAX_LIMITED_AGENT_TOOL_CALLS" envDefault:"20"`
+	QuickScanMaxGeneralAgentToolCalls int `env:"QUICK_SCAN_MAX_GENERAL_AGENT_TOOL_CALLS" envDefault:"8"`
+	QuickScanMaxLimitedAgentToolCalls int `env:"QUICK_SCAN_MAX_LIMITED_AGENT_TOOL_CALLS" envDefault:"6"`
 
 	// === Agent Planning Phase Configuration ===
-	AgentPlanningStepEnabled bool `env:"AGENT_PLANNING_STEP_ENABLED" envDefault:"false"`
+	AgentPlanningStepEnabled     bool `env:"AGENT_PLANNING_STEP_ENABLED" envDefault:"false"`
+	QuickScanDisableAgentPlanner bool `env:"QUICK_SCAN_DISABLE_AGENT_PLANNER" envDefault:"true"`
 
 	// === Shannon White-box Scan Integration ===
 	ShannonEnabled      bool   `env:"SHANNON_ENABLED" envDefault:"false"`
@@ -250,7 +253,7 @@ func NewConfig() (*Config, error) {
 	if err := env.ParseWithOptions(&config, env.Options{
 		RequiredIfNoDef: false,
 		FuncMap: map[reflect.Type]env.ParserFunc{
-			reflect.TypeOf(&url.URL{}): func(s string) (any, error) {
+			reflect.TypeFor[*url.URL](): func(s string) (any, error) {
 				if s == "" {
 					return nil, nil
 				}
@@ -301,61 +304,4 @@ func ensureLicenseKey(config *Config) {
 	} else if !info.IsValid() {
 		config.LicenseKey = ""
 	}
-}
-
-// GetSecretPatterns returns a list of patterns for all secrets in the config
-func (c *Config) GetSecretPatterns() []patterns.Pattern {
-	var result []patterns.Pattern
-
-	secrets := []struct {
-		value string
-		name  string
-	}{
-		{c.DatabaseURL, "Database URL"},
-		{c.LicenseKey, "License Key"},
-		{c.CookieSigningSalt, "Cookie Salt"},
-		{c.OpenAIKey, "OpenAI Key"},
-		{c.AnthropicAPIKey, "Anthropic Key"},
-		{c.EmbeddingKey, "Embedding Key"},
-		{c.LLMServerKey, "LLM Server Key"},
-		{c.OllamaServerAPIKey, "Ollama Key"},
-		{c.GeminiAPIKey, "Gemini Key"},
-		{c.BedrockBearerToken, "Bedrock Token"},
-		{c.BedrockAccessKey, "Bedrock Access Key"},
-		{c.BedrockSecretKey, "Bedrock Secret Key"},
-		{c.BedrockSessionToken, "Bedrock Session Token"},
-		{c.DeepSeekAPIKey, "DeepSeek Key"},
-		{c.GLMAPIKey, "GLM Key"},
-		{c.KimiAPIKey, "Kimi Key"},
-		{c.QwenAPIKey, "Qwen Key"},
-		{c.GoogleAPIKey, "Google API Key"},
-		{c.GoogleCXKey, "Google CX Key"},
-		{c.OAuthGoogleClientID, "Google Client ID"},
-		{c.OAuthGoogleClientSecret, "Google Client Secret"},
-		{c.OAuthGithubClientID, "Github Client ID"},
-		{c.OAuthGithubClientSecret, "Github Client Secret"},
-		{c.TraversaalAPIKey, "Traversaal Key"},
-		{c.TavilyAPIKey, "Tavily Key"},
-		{c.PerplexityAPIKey, "Perplexity Key"},
-		{c.ProxyURL, "Proxy URL"},
-		{c.LangfusePublicKey, "Langfuse Public Key"},
-		{c.LangfuseSecretKey, "Langfuse Secret Key"},
-	}
-
-	for _, s := range secrets {
-		trimmed := strings.TrimSpace(s.value)
-		if trimmed == "" {
-			continue
-		}
-
-		// escape regex special characters
-		escaped := regexp.QuoteMeta(trimmed)
-		pattern := patterns.Pattern{
-			Name:  s.name,
-			Regex: "(?P<replace>" + escaped + ")",
-		}
-		result = append(result, pattern)
-	}
-
-	return result
 }

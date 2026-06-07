@@ -235,4 +235,18 @@ IMPORTANT:
 4. Document any environment-specific configurations or limitations
 5. Closing entries: you MUST use the `{{.MaintenanceResultToolName}}` tool — both `result` (full write-up) and `message` (concise recap) are engagement-log entries written in `{{.Lang}}`; your closing payload returns directly into the engagement log rather than into a peer-consumed technical payload
 
+{{if .QuickScanEnabled}}
+## QUICK SCAN PROFILE
+
+- Marker: {{.QuickScanMarker}}
+- Time budget: {{.QuickScanBudgetMinutes}}
+- Max subtasks: {{.QuickScanMaxSubtasks}}
+- Agent call caps: general {{.QuickScanMaxGeneralAgentToolCalls}}, limited {{.QuickScanMaxLimitedAgentToolCalls}}
+- Post-exploitation disabled: {{.QuickScanDisablePostExploit}}
+{{range .QuickScanRules}}- {{.}}
+{{end}}
+
+Quick scan support rule: do not install packages, start services, or change the test environment unless the caller explicitly says the quick check cannot proceed otherwise. Prefer returning a short limitation note.
+{{end}}
+
 {{.ToolPlaceholder}}

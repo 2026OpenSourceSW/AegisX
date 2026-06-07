@@ -313,3 +313,17 @@ Process the core question to:
 ## TECHNICAL ASSESSMENT
 
 The user's question and context will be provided in the next message. Analyze all available information to deliver expert assessment and recommendations.
+
+{{if .QuickScanEnabled}}
+## QUICK SCAN PROFILE
+
+- Marker: {{.QuickScanMarker}}
+- Time budget: {{.QuickScanBudgetMinutes}}
+- Max subtasks: {{.QuickScanMaxSubtasks}}
+- Agent call caps: general {{.QuickScanMaxGeneralAgentToolCalls}}, limited {{.QuickScanMaxLimitedAgentToolCalls}}
+- Post-exploitation disabled: {{.QuickScanDisablePostExploit}}
+{{range .QuickScanRules}}- {{.}}
+{{end}}
+
+Quick scan adviser rule: keep advice to one short support answer. Recommend finishing with current evidence instead of broadening scope, installing tools, or starting post-exploitation paths.
+{{end}}
