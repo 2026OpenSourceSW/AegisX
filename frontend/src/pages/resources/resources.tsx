@@ -466,7 +466,8 @@ function Resources() {
     const noResourcesState = (
         <FileDropZone
             actionLabel="파일 업로드"
-            description="AegisX 에이전트가 점검 중 참고할 문서를 업로드하세요. 이 패널 어디로든 파일을 끌어다 놓을 수 있습니다."
+            description={`AegisX 에이전트가 점검 중 참고할 문서를 업로드하세요.
+이 패널 어디로든 파일을 끌어다 놓을 수 있습니다.`}
             hint="파일당 최대 300 MB · 업로드당 최대 2 GB"
             isDragging={isDragging}
             isUploading={upload.isUploading}

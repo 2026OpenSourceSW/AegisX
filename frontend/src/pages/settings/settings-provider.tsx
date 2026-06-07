@@ -156,13 +156,15 @@ function FormComboboxItem({
                             <CommandInput
                                 className="h-9"
                                 onValueChange={setSearch}
-                                placeholder={`Search ${label.toLowerCase()}...`}
+                                placeholder={`${label} 검색...`}
                                 value={search}
                             />
                             <CommandList>
                                 <CommandEmpty>
                                     <div className="py-2 text-center">
-                                        <p className="text-muted-foreground text-sm">No {label.toLowerCase()} found.</p>
+                                        <p className="text-muted-foreground text-sm">
+                                            검색어와 일치하는 항목이 없습니다.
+                                        </p>
                                         {search && allowCustom && (
                                             <Button
                                                 className="mt-2"
@@ -174,7 +176,7 @@ function FormComboboxItem({
                                                 size="sm"
                                                 variant="ghost"
                                             >
-                                                Use "{search}" as custom {label.toLowerCase()}
+                                                "{search}"을 사용자 지정 값으로 사용
                                             </Button>
                                         )}
                                     </div>
@@ -322,7 +324,7 @@ function FormModelComboboxItem({
         price?: null | { cacheRead: number; cacheWrite: number; input: number; output: number },
     ): string => {
         if (!price || ((!price.input || price.input === 0) && (!price.output || price.output === 0))) {
-            return 'free';
+            return '무료';
         }
 
         const formatValue = (value: number): string => {
@@ -386,14 +388,14 @@ function FormModelComboboxItem({
                                 <CommandInput
                                     className="h-9"
                                     onValueChange={setSearch}
-                                    placeholder={`Search ${label.toLowerCase()}...`}
+                                    placeholder={`${label} 검색...`}
                                     value={search}
                                 />
                                 <CommandList>
                                     <CommandEmpty>
                                         <div className="py-2 text-center">
                                             <p className="text-muted-foreground text-sm">
-                                                No {label.toLowerCase()} found.
+                                                검색어와 일치하는 항목이 없습니다.
                                             </p>
                                             {search && allowCustom && (
                                                 <Button
@@ -406,7 +408,7 @@ function FormModelComboboxItem({
                                                     size="sm"
                                                     variant="ghost"
                                                 >
-                                                    Use "{search}" as custom {label.toLowerCase()}
+                                                    "{search}"을 사용자 지정 값으로 사용
                                                 </Button>
                                             )}
                                         </div>
@@ -473,7 +475,7 @@ const agentConfigSchema = z
             (value) => (value === '' || value === undefined ? null : value),
             z.number().nullable().optional(),
         ),
-        model: z.preprocess((value) => value || '', z.string().min(1, 'Model is required')),
+        model: z.preprocess((value) => value || '', z.string().min(1, '모델은 필수입니다')),
         presencePenalty: z.preprocess(
             (value) => (value === '' || value === undefined ? null : value),
             z.number().nullable().optional(),
@@ -535,9 +537,9 @@ const formSchema = z.object({
     agents: z.record(z.string(), agentConfigSchema).optional(),
     name: z.preprocess(
         (value) => value || '',
-        z.string().min(1, 'Provider name is required').max(50, 'Maximum 50 characters allowed'),
+        z.string().min(1, 'Provider 이름은 필수입니다').max(50, '최대 50자까지 입력할 수 있습니다'),
     ),
-    type: z.preprocess((value) => value || '', z.string().min(1, 'Provider type is required')),
+    type: z.preprocess((value) => value || '', z.string().min(1, 'Provider 유형은 필수입니다')),
 });
 
 type FormAgents = FormData['agents'];
@@ -687,7 +689,7 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
         >
             <DialogContent className="flex max-h-[80vh] max-w-4xl flex-col">
                 <DialogHeader className="shrink-0">
-                    <DialogTitle>Provider Test Results</DialogTitle>
+                    <DialogTitle>Provider 테스트 결과</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-1 flex-col gap-6 overflow-y-auto">
                     <Accordion
@@ -707,7 +709,7 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
                                         <div className="mr-4 flex w-full items-center justify-between">
                                             <span className="text-lg font-semibold capitalize">{agentType}</span>
                                             <span className="text-muted-foreground text-sm">
-                                                {successTestsCount}/{testsCount} tests passed
+                                                {successTestsCount}/{testsCount}개 테스트 통과
                                             </span>
                                         </div>
                                     </AccordionTrigger>
@@ -730,34 +732,34 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
                                                         </div>
                                                         <div className="text-muted-foreground flex items-center gap-3 text-sm">
                                                             {test.reasoning !== undefined && (
-                                                                <span>Reasoning: {test.reasoning ? 'Yes' : 'No'}</span>
+                                                                <span>추론: {test.reasoning ? '예' : '아니요'}</span>
                                                             )}
                                                             {test.streaming !== undefined && (
-                                                                <span>Streaming: {test.streaming ? 'Yes' : 'No'}</span>
+                                                                <span>스트리밍: {test.streaming ? '예' : '아니요'}</span>
                                                             )}
-                                                            {test.latency && <span>Latency: {test.latency}ms</span>}
+                                                            {test.latency && <span>지연 시간: {test.latency}ms</span>}
                                                         </div>
                                                     </div>
                                                     <div
                                                         className={`text-sm font-medium ${getStatusColor(test.result)}`}
                                                     >
-                                                        Result:{' '}
+                                                        결과:{' '}
                                                         {test.result === true
-                                                            ? 'Success'
+                                                            ? '성공'
                                                             : test.result === false
-                                                              ? 'Failed'
-                                                              : 'Unknown'}
+                                                              ? '실패'
+                                                              : '알 수 없음'}
                                                     </div>
                                                     {test.error && (
                                                         <div className="mt-2 rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">
-                                                            <strong>Error:</strong> {test.error}
+                                                            <strong>오류:</strong> {test.error}
                                                         </div>
                                                     )}
                                                 </div>
                                             ))}
                                             {tests.length === 0 && (
                                                 <div className="text-muted-foreground py-4 text-center">
-                                                    No tests available for this agent
+                                                    이 에이전트에 사용할 수 있는 테스트가 없습니다
                                                 </div>
                                             )}
                                         </div>
@@ -1086,7 +1088,7 @@ function SettingsProvider() {
             navigate('/settings/providers');
         } catch (error) {
             console.error('Submit error:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred while saving');
+            setSubmitError(error instanceof Error ? error.message : '저장하는 중 오류가 발생했습니다');
         }
     };
 
@@ -1114,7 +1116,7 @@ function SettingsProvider() {
             navigate('/settings/providers');
         } catch (error) {
             console.error('Delete error:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred while deleting');
+            setSubmitError(error instanceof Error ? error.message : '삭제하는 중 오류가 발생했습니다');
         }
     };
 
@@ -1170,7 +1172,7 @@ function SettingsProvider() {
                 .filter(Boolean)
                 .join('\n');
 
-            setSubmitError(`Please fix the following validation errors:\n\n${errorMessages}`);
+            setSubmitError(`유효성 검사 오류를 수정하세요:\n\n${errorMessages}`);
 
             return;
         }
@@ -1191,7 +1193,7 @@ function SettingsProvider() {
             setIsTestDialogOpen(true);
         } catch (error) {
             console.error('Test error:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred while testing');
+            setSubmitError(error instanceof Error ? error.message : '테스트하는 중 오류가 발생했습니다');
         }
     };
 
@@ -1243,7 +1245,7 @@ function SettingsProvider() {
                 .filter(Boolean)
                 .join('\n');
 
-            setSubmitError(`Please fix the following validation errors:\n\n${errorMessages}`);
+            setSubmitError(`유효성 검사 오류를 수정하세요:\n\n${errorMessages}`);
 
             return;
         }
@@ -1267,7 +1269,7 @@ function SettingsProvider() {
             return;
         } catch (error) {
             console.error('Test error:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred while testing');
+            setSubmitError(error instanceof Error ? error.message : '테스트하는 중 오류가 발생했습니다');
             setCurrentAgentKey(null);
         }
     };
@@ -1306,9 +1308,9 @@ function SettingsProvider() {
     if (loading) {
         return (
             <StatusCard
-                description="Please wait while we fetch provider configuration"
+                description="Provider 구성을 불러오는 동안 잠시 기다려 주세요"
                 icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                title="Loading provider data..."
+                title="Provider 데이터 불러오는 중..."
             />
         );
     }
@@ -1317,7 +1319,7 @@ function SettingsProvider() {
         return (
             <Alert variant="destructive">
                 <AlertCircle className="size-4" />
-                <AlertTitle>Error loading provider data</AlertTitle>
+                <AlertTitle>Provider 데이터를 불러오지 못했습니다</AlertTitle>
                 <AlertDescription>{error.message}</AlertDescription>
             </Alert>
         );
@@ -1335,13 +1337,13 @@ function SettingsProvider() {
                 <div className="flex flex-col gap-2">
                     <h2 className="flex items-center gap-2 text-lg font-semibold">
                         <Cpu className="text-muted-foreground size-5" />
-                        {isNew ? 'New Provider' : 'Provider Settings'}
+                        {isNew ? '새 Provider 만들기' : 'Provider 설정'}
                     </h2>
 
                     <div className="text-muted-foreground">
                         {isNew
-                            ? 'Configure a new language model provider'
-                            : 'Update provider settings and configuration'}
+                            ? '새 언어 모델 Provider를 설정합니다'
+                            : 'Provider 설정과 구성을 업데이트합니다'}
                     </div>
                 </div>
 
@@ -1355,7 +1357,7 @@ function SettingsProvider() {
                         {mutationError && (
                             <Alert variant="destructive">
                                 <AlertCircle className="size-4" />
-                                <AlertTitle>Error</AlertTitle>
+                                <AlertTitle>오류</AlertTitle>
                                 <AlertDescription>
                                     {mutationError instanceof Error ? (
                                         mutationError.message
@@ -1370,28 +1372,28 @@ function SettingsProvider() {
                         <FormComboboxItem
                             allowCustom={false}
                             control={control}
-                            description="The type of language model provider"
+                            description="언어 모델 Provider의 유형"
                             disabled={isLoading || !!selectedType}
-                            label="Type"
+                            label="유형"
                             name="type"
                             options={providers}
-                            placeholder="Select provider"
+                            placeholder="Provider 선택"
                         />
 
                         <FormInputStringItem
                             control={control}
-                            description="A unique name for your provider configuration"
+                            description="이 Provider 설정을 구분할 고유 이름"
                             disabled={isLoading}
-                            label="Name"
+                            label="이름"
                             name="name"
-                            placeholder="Enter provider name"
+                            placeholder="Provider 이름 입력"
                         />
 
                         {/* Agents Configuration Section */}
                         <div className="flex flex-col gap-4">
                             <div>
-                                <h3 className="text-lg font-medium">Agent Configurations</h3>
-                                <p className="text-muted-foreground text-sm">Configure settings for each agent type</p>
+                                <h3 className="text-lg font-medium">에이전트 설정</h3>
+                                <p className="text-muted-foreground text-sm">에이전트 유형별 모델 설정을 구성합니다</p>
                             </div>
 
                             <Accordion
@@ -1428,8 +1430,8 @@ function SettingsProvider() {
                                                     )}
                                                     <span className="no-underline! hover:no-underline!">
                                                         {isAgentTestLoading && currentAgentKey === agentKey
-                                                            ? 'Testing...'
-                                                            : 'Test'}
+                                                            ? '테스트 중...'
+                                                            : '테스트'}
                                                     </span>
                                                 </span>
                                             </div>
@@ -1440,7 +1442,7 @@ function SettingsProvider() {
                                                 <FormModelComboboxItem
                                                     control={control}
                                                     disabled={isLoading}
-                                                    label="Model"
+                                                    label="모델"
                                                     name={`agents.${agentKey}.model`}
                                                     onOptionSelect={(option) => {
                                                         {
@@ -1467,14 +1469,14 @@ function SettingsProvider() {
                                                         );
                                                     }}
                                                     options={availableModels}
-                                                    placeholder="Select or enter model name"
+                                                    placeholder="모델 이름 선택 또는 입력"
                                                 />
 
                                                 {/* Temperature field */}
                                                 <FormInputNumberItem
                                                     control={control}
                                                     disabled={isLoading}
-                                                    label="Temperature"
+                                                    label="온도"
                                                     max="2"
                                                     min="0"
                                                     name={`agents.${agentKey}.temperature`}
@@ -1486,7 +1488,7 @@ function SettingsProvider() {
                                                 <FormInputNumberItem
                                                     control={control}
                                                     disabled={isLoading}
-                                                    label="Max Tokens"
+                                                    label="최대 토큰"
                                                     min="1"
                                                     name={`agents.${agentKey}.maxTokens`}
                                                     placeholder="1000"
@@ -1520,7 +1522,7 @@ function SettingsProvider() {
                                                 <FormInputNumberItem
                                                     control={control}
                                                     disabled={isLoading}
-                                                    label="Min Length"
+                                                    label="최소 길이"
                                                     min="0"
                                                     name={`agents.${agentKey}.minLength`}
                                                     placeholder="0"
@@ -1531,7 +1533,7 @@ function SettingsProvider() {
                                                 <FormInputNumberItem
                                                     control={control}
                                                     disabled={isLoading}
-                                                    label="Max Length"
+                                                    label="최대 길이"
                                                     min="1"
                                                     name={`agents.${agentKey}.maxLength`}
                                                     placeholder="2000"
@@ -1542,7 +1544,7 @@ function SettingsProvider() {
                                                 <FormInputNumberItem
                                                     control={control}
                                                     disabled={isLoading}
-                                                    label="Repetition Penalty"
+                                                    label="반복 패널티"
                                                     max="2"
                                                     min="0"
                                                     name={`agents.${agentKey}.repetitionPenalty`}
@@ -1554,7 +1556,7 @@ function SettingsProvider() {
                                                 <FormInputNumberItem
                                                     control={control}
                                                     disabled={isLoading}
-                                                    label="Frequency Penalty"
+                                                    label="빈도 패널티"
                                                     max="2"
                                                     min="0"
                                                     name={`agents.${agentKey}.frequencyPenalty`}
@@ -1566,7 +1568,7 @@ function SettingsProvider() {
                                                 <FormInputNumberItem
                                                     control={control}
                                                     disabled={isLoading}
-                                                    label="Presence Penalty"
+                                                    label="존재 패널티"
                                                     max="2"
                                                     min="0"
                                                     name={`agents.${agentKey}.presencePenalty`}
@@ -1575,18 +1577,16 @@ function SettingsProvider() {
                                                 />
                                             </div>
 
-                                            {/* Reasoning Configuration */}
                                             <div className="col-span-full p-px">
                                                 <div className="mt-6 flex flex-col gap-4">
-                                                    <h4 className="text-sm font-medium">Reasoning Configuration</h4>
+                                                    <h4 className="text-sm font-medium">추론 설정</h4>
                                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                        {/* Reasoning Effort field */}
                                                         <FormField
                                                             control={control}
                                                             name={`agents.${agentKey}.reasoning.effort`}
                                                             render={({ field }) => (
                                                                 <FormItem>
-                                                                    <FormLabel>Reasoning Effort</FormLabel>
+                                                                    <FormLabel>추론 강도</FormLabel>
                                                                     <Select
                                                                         defaultValue={field.value ?? 'none'}
                                                                         disabled={isLoading}
@@ -1598,21 +1598,21 @@ function SettingsProvider() {
                                                                     >
                                                                         <FormControl>
                                                                             <SelectTrigger>
-                                                                                <SelectValue placeholder="Select effort level (optional)" />
+                                                                                <SelectValue placeholder="추론 강도 선택(선택 사항)" />
                                                                             </SelectTrigger>
                                                                         </FormControl>
                                                                         <SelectContent>
                                                                             <SelectItem value="none">
-                                                                                Not selected
+                                                                                선택 안 함
                                                                             </SelectItem>
                                                                             <SelectItem value={ReasoningEffort.Low}>
-                                                                                Low
+                                                                                낮음
                                                                             </SelectItem>
                                                                             <SelectItem value={ReasoningEffort.Medium}>
-                                                                                Medium
+                                                                                보통
                                                                             </SelectItem>
                                                                             <SelectItem value={ReasoningEffort.High}>
-                                                                                High
+                                                                                높음
                                                                             </SelectItem>
                                                                         </SelectContent>
                                                                     </Select>
@@ -1621,11 +1621,10 @@ function SettingsProvider() {
                                                             )}
                                                         />
 
-                                                        {/* Reasoning Max Tokens field */}
                                                         <FormInputNumberItem
                                                             control={control}
                                                             disabled={isLoading}
-                                                            label="Reasoning Max Tokens"
+                                                            label="추론 최대 토큰"
                                                             min="1"
                                                             name={`agents.${agentKey}.reasoning.maxTokens`}
                                                             placeholder="1000"
@@ -1635,17 +1634,16 @@ function SettingsProvider() {
                                                 </div>
                                             </div>
 
-                                            {/* Price Configuration */}
                                             <div className="col-span-full p-px">
                                                 <div className="mt-6 flex flex-col gap-4">
-                                                    <h4 className="text-sm font-medium">Price Configuration</h4>
+                                                    <h4 className="text-sm font-medium">가격 설정</h4>
                                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                         {/* Price Input field */}
                                                         <FormInputNumberItem
                                                             control={control}
-                                                            description="Price per 1M input tokens"
+                                                            description="입력 토큰 100만 개당 가격"
                                                             disabled={isLoading}
-                                                            label="Input Price"
+                                                            label="입력 가격"
                                                             min="0"
                                                             name={`agents.${agentKey}.price.input`}
                                                             placeholder="0.001"
@@ -1655,33 +1653,31 @@ function SettingsProvider() {
                                                         {/* Price Output field */}
                                                         <FormInputNumberItem
                                                             control={control}
-                                                            description="Price per 1M output tokens"
+                                                            description="출력 토큰 100만 개당 가격"
                                                             disabled={isLoading}
-                                                            label="Output Price"
+                                                            label="출력 가격"
                                                             min="0"
                                                             name={`agents.${agentKey}.price.output`}
                                                             placeholder="0.002"
                                                             step="0.000001"
                                                         />
 
-                                                        {/* Cache Read Price field */}
                                                         <FormInputNumberItem
                                                             control={control}
-                                                            description="Price per 1M cached read tokens"
+                                                            description="캐시 읽기 토큰 100만 개당 가격"
                                                             disabled={isLoading}
-                                                            label="Cache Read Price"
+                                                            label="캐시 읽기 가격"
                                                             min="0"
                                                             name={`agents.${agentKey}.price.cacheRead`}
                                                             placeholder="0.0001"
                                                             step="0.000001"
                                                         />
 
-                                                        {/* Cache Write Price field */}
                                                         <FormInputNumberItem
                                                             control={control}
-                                                            description="Price per 1M cache write tokens"
+                                                            description="캐시 쓰기 토큰 100만 개당 가격"
                                                             disabled={isLoading}
-                                                            label="Cache Write Price"
+                                                            label="캐시 쓰기 가격"
                                                             min="0"
                                                             name={`agents.${agentKey}.price.cacheWrite`}
                                                             placeholder="0.00015"
@@ -1715,7 +1711,7 @@ function SettingsProvider() {
                             ) : (
                                 <Trash2 className="size-4" />
                             )}
-                            {isDeleteLoading ? 'Deleting...' : 'Delete'}
+                            {isDeleteLoading ? '삭제 중...' : '삭제'}
                         </Button>
                     )}
                     <Button
@@ -1725,7 +1721,7 @@ function SettingsProvider() {
                         variant="outline"
                     >
                         {isTestLoading ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />}
-                        {isTestLoading ? 'Testing...' : 'Test'}
+                        {isTestLoading ? '테스트 중...' : '테스트'}
                     </Button>
                 </div>
 
@@ -1736,7 +1732,7 @@ function SettingsProvider() {
                         type="button"
                         variant="outline"
                     >
-                        Cancel
+                        취소
                     </Button>
                     <FormSubmitButton
                         form="provider-form"
@@ -1744,7 +1740,7 @@ function SettingsProvider() {
                         loading={isLoading}
                         variant="secondary"
                     >
-                        {isLoading ? 'Saving...' : isNew ? 'Create Provider' : 'Update Provider'}
+                        {isLoading ? '저장 중...' : isNew ? 'Provider 만들기' : 'Provider 업데이트'}
                     </FormSubmitButton>
                 </div>
             </div>
@@ -1756,25 +1752,25 @@ function SettingsProvider() {
             />
 
             <ConfirmationDialog
-                cancelText="Cancel"
-                confirmText="Delete"
+                cancelText="취소"
+                confirmText="삭제"
                 handleConfirm={handleConfirmDelete}
                 handleOpenChange={setIsDeleteDialogOpen}
                 isOpen={isDeleteDialogOpen}
                 itemName={providerName}
-                itemType="provider"
+                itemType="Provider"
             />
 
             <ConfirmationDialog
-                cancelText="Stay"
+                cancelText="계속 편집"
                 confirmIcon={undefined}
-                confirmText="Leave"
+                confirmText="나가기"
                 confirmVariant="destructive"
-                description="You have unsaved changes. Are you sure you want to leave without saving?"
+                description="저장하지 않은 변경사항이 있습니다. 저장하지 않고 나갈까요?"
                 handleConfirm={handleConfirmLeave}
                 handleOpenChange={handleLeaveDialogOpenChange}
                 isOpen={isLeaveDialogOpen}
-                title="Discard changes?"
+                title="변경사항을 버릴까요?"
             />
         </>
     );

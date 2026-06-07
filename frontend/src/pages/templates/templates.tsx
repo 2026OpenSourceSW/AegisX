@@ -132,7 +132,7 @@ function Templates() {
                             inputRef={editingInputRef}
                             onCancel={handleTemplateRenameCancel}
                             onSave={handleTemplateRenameSave}
-                            placeholder="Template title"
+                            placeholder="템플릿 제목"
                         />
                     );
                 }
@@ -142,7 +142,7 @@ function Templates() {
             header: ({ column }) => (
                 <DataTableColumnHeader
                     column={column}
-                    title="Title"
+                    title="제목"
                 />
             ),
             meta: { searchable: true },
@@ -157,7 +157,7 @@ function Templates() {
             header: ({ column }) => (
                 <DataTableColumnHeader
                     column={column}
-                    title="Text"
+                    title="내용"
                 />
             ),
             meta: { searchable: true },
@@ -171,7 +171,7 @@ function Templates() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
-                                    aria-label="Open menu"
+                                    aria-label="작업 메뉴 열기"
                                     className="size-8 p-0"
                                     onClick={(e) => e.stopPropagation()}
                                     variant="ghost"
@@ -186,11 +186,11 @@ function Templates() {
                             >
                                 <DropdownMenuItem onClick={() => handleTemplateOpen(template.id)}>
                                     <Pencil />
-                                    Edit
+                                    편집
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleTemplateRenameStart(template)}>
                                     <Pencil className="size-3" />
-                                    Rename
+                                    이름 변경
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -200,12 +200,12 @@ function Templates() {
                                     {deletingIds.has(template.id) ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            Deleting...
+                                            삭제 중...
                                         </>
                                     ) : (
                                         <>
                                             <Trash className="size-4" />
-                                            Delete
+                                            삭제
                                         </>
                                     )}
                                 </DropdownMenuItem>
@@ -226,11 +226,11 @@ function Templates() {
         <>
             <ContextMenuItem onClick={() => handleTemplateOpen(template.id)}>
                 <Pencil />
-                Edit
+                편집
             </ContextMenuItem>
             <ContextMenuItem onClick={() => handleTemplateRenameStart(template)}>
                 <PencilLine />
-                Rename
+                이름 변경
             </ContextMenuItem>
             <ContextMenuSeparator />
             <ContextMenuItem
@@ -238,7 +238,7 @@ function Templates() {
                 onClick={() => handleDeleteDialogOpen(template)}
             >
                 <Trash />
-                {deletingIds.has(template.id) ? 'Deleting...' : 'Delete'}
+                {deletingIds.has(template.id) ? '삭제 중...' : '삭제'}
             </ContextMenuItem>
         </>
     );
@@ -257,7 +257,7 @@ function Templates() {
                     <BreadcrumbList className="min-w-0 flex-nowrap">
                         <BreadcrumbItem className="min-w-0">
                             <FileText className="size-4 shrink-0" />
-                            <BreadcrumbPage className="min-w-0 truncate">Templates</BreadcrumbPage>
+                            <BreadcrumbPage className="min-w-0 truncate">보고서 템플릿</BreadcrumbPage>
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
@@ -265,7 +265,7 @@ function Templates() {
             <div className="flex shrink-0 items-center gap-2 px-4">
                 <HeaderButton
                     icon={<Plus />}
-                    label="New Template"
+                    label="새 템플릿"
                     onClick={() => navigate('/templates/new')}
                     variant="secondary"
                 />
@@ -285,12 +285,12 @@ function Templates() {
                                 variant="secondary"
                             >
                                 <Plus className="size-4" />
-                                New Template
+                                새 템플릿
                             </Button>
                         }
-                        description="Create your first template to get started"
+                        description="점검 보고서 작성에 반복해서 사용할 템플릿을 만들어 보세요"
                         icon={<FileText className="text-muted-foreground size-8" />}
-                        title="No templates yet"
+                        title="아직 보고서 템플릿이 없습니다"
                     />
                 </div>
             </>
@@ -306,19 +306,19 @@ function Templates() {
                     metrics={[
                         {
                             icon: <FileText className="size-4" />,
-                            label: 'Total templates',
+                            label: '전체 템플릿',
                             tone: 'text-primary',
                             value: templateSummary.total,
                         },
                         {
                             icon: <PencilLine className="size-4" />,
-                            label: 'Ready',
+                            label: '사용 가능',
                             tone: 'text-green-600',
                             value: templateSummary.ready,
                         },
                         {
                             icon: <FileText className="size-4" />,
-                            label: 'Empty drafts',
+                            label: '빈 초안',
                             tone: 'text-yellow-600',
                             value: templateSummary.empty,
                         },
@@ -327,8 +327,8 @@ function Templates() {
                 <DataTable
                     columns={columns}
                     data={templates}
-                    empty={{ entityName: 'templates' }}
-                    filterPlaceholder="Filter templates..."
+                    empty={{ entityName: '보고서 템플릿' }}
+                    filterPlaceholder="템플릿 검색..."
                     filterValue={filter}
                     onFilterChange={setFilter}
                     onRowClick={(template) => {
@@ -340,13 +340,13 @@ function Templates() {
                 />
 
                 <ConfirmationDialog
-                    cancelText="Cancel"
-                    confirmText="Delete"
+                    cancelText="취소"
+                    confirmText="삭제"
                     handleConfirm={handleDelete}
                     handleOpenChange={setIsDeleteDialogOpen}
                     isOpen={isDeleteDialogOpen}
                     itemName={deletingTemplate?.title}
-                    itemType="template"
+                    itemType="템플릿"
                 />
             </div>
         </>

@@ -34,7 +34,7 @@ export type TitleResolver = ((params: RouteParams) => string) | ComponentType<{ 
  * from this registry onto the matching <Route>.
  */
 export const routeTitles = {
-    apiTokens: { title: 'API Tokens' },
+    apiTokens: { title: 'API 토큰' },
     dashboard: { title: '대시보드' },
     flow: {
         title: apolloTitle({
@@ -49,25 +49,25 @@ export const routeTitles = {
     knowledge: {
         title: apolloTitle({
             select: (data, { knowledgeId }) =>
-                knowledgeId === 'new' ? 'New knowledge' : data?.knowledgeDocument?.question || 'Knowledge',
+                knowledgeId === 'new' ? '새 지식 문서' : data?.knowledgeDocument?.question || '지식',
             useQuery: useKnowledgeDocumentQuery,
             variables: ({ knowledgeId }) => (!knowledgeId || knowledgeId === 'new' ? null : { id: knowledgeId }),
         }),
     },
-    knowledges: { title: 'Knowledges' },
+    knowledges: { title: '지식' },
     login: { title: '로그인' },
     newFlow: { title: '새 점검' },
     oauth: { title: 'OAuth' },
     prompt: {
-        title: (params: RouteParams) => (params.promptId ? formatPromptId(params.promptId) : 'Prompt'),
+        title: (params: RouteParams) => (params.promptId ? formatPromptId(params.promptId) : '프롬프트'),
     },
-    prompts: { title: 'Prompts' },
+    prompts: { title: '프롬프트' },
 
     provider: {
         title: apolloTitle({
             select: (data, { providerId }) => {
                 if (providerId === 'new') {
-                    return 'New provider';
+                    return '새 Provider';
                 }
 
                 const provider = data?.settingsProviders.userDefined?.find(
@@ -81,18 +81,18 @@ export const routeTitles = {
         }),
     },
 
-    providers: { title: 'Providers' },
+    providers: { title: 'Provider' },
 
     resources: { title: '자료' },
 
     template: {
         title: apolloTitle({
             select: (data, { templateId }) =>
-                templateId === 'new' ? 'New template' : data?.flowTemplate?.title || 'Template',
+                templateId === 'new' ? '새 보고서 템플릿' : data?.flowTemplate?.title || '보고서 템플릿',
             useQuery: useFlowTemplateQuery,
             variables: ({ templateId }) => (!templateId || templateId === 'new' ? null : { templateId }),
         }),
     },
 
-    templates: { title: 'Templates' },
+    templates: { title: '보고서 템플릿' },
 } as const satisfies Record<string, RouteTitleHandle>;

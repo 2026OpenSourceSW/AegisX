@@ -420,7 +420,7 @@ function Template() {
                                         inputRef={editingInputRef}
                                         onCancel={handleTemplateRenameCancel}
                                         onSave={handleTemplateRenameSave}
-                                        placeholder="Template title"
+                                        placeholder="템플릿 제목"
                                     />
                                 ) : canShowActions ? (
                                     <Tooltip>
@@ -429,14 +429,14 @@ function Template() {
                                                 className="max-w-64 min-w-0 cursor-text truncate select-none"
                                                 onDoubleClick={handleTemplateRenameStart}
                                             >
-                                                {templateName ?? 'Template'}
+                                                {templateName ?? '보고서 템플릿'}
                                             </BreadcrumbPage>
                                         </TooltipTrigger>
-                                        <TooltipContent>Double-click to rename</TooltipContent>
+                                        <TooltipContent>두 번 클릭해서 이름 변경</TooltipContent>
                                     </Tooltip>
                                 ) : (
                                     <BreadcrumbPage className="min-w-0 truncate">
-                                        {isNew ? 'New template' : (templateName ?? 'Template')}
+                                        {isNew ? '새 보고서 템플릿' : (templateName ?? '보고서 템플릿')}
                                     </BreadcrumbPage>
                                 )}
                             </BreadcrumbItem>
@@ -449,7 +449,7 @@ function Template() {
                             controller={templateNav}
                             renderItem={renderTemplateItem}
                             sheetIcon={<FileText className="size-4" />}
-                            sheetTitle="Templates"
+                            sheetTitle="보고서 템플릿"
                         />
                     )}
                     <Button
@@ -463,7 +463,7 @@ function Template() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
-                                    aria-label="Template actions"
+                                    aria-label="템플릿 작업"
                                     className="size-8 p-0"
                                     variant="ghost"
                                 >
@@ -482,11 +482,11 @@ function Template() {
                                             onSelect={(event) => event.preventDefault()}
                                         >
                                             <FileText className="size-4" />
-                                            Templates
+                                            보고서 템플릿
                                             <div className="-my-1.5 -mr-2 ml-auto flex items-center">
                                                 <DetailNavigationButtons<Template>
                                                     controller={templateNav}
-                                                    sheetTitle="Templates"
+                                                    sheetTitle="보고서 템플릿"
                                                     size="sm"
                                                 />
                                             </div>
@@ -496,7 +496,7 @@ function Template() {
                                 )}
                                 <DropdownMenuItem onClick={handleTemplateRenameStart}>
                                     <Pencil className="size-3" />
-                                    Rename
+                                    이름 변경
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -506,12 +506,12 @@ function Template() {
                                     {isDeleting ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            Deleting...
+                                            삭제 중...
                                         </>
                                     ) : (
                                         <>
                                             <Trash className="size-4" />
-                                            Delete
+                                            삭제
                                         </>
                                     )}
                                 </DropdownMenuItem>
@@ -525,7 +525,7 @@ function Template() {
                     controller={templateNav}
                     renderItem={renderTemplateItem}
                     sheetIcon={<FileText className="size-4" />}
-                    sheetTitle="Templates"
+                    sheetTitle="보고서 템플릿"
                 />
             )}
         </>
@@ -605,7 +605,7 @@ function Template() {
                         <SheetHeader className="border-b p-4">
                             <SheetTitle className="flex items-center gap-2 pr-8 text-base">
                                 <FileText className="size-4" />
-                                <span>Preset templates</span>
+                                <span>미리 준비된 템플릿</span>
                                 <Badge
                                     className="ml-auto font-normal tabular-nums"
                                     variant="secondary"
@@ -635,7 +635,7 @@ function Template() {
                             <div className="border-b p-4">
                                 <h3 className="flex items-center gap-2 text-base font-semibold">
                                     <FileText className="size-4" />
-                                    <span>Preset templates</span>
+                                    <span>미리 준비된 템플릿</span>
                                     <Badge
                                         className="ml-auto font-normal tabular-nums"
                                         variant="secondary"
@@ -670,9 +670,9 @@ function Template() {
                 <div className="flex min-h-[calc(100dvh-3rem)] items-center justify-center p-4">
                     <Card className="w-full max-w-2xl">
                         <CardContent className="flex flex-col items-center gap-4 pt-6 text-center">
-                            <h2 className="text-xl font-semibold">Template not found</h2>
-                            <p className="text-muted-foreground">The template you are looking for does not exist.</p>
-                            <Button onClick={() => navigate('/templates')}>Back to Templates</Button>
+                            <h2 className="text-xl font-semibold">템플릿을 찾을 수 없습니다</h2>
+                            <p className="text-muted-foreground">요청한 보고서 템플릿이 존재하지 않습니다.</p>
+                            <Button onClick={() => navigate('/templates')}>보고서 템플릿으로 돌아가기</Button>
                         </CardContent>
                     </Card>
                 </div>
@@ -689,16 +689,16 @@ function Template() {
                         <CardContent className="flex flex-col gap-4 pt-6">
                             <div className="text-center">
                                 <h1 className="text-2xl font-semibold">
-                                    {isNew ? 'Create a new template' : 'Edit template'}
+                                    {isNew ? '새 보고서 템플릿 만들기' : '보고서 템플릿 편집'}
                                 </h1>
                                 <p className="text-muted-foreground mt-2">
-                                    Add title and content for your template or use a
+                                    제목과 내용을 입력하거나
                                     <Button
                                         className="h-auto px-1.5 py-0 text-base"
                                         onClick={() => setIsAsideOpen((open) => !open)}
                                         variant="link"
                                     >
-                                        Preset template
+                                        미리 준비된 템플릿
                                     </Button>
                                 </p>
                             </div>
@@ -716,7 +716,7 @@ function Template() {
                                                     <Input
                                                         autoFocus={isNew}
                                                         disabled={isSaving}
-                                                        placeholder="Title"
+                                                        placeholder="제목"
                                                         {...field}
                                                     />
                                                 </FormControl>
@@ -737,11 +737,11 @@ function Template() {
                                                             maxRows={9}
                                                             minRows={1}
                                                             onKeyDown={handleKeyDown}
-                                                            placeholder="Content"
+                                                            placeholder="내용"
                                                         />
                                                         <InputGroupAddon align="block-end">
                                                             <InputGroupButton
-                                                                aria-label={isNew ? 'Create template' : 'Save template'}
+                                                                aria-label={isNew ? '템플릿 만들기' : '템플릿 저장'}
                                                                 className="ml-auto"
                                                                 disabled={
                                                                     isSaving ||
@@ -749,7 +749,7 @@ function Template() {
                                                                     (!isNew && !hasUnsavedChanges)
                                                                 }
                                                                 size="icon-xs"
-                                                                title={isNew ? 'Create template' : 'Save template'}
+                                                                title={isNew ? '템플릿 만들기' : '템플릿 저장'}
                                                                 type="submit"
                                                                 variant="default"
                                                             >
@@ -774,9 +774,9 @@ function Template() {
             </div>
             <ConfirmationDialog
                 confirmIcon={<FileSymlink />}
-                confirmText="Replace"
+                confirmText="교체"
                 confirmVariant="default"
-                description="Current form has content. Replace with the selected preset?"
+                description="현재 입력한 내용이 있습니다. 선택한 템플릿으로 교체할까요?"
                 handleConfirm={handleConfirmReplacePreset}
                 handleOpenChange={(open) => {
                     if (!open) {
@@ -786,16 +786,16 @@ function Template() {
                     setIsReplaceConfirmOpen(open);
                 }}
                 isOpen={isReplaceConfirmOpen}
-                title="Replace content?"
+                title="내용을 교체할까요?"
             />
             <ConfirmationDialog
-                cancelText="Cancel"
-                confirmText="Delete"
+                cancelText="취소"
+                confirmText="삭제"
                 handleConfirm={handleTemplateDelete}
                 handleOpenChange={setIsDeleteDialogOpen}
                 isOpen={isDeleteDialogOpen}
                 itemName={templateName ?? undefined}
-                itemType="template"
+                itemType="템플릿"
             />
         </>
     );

@@ -58,6 +58,18 @@ type ToolPromptTableData = {
     template: string;
 };
 
+function formatPromptStatus(status: 'Custom' | 'Default' | 'N/A') {
+    if (status === 'Custom') {
+        return '사용자 지정';
+    }
+
+    if (status === 'Default') {
+        return '기본값';
+    }
+
+    return status;
+}
+
 function SettingsPrompts() {
     const { data, error, loading: isLoading } = useSettingsPromptsQuery();
     const [deletePrompt, { loading: isDeleteLoading }] = useDeletePromptMutation();
@@ -330,7 +342,7 @@ function SettingsPrompts() {
                         onClick={() => handleColumnSort(column)}
                         variant="link"
                     >
-                        Agent Name
+                        에이전트 이름
                         {sorted === 'asc' ? (
                             <ArrowDown className="size-4" />
                         ) : sorted === 'desc' ? (
@@ -339,7 +351,7 @@ function SettingsPrompts() {
                     </Button>
                 );
             },
-            meta: { columnMenuLabel: 'Agent Name', searchable: true },
+            meta: { columnMenuLabel: '에이전트 이름', searchable: true },
             size: 200,
         },
         {
@@ -349,12 +361,12 @@ function SettingsPrompts() {
 
                 return (
                     <Badge variant={status === 'Custom' ? 'default' : status === 'Default' ? 'secondary' : 'outline'}>
-                        {status}
+                        {formatPromptStatus(status)}
                     </Badge>
                 );
             },
-            header: 'System Prompt',
-            meta: { columnMenuLabel: 'System Prompt', searchable: true },
+            header: '시스템 프롬프트',
+            meta: { columnMenuLabel: '시스템 프롬프트', searchable: true },
             size: 100,
         },
         {
@@ -368,8 +380,8 @@ function SettingsPrompts() {
                     </Badge>
                 );
             },
-            header: 'Human Prompt',
-            meta: { columnMenuLabel: 'Human Prompt', searchable: true },
+            header: '사용자 프롬프트',
+            meta: { columnMenuLabel: '사용자 프롬프트', searchable: true },
             size: 100,
         },
         {
@@ -381,7 +393,7 @@ function SettingsPrompts() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
-                                    aria-label="Open menu"
+                                    aria-label="작업 메뉴 열기"
                                     className="size-8 p-0"
                                     variant="ghost"
                                 >
@@ -394,7 +406,7 @@ function SettingsPrompts() {
                             >
                                 <DropdownMenuItem onClick={() => handlePromptEdit(agent.name)}>
                                     <Pencil className="size-3" />
-                                    Edit
+                                    편집
                                 </DropdownMenuItem>
                                 {(canResetPrompt(agent.name, 'system') ||
                                     canResetPrompt(agent.name, 'human') ||
@@ -413,12 +425,12 @@ function SettingsPrompts() {
                                         resetOperation?.type === 'system' ? (
                                             <>
                                                 <Loader2 className="size-3 animate-spin" />
-                                                Resetting...
+                                                초기화 중...
                                             </>
                                         ) : (
                                             <>
                                                 <RotateCcw className="size-3" />
-                                                Reset System
+                                                시스템 초기화
                                             </>
                                         )}
                                     </DropdownMenuItem>
@@ -437,12 +449,12 @@ function SettingsPrompts() {
                                         resetOperation?.type === 'human' ? (
                                             <>
                                                 <Loader2 className="size-3 animate-spin" />
-                                                Resetting...
+                                                초기화 중...
                                             </>
                                         ) : (
                                             <>
                                                 <RotateCcw className="size-3" />
-                                                Reset Human
+                                                사용자 초기화
                                             </>
                                         )}
                                     </DropdownMenuItem>
@@ -461,12 +473,12 @@ function SettingsPrompts() {
                                         resetOperation?.type === 'all' ? (
                                             <>
                                                 <Loader2 className="size-3 animate-spin" />
-                                                Resetting...
+                                                초기화 중...
                                             </>
                                         ) : (
                                             <>
                                                 <Trash2 className="size-3" />
-                                                Reset All
+                                                모두 초기화
                                             </>
                                         )}
                                     </DropdownMenuItem>
@@ -502,7 +514,7 @@ function SettingsPrompts() {
                         onClick={() => handleColumnSort(column)}
                         variant="link"
                     >
-                        Tool Name
+                        도구 이름
                         {sorted === 'asc' ? (
                             <ArrowDown className="size-4" />
                         ) : sorted === 'desc' ? (
@@ -511,7 +523,7 @@ function SettingsPrompts() {
                     </Button>
                 );
             },
-            meta: { columnMenuLabel: 'Tool Name', searchable: true },
+            meta: { columnMenuLabel: '도구 이름', searchable: true },
             size: 300,
         },
         {
@@ -521,12 +533,12 @@ function SettingsPrompts() {
 
                 return (
                     <Badge variant={status === 'Custom' ? 'default' : status === 'Default' ? 'secondary' : 'outline'}>
-                        {status}
+                        {formatPromptStatus(status)}
                     </Badge>
                 );
             },
-            header: 'Prompt',
-            meta: { columnMenuLabel: 'Prompt', searchable: true },
+            header: '프롬프트',
+            meta: { columnMenuLabel: '프롬프트', searchable: true },
             size: 100,
         },
         {
@@ -538,7 +550,7 @@ function SettingsPrompts() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
-                                    aria-label="Open menu"
+                                    aria-label="작업 메뉴 열기"
                                     className="size-8 p-0"
                                     variant="ghost"
                                 >
@@ -551,7 +563,7 @@ function SettingsPrompts() {
                             >
                                 <DropdownMenuItem onClick={() => handlePromptEdit(tool.name)}>
                                     <Pencil className="size-3" />
-                                    Edit
+                                    편집
                                 </DropdownMenuItem>
                                 {canResetPrompt(tool.name, 'tool') && (
                                     <>
@@ -569,12 +581,12 @@ function SettingsPrompts() {
                                             resetOperation?.type === 'tool' ? (
                                                 <>
                                                     <Loader2 className="size-3 animate-spin" />
-                                                    Resetting...
+                                                    초기화 중...
                                                 </>
                                             ) : (
                                                 <>
                                                     <RotateCcw className="size-3" />
-                                                    Reset
+                                                    초기화
                                                 </>
                                             )}
                                         </DropdownMenuItem>
@@ -604,7 +616,7 @@ function SettingsPrompts() {
 
         return (
             <div className="bg-muted/20 flex flex-col gap-4 border-t p-4">
-                <h4 className="font-medium">Prompt Templates</h4>
+                <h4 className="font-medium">프롬프트 템플릿</h4>
                 <hr className="border-muted-foreground/20" />
 
                 <div className="flex flex-col gap-4">
@@ -612,13 +624,13 @@ function SettingsPrompts() {
                         <div>
                             <h5 className="mb-2 flex items-center gap-2 text-sm font-medium">
                                 <Code className="size-3" />
-                                System Prompt
+                                시스템 프롬프트
                                 {userSystemPrompt && (
                                     <Badge
                                         className="text-xs"
                                         variant="secondary"
                                     >
-                                        Custom
+                                        사용자 지정
                                     </Badge>
                                 )}
                             </h5>
@@ -632,13 +644,13 @@ function SettingsPrompts() {
                         <div>
                             <h5 className="mb-2 flex items-center gap-2 text-sm font-medium">
                                 <User className="size-3" />
-                                Human Prompt
+                                사용자 프롬프트
                                 {userHumanPrompt && (
                                     <Badge
                                         className="text-xs"
                                         variant="secondary"
                                     >
-                                        Custom
+                                        사용자 지정
                                     </Badge>
                                 )}
                             </h5>
@@ -662,13 +674,13 @@ function SettingsPrompts() {
         return (
             <div className="bg-muted/20 border-t p-4">
                 <div className="mb-2 flex items-center gap-2">
-                    <h5 className="text-sm font-medium">Template</h5>
+                    <h5 className="text-sm font-medium">템플릿</h5>
                     {userToolPrompt && (
                         <Badge
                             className="text-xs"
                             variant="secondary"
                         >
-                            Custom
+                            사용자 지정
                         </Badge>
                     )}
                 </div>
@@ -689,7 +701,7 @@ function SettingsPrompts() {
             <>
                 <ContextMenuItem onClick={() => handlePromptEdit(agent.name)}>
                     <Pencil className="size-3" />
-                    Edit
+                    편집
                 </ContextMenuItem>
                 {hasResetOptions && <ContextMenuSeparator />}
                 {canResetPrompt(agent.name, 'system') && (
@@ -705,8 +717,8 @@ function SettingsPrompts() {
                         {isDeleteLoading &&
                         resetOperation?.promptName === agent.name &&
                         resetOperation?.type === 'system'
-                            ? 'Resetting...'
-                            : 'Reset System'}
+                            ? '초기화 중...'
+                            : '시스템 초기화'}
                     </ContextMenuItem>
                 )}
                 {agent.hasHuman && canResetPrompt(agent.name, 'human') && (
@@ -722,8 +734,8 @@ function SettingsPrompts() {
                         {isDeleteLoading &&
                         resetOperation?.promptName === agent.name &&
                         resetOperation?.type === 'human'
-                            ? 'Resetting...'
-                            : 'Reset Human'}
+                            ? '초기화 중...'
+                            : '사용자 초기화'}
                     </ContextMenuItem>
                 )}
                 {canResetPrompt(agent.name, 'all') && (
@@ -737,8 +749,8 @@ function SettingsPrompts() {
                     >
                         <Trash2 className="size-3" />
                         {isDeleteLoading && resetOperation?.promptName === agent.name && resetOperation?.type === 'all'
-                            ? 'Resetting...'
-                            : 'Reset All'}
+                            ? '초기화 중...'
+                            : '모두 초기화'}
                     </ContextMenuItem>
                 )}
             </>
@@ -749,7 +761,7 @@ function SettingsPrompts() {
         <>
             <ContextMenuItem onClick={() => handlePromptEdit(tool.name)}>
                 <Pencil />
-                Edit
+                편집
             </ContextMenuItem>
             {canResetPrompt(tool.name, 'tool') && (
                 <>
@@ -764,8 +776,8 @@ function SettingsPrompts() {
                     >
                         <RotateCcw />
                         {isDeleteLoading && resetOperation?.promptName === tool.name && resetOperation?.type === 'tool'
-                            ? 'Resetting...'
-                            : 'Reset'}
+                            ? '초기화 중...'
+                            : '초기화'}
                     </ContextMenuItem>
                 </>
             )}
@@ -777,9 +789,9 @@ function SettingsPrompts() {
             <div className="flex flex-col gap-4">
                 <SettingsPromptsHeader />
                 <StatusCard
-                    description="Please wait while we fetch your prompt templates"
+                    description="프롬프트 템플릿을 불러오는 동안 잠시 기다려 주세요"
                     icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                    title="Loading prompts..."
+                    title="프롬프트 불러오는 중..."
                 />
             </div>
         );
@@ -791,7 +803,7 @@ function SettingsPrompts() {
                 <SettingsPromptsHeader />
                 <Alert variant="destructive">
                     <AlertCircle className="size-4" />
-                    <AlertTitle>Error loading prompts</AlertTitle>
+                    <AlertTitle>프롬프트를 불러오지 못했습니다</AlertTitle>
                     <AlertDescription>{error.message}</AlertDescription>
                 </Alert>
             </div>
@@ -806,9 +818,9 @@ function SettingsPrompts() {
             <div className="flex flex-col gap-4">
                 <SettingsPromptsHeader />
                 <StatusCard
-                    description="Prompt templates could not be loaded"
+                    description="프롬프트 템플릿을 불러올 수 없습니다"
                     icon={<Settings className="text-muted-foreground size-8" />}
-                    title="No prompts available"
+                    title="사용 가능한 프롬프트가 없습니다"
                 />
             </div>
         );
@@ -823,15 +835,17 @@ function SettingsPrompts() {
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                             <Bot className="text-muted-foreground size-5" />
-                            <h2 className="text-lg font-semibold">Agent Prompts</h2>
+                            <h2 className="text-lg font-semibold">에이전트 프롬프트</h2>
                             <Badge variant="secondary">{agentPrompts.length}</Badge>
                         </div>
-                        <p className="text-muted-foreground text-sm">System and human prompts for AI agents</p>
+                        <p className="text-muted-foreground text-sm">
+                            AI 에이전트가 사용할 시스템 및 사용자 프롬프트
+                        </p>
                         <DataTable<AgentPromptTableData>
                             columns={agentColumns}
                             data={agentPrompts}
-                            empty={{ entityName: 'agent prompts' }}
-                            filterPlaceholder="Filter agents..."
+                            empty={{ entityName: '에이전트 프롬프트' }}
+                            filterPlaceholder="에이전트 프롬프트 검색..."
                             initialPageSize={1000}
                             renderRowContextMenu={renderAgentRowContextMenu}
                             renderSubComponent={renderAgentSubComponent}
@@ -844,15 +858,17 @@ function SettingsPrompts() {
                     <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-2">
                             <Wrench className="text-muted-foreground size-5" />
-                            <h2 className="text-lg font-semibold">Tool Prompts</h2>
+                            <h2 className="text-lg font-semibold">도구 프롬프트</h2>
                             <Badge variant="secondary">{toolPrompts.length}</Badge>
                         </div>
-                        <p className="text-muted-foreground text-sm">Prompt templates for system tools and utilities</p>
+                        <p className="text-muted-foreground text-sm">
+                            시스템 도구와 유틸리티용 프롬프트 템플릿
+                        </p>
                         <DataTable<ToolPromptTableData>
                             columns={toolColumns}
                             data={toolPrompts}
-                            empty={{ entityName: 'tool prompts' }}
-                            filterPlaceholder="Filter tools..."
+                            empty={{ entityName: '도구 프롬프트' }}
+                            filterPlaceholder="도구 프롬프트 검색..."
                             initialPageSize={1000}
                             renderRowContextMenu={renderToolRowContextMenu}
                             renderSubComponent={renderToolSubComponent}
@@ -863,24 +879,24 @@ function SettingsPrompts() {
             </div>
 
             <ConfirmationDialog
-                cancelText="Cancel"
+                cancelText="취소"
                 cancelVariant="outline"
                 confirmIcon={<RotateCcw />}
-                confirmText="Reset"
+                confirmText="초기화"
                 confirmVariant="destructive"
                 description={
                     resetOperation?.type === 'system'
-                        ? `Are you sure you want to reset the system prompt for "${resetOperation.displayName}"? This will revert it to the default template and cannot be undone.`
+                        ? `"${resetOperation.displayName}" 시스템 프롬프트를 기본 템플릿으로 되돌릴까요? 이 작업은 되돌릴 수 없습니다.`
                         : resetOperation?.type === 'human'
-                          ? `Are you sure you want to reset the human prompt for "${resetOperation.displayName}"? This will revert it to the default template and cannot be undone.`
+                          ? `"${resetOperation.displayName}" 사용자 프롬프트를 기본 템플릿으로 되돌릴까요? 이 작업은 되돌릴 수 없습니다.`
                           : resetOperation?.type === 'all'
-                            ? `Are you sure you want to reset all prompts for "${resetOperation.displayName}"? This will revert both system and human prompts to their default templates and cannot be undone.`
-                            : `Are you sure you want to reset the prompt for "${resetOperation?.displayName}"? This will revert it to the default template and cannot be undone.`
+                            ? `"${resetOperation.displayName}"의 모든 프롬프트를 기본 템플릿으로 되돌릴까요? 이 작업은 되돌릴 수 없습니다.`
+                            : `"${resetOperation?.displayName}" 프롬프트를 기본 템플릿으로 되돌릴까요? 이 작업은 되돌릴 수 없습니다.`
                 }
                 handleConfirm={handleResetPrompt}
                 handleOpenChange={setResetDialogOpen}
                 isOpen={resetDialogOpen}
-                title={`Reset ${resetOperation?.displayName || 'Prompt'}`}
+                title={`${resetOperation?.displayName || '프롬프트'} 초기화`}
             />
         </Fragment>
     );
@@ -889,7 +905,7 @@ function SettingsPrompts() {
 function SettingsPromptsHeader() {
     return (
         <div className="flex items-center justify-between">
-            <p className="text-muted-foreground">Manage system and custom prompt templates</p>
+            <p className="text-muted-foreground">시스템 및 사용자 지정 프롬프트 템플릿을 관리합니다</p>
         </div>
     );
 }

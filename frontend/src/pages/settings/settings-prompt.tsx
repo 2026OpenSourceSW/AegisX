@@ -40,11 +40,11 @@ import { formatPromptId } from '@/lib/route-titles/format-prompt-id';
 import { cn } from '@/lib/utils';
 
 const systemFormSchema = z.object({
-    template: z.string().min(1, 'System template is required'),
+    template: z.string().min(1, '시스템 템플릿이 필요합니다'),
 });
 
 const humanFormSchema = z.object({
-    template: z.string().min(1, 'Human template is required'),
+    template: z.string().min(1, '사용자 템플릿이 필요합니다'),
 });
 
 interface BaseFieldProps extends ControllerProps {
@@ -209,7 +209,7 @@ function SettingsPrompt() {
             setResetDialogOpen(false);
         } catch (error) {
             console.error('Reset error:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred while resetting');
+            setSubmitError(error instanceof Error ? error.message : '초기화하는 중 오류가 발생했습니다');
             setResetDialogOpen(false);
         }
     };
@@ -253,7 +253,7 @@ function SettingsPrompt() {
             setValidationDialogOpen(true);
         } catch (error) {
             console.error('Validation error:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred while validating');
+            setSubmitError(error instanceof Error ? error.message : '유효성을 검사하는 중 오류가 발생했습니다');
         }
     };
 
@@ -499,7 +499,7 @@ function SettingsPrompt() {
             }
         } catch (error) {
             console.error('Submit error:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred while saving');
+            setSubmitError(error instanceof Error ? error.message : '저장하는 중 오류가 발생했습니다');
         }
     };
 
@@ -522,7 +522,7 @@ function SettingsPrompt() {
             const humanPromptType = agentData.human?.type;
 
             if (!humanPromptType) {
-                setSubmitError('Human prompt type not found');
+                setSubmitError('사용자 프롬프트 유형을 찾을 수 없습니다');
 
                 return;
             }
@@ -546,7 +546,7 @@ function SettingsPrompt() {
             }
         } catch (error) {
             console.error('Submit error:', error);
-            setSubmitError(error instanceof Error ? error.message : 'An error occurred while saving');
+            setSubmitError(error instanceof Error ? error.message : '저장하는 중 오류가 발생했습니다');
         }
     };
 
@@ -554,9 +554,9 @@ function SettingsPrompt() {
         return (
             <>
                 <StatusCard
-                    description="Please wait while we fetch prompt information"
+                    description="프롬프트 정보를 불러오는 동안 잠시 기다려 주세요"
                     icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                    title="Loading prompt data..."
+                    title="프롬프트 데이터 불러오는 중..."
                 />
             </>
         );
@@ -567,7 +567,7 @@ function SettingsPrompt() {
             <>
                 <Alert variant="destructive">
                     <AlertCircle className="size-4" />
-                    <AlertTitle>Error loading prompt data</AlertTitle>
+                    <AlertTitle>프롬프트 데이터를 불러오지 못했습니다</AlertTitle>
                     <AlertDescription>{error.message}</AlertDescription>
                 </Alert>
             </>
@@ -579,9 +579,9 @@ function SettingsPrompt() {
             <>
                 <Alert variant="destructive">
                     <AlertCircle className="size-4" />
-                    <AlertTitle>Prompt not found</AlertTitle>
+                    <AlertTitle>프롬프트를 찾을 수 없습니다</AlertTitle>
                     <AlertDescription>
-                        The prompt "{promptId}" could not be found or is not supported for editing.
+                        "{promptId}" 프롬프트를 찾을 수 없거나 편집을 지원하지 않습니다.
                     </AlertDescription>
                 </Alert>
             </>
@@ -687,8 +687,8 @@ function SettingsPrompt() {
 
                 <div className="text-muted-foreground">
                     {promptInfo.type === 'agent'
-                        ? 'Configure prompts for this AI agent'
-                        : 'Configure the prompt for this tool'}
+                        ? '이 AI 에이전트가 사용할 프롬프트를 설정합니다'
+                        : '이 도구가 사용할 프롬프트를 설정합니다'}
                 </div>
             </div>
 
@@ -701,14 +701,14 @@ function SettingsPrompt() {
                     <TabsTrigger value="system">
                         <div className="flex items-center gap-2">
                             <Code className="size-4" />
-                            System Prompt
+                            시스템 프롬프트
                         </div>
                     </TabsTrigger>
                     {promptInfo.type === 'agent' && promptInfo.hasHuman && (
                         <TabsTrigger value="human">
                             <div className="flex items-center gap-2">
                                 <User className="size-4" />
-                                Human Prompt
+                                사용자 프롬프트
                             </div>
                         </TabsTrigger>
                     )}
@@ -728,7 +728,7 @@ function SettingsPrompt() {
                             {mutationError && (
                                 <Alert variant="destructive">
                                     <AlertCircle className="size-4" />
-                                    <AlertTitle>Error</AlertTitle>
+                                    <AlertTitle>오류</AlertTitle>
                                     <AlertDescription>
                                         {mutationError instanceof Error ? (
                                             mutationError.message
@@ -746,8 +746,8 @@ function SettingsPrompt() {
                                 name="template"
                                 placeholder={
                                     promptInfo.type === 'tool'
-                                        ? 'Enter the tool template...'
-                                        : 'Enter the system prompt template...'
+                                        ? '도구 템플릿을 입력하세요...'
+                                        : '시스템 프롬프트 템플릿을 입력하세요...'
                                 }
                             />
                         </form>
@@ -769,7 +769,7 @@ function SettingsPrompt() {
                                 {mutationError && (
                                     <Alert variant="destructive">
                                         <AlertCircle className="size-4" />
-                                        <AlertTitle>Error</AlertTitle>
+                                        <AlertTitle>오류</AlertTitle>
                                         <AlertDescription>
                                             {mutationError instanceof Error ? (
                                                 mutationError.message
@@ -785,7 +785,7 @@ function SettingsPrompt() {
                                     control={humanForm.control}
                                     disabled={isLoading}
                                     name="template"
-                                    placeholder="Enter the human prompt template..."
+                                    placeholder="사용자 프롬프트 템플릿을 입력하세요..."
                                 />
                             </form>
                         </Form>
@@ -818,7 +818,7 @@ function SettingsPrompt() {
                                     variant="destructive"
                                 >
                                     {isDeleteLoading ? <Loader2 className="size-4 animate-spin" /> : <RotateCcw />}
-                                    {isDeleteLoading ? 'Resetting...' : 'Reset'}
+                                    {isDeleteLoading ? '초기화 중...' : '초기화'}
                                 </Button>
 
                                 <Button
@@ -828,7 +828,7 @@ function SettingsPrompt() {
                                     variant="outline"
                                 >
                                     <FileDiff className="size-4" />
-                                    Diff
+                                    차이 보기
                                 </Button>
                             </>
                         )}
@@ -843,7 +843,7 @@ function SettingsPrompt() {
                             ) : (
                                 <CheckCircle className="size-4" />
                             )}
-                            {isValidateLoading ? 'Validating...' : 'Validate'}
+                            {isValidateLoading ? '유효성 검사 중...' : '유효성 검사'}
                         </Button>
                     </div>
 
@@ -854,7 +854,7 @@ function SettingsPrompt() {
                             type="button"
                             variant="outline"
                         >
-                            Cancel
+                            취소
                         </Button>
                         {activeTab === 'system' && (
                             <FormSubmitButton
@@ -863,7 +863,7 @@ function SettingsPrompt() {
                                 loading={isLoading}
                                 variant="secondary"
                             >
-                                {isLoading ? 'Saving...' : 'Save Changes'}
+                                {isLoading ? '저장 중...' : '변경사항 저장'}
                             </FormSubmitButton>
                         )}
                         {activeTab === 'human' && promptInfo?.type === 'agent' && promptInfo?.hasHuman && (
@@ -873,7 +873,7 @@ function SettingsPrompt() {
                                 loading={isLoading}
                                 variant="secondary"
                             >
-                                {isLoading ? 'Saving...' : 'Save Changes'}
+                                {isLoading ? '저장 중...' : '변경사항 저장'}
                             </FormSubmitButton>
                         )}
                     </div>
@@ -882,31 +882,31 @@ function SettingsPrompt() {
 
             {/* Reset Confirmation Dialog */}
             <ConfirmationDialog
-                cancelText="Cancel"
+                cancelText="취소"
                 cancelVariant="outline"
                 confirmIcon={<RotateCcw />}
-                confirmText="Reset"
+                confirmText="초기화"
                 confirmVariant="destructive"
-                description="Are you sure you want to reset this prompt to its default value? This action cannot be undone."
+                description="이 프롬프트를 기본값으로 초기화할까요? 이 작업은 되돌릴 수 없습니다."
                 handleConfirm={handleConfirmReset}
                 handleOpenChange={setResetDialogOpen}
                 isOpen={resetDialogOpen}
-                itemName={`${activeTab} prompt`}
-                itemType="template"
-                title="Reset Prompt"
+                itemName={activeTab === 'system' ? '시스템 프롬프트' : '사용자 프롬프트'}
+                itemType="템플릿"
+                title="프롬프트 초기화"
             />
 
             {/* Leave Confirmation Dialog */}
             <ConfirmationDialog
-                cancelText="Stay"
+                cancelText="계속 편집"
                 confirmIcon={undefined}
-                confirmText="Leave"
+                confirmText="나가기"
                 confirmVariant="destructive"
-                description="You have unsaved changes. Are you sure you want to leave without saving?"
+                description="저장하지 않은 변경사항이 있습니다. 저장하지 않고 나갈까요?"
                 handleConfirm={handleConfirmLeave}
                 handleOpenChange={handleLeaveDialogOpenChange}
                 isOpen={isLeaveDialogOpen}
-                title="Discard changes?"
+                title="변경사항을 버릴까요?"
             />
 
             {/* Validation Results Dialog */}
@@ -918,10 +918,10 @@ function SettingsPrompt() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <AlertCircle className="size-5" />
-                            Validation Results
+                            유효성 검사 결과
                         </DialogTitle>
                         <DialogDescription>
-                            The validation result for the {activeTab} prompt template.
+                            {activeTab === 'system' ? '시스템' : '사용자'} 프롬프트 템플릿의 유효성 검사 결과입니다.
                         </DialogDescription>
                     </DialogHeader>
 
@@ -934,19 +934,19 @@ function SettingsPrompt() {
                                     <XCircle className="size-4 text-red-500!" />
                                 )}
                                 <AlertTitle>
-                                    {validationResult.result === 'success' ? 'Valid Template' : 'Validation Error'}
+                                    {validationResult.result === 'success' ? '유효한 템플릿' : '유효성 검사 오류'}
                                 </AlertTitle>
                                 <AlertDescription>
                                     <div className="whitespace-pre-line">
                                         {validationResult.message}
                                         {validationResult.details && (
                                             <div className="mt-2">
-                                                <strong>Details:</strong> {validationResult.details}
+                                                <strong>세부 정보:</strong> {validationResult.details}
                                             </div>
                                         )}
                                         {validationResult.line && (
                                             <div className="mt-1">
-                                                <strong>Line:</strong> {validationResult.line}
+                                                <strong>줄:</strong> {validationResult.line}
                                             </div>
                                         )}
                                     </div>
@@ -954,7 +954,7 @@ function SettingsPrompt() {
                             </Alert>
 
                             <div className="flex justify-end">
-                                <Button onClick={() => setValidationDialogOpen(false)}>Close</Button>
+                                <Button onClick={() => setValidationDialogOpen(false)}>닫기</Button>
                             </div>
                         </div>
                     )}
@@ -970,9 +970,9 @@ function SettingsPrompt() {
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <FileDiff className="size-5" />
-                            Diff
+                            차이 보기
                         </DialogTitle>
-                        <DialogDescription>Changes between current value and default template.</DialogDescription>
+                        <DialogDescription>현재 값과 기본 템플릿의 차이를 확인합니다.</DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[70vh] overflow-auto">
                         <ReactDiffViewer
@@ -998,7 +998,7 @@ function Variables({ currentTemplate, onVariableClick, variables }: VariablesPro
 
     return (
         <div className="bg-muted/50 mb-4 rounded-md border p-3">
-            <h4 className="text-muted-foreground mb-2 text-sm font-medium">Available Variables:</h4>
+            <h4 className="text-muted-foreground mb-2 text-sm font-medium">사용 가능한 변수:</h4>
             <div className="flex flex-wrap gap-1">
                 {variables.map((variable) => {
                     const isUsed = usedVariables.has(variable);
