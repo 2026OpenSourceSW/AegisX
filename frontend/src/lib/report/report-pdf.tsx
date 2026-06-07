@@ -31,44 +31,45 @@ Font.register({
     ],
 });
 
+Font.register({
+    family: 'AegisXReportKR',
+    fonts: [
+        { fontStyle: 'normal', fontWeight: 'normal', src: '/fonts/AegisXReportKR-Regular.ttf' },
+        { fontStyle: 'normal', fontWeight: 'bold', src: '/fonts/AegisXReportKR-Bold.ttf' },
+    ],
+});
+
 // Disable word hyphenation (breaks CJK and Cyrillic incorrectly)
 Font.registerHyphenationCallback((word) => [word]);
 
+const HANGUL_RE = /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF]/u;
 const CJK_RE =
-    /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF\u3040-\u30FF\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]+(?:[\u0020\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF\u3040-\u30FF\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]+)*/g;
+    /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF\u3040-\u30FF\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]/u;
 
 interface TextSegment {
     isCJK: boolean;
     text: string;
 }
 
-/**
- * Splits a string into alternating non-CJK and CJK segments so each segment
- * can be rendered with the appropriate font family.
- */
 export const splitTextForPdfFonts = (text: string): TextSegment[] => {
-    const segments: TextSegment[] = [];
-    let lastIndex = 0;
+    return [{ isCJK: CJK_RE.test(text), text }];
+};
 
-    CJK_RE.lastIndex = 0;
-
-    let match = CJK_RE.exec(text);
-
-    while (match !== null) {
-        if (match.index > lastIndex) {
-            segments.push({ isCJK: false, text: text.slice(lastIndex, match.index) });
-        }
-
-        segments.push({ isCJK: true, text: match[0] });
-        lastIndex = match.index + match[0].length;
-        match = CJK_RE.exec(text);
+export const getPdfFontFamilyForTextRun = (
+    text: string,
+    baseFamily: string,
+    boldFamily: string,
+    bold = false,
+): string => {
+    if (HANGUL_RE.test(text)) {
+        return 'AegisXReportKR';
     }
 
-    if (lastIndex < text.length) {
-        segments.push({ isCJK: false, text: text.slice(lastIndex) });
+    if (CJK_RE.test(text)) {
+        return 'NotoSansSC';
     }
 
-    return segments.length > 0 ? segments : [{ isCJK: false, text }];
+    return bold ? boldFamily : baseFamily;
 };
 
 export const createPdfNodeKey = (base: string, occurrences: Map<string, number>): string => {
@@ -196,7 +197,7 @@ const pdfStyles = StyleSheet.create({
         color: '#475569',
         lineHeight: 1.6,
         marginBottom: 8,
-        textAlign: 'justify',
+        textAlign: 'left',
     },
 });
 
@@ -397,11 +398,6 @@ const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
     return result;
 };
 
-/**
- * Splits CJK segments out so each chunk renders with the matching font family —
- * Noto Sans for Latin/Cyrillic, Noto Sans SC for CJK. CJK fonts have no true italic
- * variant, so italic is dropped for those segments.
- */
 const renderTextWithCJK = (
     text: string,
     baseFamily: string,
@@ -423,10 +419,10 @@ const renderTextWithCJK = (
             `${keyPrefix}-cjk-${seg.isCJK ? 'cjk' : 'base'}-${seg.text}`,
             segmentOccurrences,
         );
-        const family = seg.isCJK ? (bold ? 'NotoSansSC' : 'NotoSansSC') : bold ? boldFamily : baseFamily;
+        const family = getPdfFontFamilyForTextRun(seg.text, baseFamily, boldFamily, bold);
         const style: Record<string, string> = { fontFamily: family };
 
-        if (bold && !seg.isCJK) {
+        if (bold) {
             style.fontWeight = 'bold';
         }
 
