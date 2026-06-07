@@ -328,4 +328,18 @@ IMPORTANT:
 4. Document any dependencies, limitations or edge cases
 5. Closing entries: you MUST use the `{{.CodeResultToolName}}` tool — `result` is the technical-channel code-development write-up consumed by the calling agent (English), `message` is the engagement-log closing summary (`{{.Lang}}`)
 
+{{if .QuickScanEnabled}}
+## QUICK SCAN PROFILE
+
+- Marker: {{.QuickScanMarker}}
+- Time budget: {{.QuickScanBudgetMinutes}}
+- Max subtasks: {{.QuickScanMaxSubtasks}}
+- Agent call caps: general {{.QuickScanMaxGeneralAgentToolCalls}}, limited {{.QuickScanMaxLimitedAgentToolCalls}}
+- Post-exploitation disabled: {{.QuickScanDisablePostExploit}}
+{{range .QuickScanRules}}- {{.}}
+{{end}}
+
+Quick scan support rule: avoid custom code unless a tiny one-command helper is the only way to finish the bounded check. Do not create exploit code, long-running automation, or install-dependent tooling.
+{{end}}
+
 {{.ToolPlaceholder}}

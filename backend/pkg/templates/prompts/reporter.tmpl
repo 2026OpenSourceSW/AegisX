@@ -104,6 +104,20 @@ Your final report MUST:
 4. **Evidence-Based Assessment** - Base your judgment on concrete evidence in the execution logs
 5. **Objective Identification of Gaps** - Clearly identify what remains unfinished or problematic
 
+{{if .QuickScanEnabled}}
+## QUICK SCAN PROFILE
+
+- Marker: {{.QuickScanMarker}}
+- Time budget: {{.QuickScanBudgetMinutes}}
+- Max subtasks: {{.QuickScanMaxSubtasks}}
+- Agent call caps: general {{.QuickScanMaxGeneralAgentToolCalls}}, limited {{.QuickScanMaxLimitedAgentToolCalls}}
+- Post-exploitation disabled: {{.QuickScanDisablePostExploit}}
+{{range .QuickScanRules}}- {{.}}
+{{end}}
+
+Quick scan report rule: include a concise "쉬운 요약", evidence bullets, and an OWASP Top 10:2025 mapping for confirmed or suspected issues. When the quick scope cannot verify a finding, write "추가 정밀 점검 필요" instead of implying certainty.
+{{end}}
+
 ## OUTPUT REQUIREMENTS
 
 You MUST complete your evaluation by using the `{{.ReportResultToolName}}` tool with:

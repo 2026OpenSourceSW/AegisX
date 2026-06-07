@@ -133,11 +133,18 @@ function NewFlow() {
         }
 
         return buildSimpleModeMessage({
+            promptMarker: selectedScenario.promptMarker,
             scenarioIntent: selectedScenario.promptIntent,
             scenarioTitle: selectedScenario.title,
             target: trimmedTarget,
         });
-    }, [isSimpleReady, selectedScenario.promptIntent, selectedScenario.title, trimmedTarget]);
+    }, [
+        isSimpleReady,
+        selectedScenario.promptIntent,
+        selectedScenario.promptMarker,
+        selectedScenario.title,
+        trimmedTarget,
+    ]);
 
     const defaultValues = useMemo<Partial<FlowFormValues>>(
         () => ({

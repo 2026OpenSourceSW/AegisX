@@ -414,7 +414,7 @@ func (fp *flowProvider) performCoder(
 		return "", fmt.Errorf("failed to get coder executor: %w", err)
 	}
 
-	if fp.planning {
+	if fp.shouldPlanAgentTask(ctx, taskID) {
 		userCoderTmplWithPlan, err := fp.performPlanner(
 			ctx, taskID, subtaskID, optAgentType, executor, userCoderTmpl, question,
 		)
@@ -499,7 +499,7 @@ func (fp *flowProvider) performInstaller(
 		return "", fmt.Errorf("failed to get installer executor: %w", err)
 	}
 
-	if fp.planning {
+	if fp.shouldPlanAgentTask(ctx, taskID) {
 		userInstallerTmplWithPlan, err := fp.performPlanner(
 			ctx, taskID, subtaskID, optAgentType, executor, userInstallerTmpl, question,
 		)
@@ -652,7 +652,7 @@ func (fp *flowProvider) performPentester(
 		return "", fmt.Errorf("failed to get pentester executor: %w", err)
 	}
 
-	if fp.planning {
+	if fp.shouldPlanAgentTask(ctx, taskID) {
 		userPentesterTmplWithPlan, err := fp.performPlanner(
 			ctx, taskID, subtaskID, optAgentType, executor, userPentesterTmpl, question,
 		)

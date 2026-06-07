@@ -50,6 +50,7 @@ type terminal struct {
 	dockerClient       docker.DockerClient
 	tlp                TermLogProvider
 	defaultExecTimeout time.Duration
+	quickScanEnabled   bool
 }
 
 func NewTerminalTool(
@@ -60,6 +61,49 @@ func NewTerminalTool(
 	tlp TermLogProvider,
 	defaultExecTimeout time.Duration,
 ) Tool {
+	return newTerminalTool(
+		flowID,
+		taskID,
+		subtaskID,
+		containerID,
+		containerLID,
+		dockerClient,
+		tlp,
+		defaultExecTimeout,
+		false,
+	)
+}
+
+func NewQuickScanTerminalTool(
+	flowID int64,
+	taskID, subtaskID *int64,
+	containerID int64, containerLID string,
+	dockerClient docker.DockerClient,
+	tlp TermLogProvider,
+	defaultExecTimeout time.Duration,
+) Tool {
+	return newTerminalTool(
+		flowID,
+		taskID,
+		subtaskID,
+		containerID,
+		containerLID,
+		dockerClient,
+		tlp,
+		defaultExecTimeout,
+		true,
+	)
+}
+
+func newTerminalTool(
+	flowID int64,
+	taskID, subtaskID *int64,
+	containerID int64, containerLID string,
+	dockerClient docker.DockerClient,
+	tlp TermLogProvider,
+	defaultExecTimeout time.Duration,
+	quickScanEnabled bool,
+) Tool {
 	return &terminal{
 		flowID:             flowID,
 		taskID:             taskID,
@@ -69,6 +113,7 @@ func NewTerminalTool(
 		dockerClient:       dockerClient,
 		tlp:                tlp,
 		defaultExecTimeout: defaultExecTimeout,
+		quickScanEnabled:   quickScanEnabled,
 	}
 }
 
@@ -131,6 +176,10 @@ func (t *terminal) Handle(ctx context.Context, name string, args json.RawMessage
 			logger.WithError(err).Error("failed to unmarshal terminal action")
 			return "", fmt.Errorf("failed to unmarshal terminal action: %w", err)
 		}
+		if err := t.validateQuickScanTerminalAction(action); err != nil {
+			logger.WithError(err).Warn("blocked terminal action by quick scan policy")
+			return "", err
+		}
 		timeout := t.normalizeExecTimeout(time.Duration(action.Timeout) * time.Second)
 		if timeout > 0 {
 			timeout += defaultExtraExecTimeout
@@ -154,6 +203,10 @@ func (t *terminal) Handle(ctx context.Context, name string, args json.RawMessage
 			result, err := t.ReadFile(ctx, t.flowID, action.Path)
 			return t.wrapCommandResult(ctx, args, name, result, err)
 		case WriteFile:
+			if err := t.validateQuickScanFileAction(action); err != nil {
+				logger.WithError(err).Warn("blocked file action by quick scan policy")
+				return "", err
+			}
 			result, err := t.WriteFile(ctx, t.flowID, action.Content, action.Path)
 			return t.wrapCommandResult(ctx, args, name, result, err)
 		default:
@@ -351,10 +404,11 @@ func (t *terminal) ReadFile(ctx context.Context, flowID int64, path string) (str
 
 		if stats.Mode.IsDir() {
 			buffer.WriteString("--------------------------------------------------\n")
-			buffer.WriteString(
-				fmt.Sprintf("'%s' file content (with size %d bytes) shown below:\n",
-					tarHeader.Name, tarHeader.Size,
-				),
+			fmt.Fprintf(
+				&buffer,
+				"'%s' file content (with size %d bytes) shown below:\n",
+				tarHeader.Name,
+				tarHeader.Size,
 			)
 		}
 

@@ -130,10 +130,17 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 		containerLID = cnt.LocalID.String
 	}
 
+	taskInput := te.taskInput(ctx)
+	toolCfg := tools.ToolConfigForTaskInput(te.cfg, taskInput)
+	newTerminalTool := tools.NewTerminalTool
+	if tools.IsQuickScanTaskInput(taskInput) {
+		newTerminalTool = tools.NewQuickScanTerminalTool
+	}
+
 	// Check which tool to create based on function name
 	switch funcName {
 	case tools.TerminalToolName:
-		return tools.NewTerminalTool(
+		return newTerminalTool(
 			te.flowID,
 			te.taskID,
 			te.subtaskID,
@@ -141,12 +148,11 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 			containerLID,
 			te.dockerClient,
 			te.proxies.GetTermLogProvider(),
-			time.Duration(te.cfg.TerminalToolTimeout)*time.Second,
+			time.Duration(toolCfg.TerminalToolTimeout)*time.Second,
 		), nil
 
 	case tools.FileToolName:
-		// For file operations - uses the same terminal tool
-		return tools.NewTerminalTool(
+		return newTerminalTool(
 			te.flowID,
 			te.taskID,
 			te.subtaskID,
@@ -154,7 +160,7 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 			containerLID,
 			te.dockerClient,
 			te.proxies.GetTermLogProvider(),
-			time.Duration(te.cfg.TerminalToolTimeout)*time.Second,
+			time.Duration(toolCfg.TerminalToolTimeout)*time.Second,
 		), nil
 
 	case tools.BrowserToolName:
@@ -170,7 +176,7 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 
 	case tools.GoogleToolName:
 		return tools.NewGoogleTool(
-			te.cfg,
+			toolCfg,
 			te.flowID,
 			te.taskID,
 			te.subtaskID,
@@ -179,7 +185,7 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 
 	case tools.DuckDuckGoToolName:
 		return tools.NewDuckDuckGoTool(
-			te.cfg,
+			toolCfg,
 			te.flowID,
 			te.taskID,
 			te.subtaskID,
@@ -188,7 +194,7 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 
 	case tools.TavilyToolName:
 		return tools.NewTavilyTool(
-			te.cfg,
+			toolCfg,
 			te.flowID,
 			te.taskID,
 			te.subtaskID,
@@ -198,7 +204,7 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 
 	case tools.TraversaalToolName:
 		return tools.NewTraversaalTool(
-			te.cfg,
+			toolCfg,
 			te.flowID,
 			te.taskID,
 			te.subtaskID,
@@ -207,7 +213,7 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 
 	case tools.PerplexityToolName:
 		return tools.NewPerplexityTool(
-			te.cfg,
+			toolCfg,
 			te.flowID,
 			te.taskID,
 			te.subtaskID,
@@ -217,7 +223,7 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 
 	case tools.SearxngToolName:
 		return tools.NewSearxngTool(
-			te.cfg,
+			toolCfg,
 			te.flowID,
 			te.taskID,
 			te.subtaskID,
@@ -227,7 +233,7 @@ func (te *toolExecutor) GetTool(ctx context.Context, funcName string) (tools.Too
 
 	case tools.SploitusToolName:
 		return tools.NewSploitusTool(
-			te.cfg,
+			toolCfg,
 			te.flowID,
 			te.taskID,
 			te.subtaskID,

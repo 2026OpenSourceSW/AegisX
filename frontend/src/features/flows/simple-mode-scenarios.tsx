@@ -10,18 +10,20 @@ export interface ScenarioOption {
     readonly icon: ReactNode;
     readonly id: string;
     readonly promptIntent: string;
+    readonly promptMarker?: string;
     readonly risk: 'Low' | 'Medium';
     readonly title: string;
 }
 
 export const defaultScenario: ScenarioOption = {
-    description: '외부에서 접근 가능한 포트 및 서비스 노출 여부를 빠르게 확인합니다.',
-    duration: '점검 후 산정',
+    description: '외부에서 접근 가능한 포트, 서비스, 기본 웹 응답을 짧은 범위로 확인하고 즉시 조치가 필요한 위험만 요약합니다.',
+    duration: '5분~10분',
     icon: <Globe2 className="size-5" />,
     id: 'exposure',
-    promptIntent: '외부에서 접근 가능한 포트와 서비스를 확인하고, 중요한 노출 위험만 요약합니다.',
+    promptIntent: '5~10분 안에 외부 노출 여부와 즉시 조치가 필요한 핵심 위험만 빠르게 확인합니다.',
+    promptMarker: '<빠른 점검>',
     risk: 'Low',
-    title: '외부 노출 점검',
+    title: '빠른 점검',
 };
 
 export const scenarioOptions: readonly ScenarioOption[] = [

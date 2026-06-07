@@ -59,4 +59,19 @@
   {{.ExecutionLogs}}
   </execution_logs>
   {{end}}
+  {{if .QuickScanEnabled}}
+  <quick_scan_profile>
+    <marker>{{.QuickScanMarker}}</marker>
+    <time_budget>{{.QuickScanBudgetMinutes}}</time_budget>
+    <max_subtasks>{{.QuickScanMaxSubtasks}}</max_subtasks>
+    <max_general_agent_tool_calls>{{.QuickScanMaxGeneralAgentToolCalls}}</max_general_agent_tool_calls>
+    <max_limited_agent_tool_calls>{{.QuickScanMaxLimitedAgentToolCalls}}</max_limited_agent_tool_calls>
+    <post_exploitation_disabled>{{.QuickScanDisablePostExploit}}</post_exploitation_disabled>
+    <rules>
+      {{range .QuickScanRules}}<rule>{{.}}</rule>
+      {{end}}
+    </rules>
+    <report_instruction>Include 쉬운 요약, evidence, OWASP Top 10:2025 mapping, and 추가 정밀 점검 필요 for quick-scope uncertainty.</report_instruction>
+  </quick_scan_profile>
+  {{end}}
 </task_report_context>
