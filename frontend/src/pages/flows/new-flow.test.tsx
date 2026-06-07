@@ -151,8 +151,17 @@ describe('NewFlow', () => {
                 }),
             );
         });
+
+        const simplePayload = flowMocks.createFlow.mock.calls[0]?.[0];
+        expect(simplePayload?.message).toContain('OWASP Top 10:2025');
+        expect(simplePayload?.message).toContain('A01:2025 - Broken Access Control');
+        expect(simplePayload?.message).toContain('A10:2025 - Mishandling of Exceptional Conditions');
+        expect(simplePayload?.message).toContain('발견 항목마다 OWASP Top 10:2025 기준으로 분류');
+        expect(simplePayload?.message).toContain('쉬운 요약');
         expect(flowMocks.createFlowWithAssistant).not.toHaveBeenCalled();
-        expect(screen.getByLabelText('current location')).toHaveTextContent('/flows/flow-simple?tab=automation');
+        await waitFor(() => {
+            expect(screen.getByLabelText('current location')).toHaveTextContent('/flows/flow-simple?tab=automation');
+        });
     });
 
     it('keeps simple mode guided while preserving provider, resources, and payload shape', async () => {
@@ -192,6 +201,10 @@ describe('NewFlow', () => {
                 }),
             );
         });
+
+        const guidedPayload = flowMocks.createFlow.mock.calls[0]?.[0];
+        expect(guidedPayload?.message).toContain('A05:2025 - Injection');
+        expect(guidedPayload?.message).toContain('각 취약점의 위험, 영향, 우선 조치');
     });
 
     it('preserves assistant creation from expert mode', async () => {
