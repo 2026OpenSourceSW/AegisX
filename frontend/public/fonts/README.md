@@ -13,12 +13,12 @@ This directory contains fonts used by the AegisX frontend application inherited 
 
 ## Pretendard
 
-- **Files**: `PretendardVariable.woff2`
+- **Files**: `PretendardVariable.woff2`, `AegisXReportKR-Regular.ttf`, `AegisXReportKR-Bold.ttf`
 - **License**: SIL Open Font License 1.1
 - **License File**: [LICENSE-Pretendard.txt](./LICENSE-Pretendard.txt)
 - **Source**: https://github.com/orioncactus/pretendard
 - **Copyright**: Copyright (c) 2021, Kil Hyung-jin
-- **Usage**: Korean UI fallback font for AegisX web screens.
+- **Usage**: Korean UI fallback font for AegisX web screens and Hangul-capable PDF report text. `AegisXReportKR-*` files are static PDF font builds generated from Pretendard and renamed for report embedding.
 
 ## Roboto Mono
 
