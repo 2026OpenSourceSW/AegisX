@@ -1,8 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import debounce from 'lodash/debounce';
 import { Camera, ChevronDown, Search, X } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ const searchFormSchema = z.object({
 
 function FlowScreenshots() {
     const { flowData, flowId } = useFlow();
+    const previousFlowIdRef = useRef(flowId);
 
     const screenshots = useMemo(() => flowData?.screenshots ?? [], [flowData?.screenshots]);
     const [debouncedSearchValue, setDebouncedSearchValue] = useState('');
@@ -36,7 +37,7 @@ function FlowScreenshots() {
         resolver: zodResolver(searchFormSchema),
     });
 
-    const searchValue = form.watch('search');
+    const searchValue = useWatch({ control: form.control, name: 'search' });
 
     const debouncedUpdateSearch = useMemo(
         () =>
@@ -61,8 +62,13 @@ function FlowScreenshots() {
     }, [debouncedUpdateSearch]);
 
     useEffect(() => {
+        if (!flowId || previousFlowIdRef.current === flowId) {
+            return;
+        }
+
+        previousFlowIdRef.current = flowId;
         form.reset({ search: '' });
-        setDebouncedSearchValue('');
+        queueMicrotask(() => setDebouncedSearchValue(''));
         debouncedUpdateSearch.cancel();
     }, [flowId, form, debouncedUpdateSearch]);
 
@@ -97,7 +103,7 @@ function FlowScreenshots() {
                                         <InputGroupInput
                                             {...field}
                                             autoComplete="off"
-                                            placeholder="Search screenshots..."
+                                            placeholder="스크린샷 검색..."
                                             type="text"
                                         />
                                         {field.value && (
@@ -158,8 +164,16 @@ function FlowScreenshots() {
                         <EmptyMedia variant="icon">
                             <Camera />
                         </EmptyMedia>
-                        <EmptyTitle>No screenshots available</EmptyTitle>
-                        <EmptyDescription>Screenshots will appear here once the agent captures them</EmptyDescription>
+                        <EmptyTitle
+                            aria-level={3}
+                            role="heading"
+                        >
+                            스크린샷이 없습니다
+                        </EmptyTitle>
+                        <EmptyDescription>에이전트가 브라우저 스크린샷을 캡처하면 여기에 표시됩니다.</EmptyDescription>
+                        <EmptyDescription>
+                            어시스턴트 기반 점검은 스크린샷 없이 터미널/대화 로그만 남을 수 있습니다.
+                        </EmptyDescription>
                     </EmptyHeader>
                 </Empty>
             )}

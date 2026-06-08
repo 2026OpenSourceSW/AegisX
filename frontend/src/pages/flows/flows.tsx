@@ -41,38 +41,13 @@ import { StatusCard } from '@/components/ui/status-card';
 import { Toggle } from '@/components/ui/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { FlowHistoryOverview } from '@/features/flows/flow-history-overview';
+import { getFlowStatusDisplay } from '@/features/flows/flow-status-display';
 import { ResultType, StatusType, type TerminalFragmentFragment, useRenameFlowMutation } from '@/graphql/types';
 import { useTableState } from '@/hooks/use-table-state';
 import { mergeHrefWithSearchParams } from '@/lib/url-params';
 import { formatDate } from '@/lib/utils/format';
 import { useFavorites } from '@/providers/favorites-provider';
 import { type Flow, useFlows } from '@/providers/flows-provider';
-
-const statusConfig: Record<
-    StatusType,
-    { label: string; variant: 'default' | 'destructive' | 'outline' | 'secondary' }
-> = {
-    [StatusType.Created]: {
-        label: 'Created',
-        variant: 'outline',
-    },
-    [StatusType.Failed]: {
-        label: 'Failed',
-        variant: 'destructive',
-    },
-    [StatusType.Finished]: {
-        label: 'Finished',
-        variant: 'secondary',
-    },
-    [StatusType.Running]: {
-        label: 'Running',
-        variant: 'default',
-    },
-    [StatusType.Waiting]: {
-        label: 'Waiting',
-        variant: 'outline',
-    },
-};
 
 function Flows() {
     const navigate = useNavigate();
@@ -230,15 +205,15 @@ function Flows() {
                 accessorKey: 'status',
                 cell: ({ row }) => {
                     const status = row.getValue('status') as StatusType;
-                    const config = statusConfig[status];
+                    const statusDisplay = getFlowStatusDisplay(status);
 
                     return (
-                        <Badge variant={config.variant}>
+                        <Badge variant={statusDisplay.variant}>
                             <FlowStatusIcon
                                 className="size-3"
                                 status={status}
                             />
-                            {config.label}
+                            {statusDisplay.label}
                         </Badge>
                     );
                 },

@@ -1,5 +1,3 @@
-import type { ReactNode } from 'react';
-
 import {
     AlertTriangle,
     ChevronDown,
@@ -17,6 +15,7 @@ import {
     Star,
     Trash,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { startTransition, useCallback, useEffect, useOptimistic, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -59,6 +58,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Switch } from '@/components/ui/switch';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import FlowCentralTabs from '@/features/flows/flow-central-tabs';
+import { getFlowStatusDisplay } from '@/features/flows/flow-status-display';
 import FlowTabs from '@/features/flows/flow-tabs';
 import { useFlowDetailNavigation } from '@/features/flows/use-flow-detail-navigation';
 import { ResultType, StatusType, useRenameFlowMutation } from '@/graphql/types';
@@ -67,6 +67,7 @@ import { useFlowTabDetection } from '@/hooks/use-flow-tab-detection';
 import { axios } from '@/lib/axios';
 import { Log } from '@/lib/log';
 import { copyToClipboard, downloadTextFile, generateFileName, generateReport } from '@/lib/report';
+import { getFlowReportAvailability } from '@/lib/report/report-availability';
 import { cn } from '@/lib/utils';
 import { formatName } from '@/lib/utils/format';
 import { useFavorites } from '@/providers/favorites-provider';
@@ -101,11 +102,25 @@ function Flow() {
     const { isDesktop, isMobile } = useBreakpoint();
     const navigate = useNavigate();
 
-    const { flowData, flowError, flowId, isLoading: isFlowLoading } = useFlow();
+    const { assistantLogs, assistants, flowData, flowError, flowId, isLoading: isFlowLoading } = useFlow();
     const { deleteFlow, finishFlow } = useFlows();
     const { isFavoriteFlow, toggleFavoriteFlow } = useFavorites();
 
     const flow = flowData?.flow;
+    const flowTasks = flowData?.tasks ?? [];
+    const flowStatusDisplay = flow
+        ? getFlowStatusDisplay(flow.status, {
+              hasAssistantLogs: assistantLogs.length > 0,
+              hasTasks: flowTasks.length > 0,
+          })
+        : null;
+    const reportAvailability = getFlowReportAvailability({
+        assistantLogs,
+        flow,
+        flowId,
+        hasAssistantSession: assistants.length > 0,
+        tasks: flowTasks,
+    });
     const actualFlowTitle = flow?.title ?? '';
     // Surface an optimistic title while the rename mutation is in flight so the
     // breadcrumb, document title and edit affordance flip immediately on Save.
@@ -240,7 +255,7 @@ function Flow() {
                                         <>
                                             <FlowStatusIcon
                                                 status={flow.status}
-                                                tooltip={formatName(flow.status)}
+                                                tooltip={flowStatusDisplay?.tooltip}
                                             />
 
                                             <ProviderIcon
@@ -302,7 +317,7 @@ function Flow() {
                                 <Star className={isFavoriteFlow(flowId) ? 'fill-yellow-500 stroke-yellow-500' : ''} />
                             </Button>
                         )}
-                        {!!(flowData?.tasks ?? [])?.length && <FlowReportDropdown />}
+                        {reportAvailability.available && <FlowReportDropdown />}
                         {flow && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -459,18 +474,28 @@ function Flow() {
 }
 
 function FlowReportDropdown() {
-    const { flowData, flowId } = useFlow();
+    const { assistantLogs, assistants, flowData, flowId } = useFlow();
     const flow = flowData?.flow;
     const tasks = flowData?.tasks ?? [];
+    const preferAssistantReport = tasks.length === 0 && assistants.length > 0;
 
-    const isReportDisabled = !flow || !flowId;
+    const reportAvailability = getFlowReportAvailability({
+        assistantLogs,
+        flow,
+        flowId,
+        hasAssistantSession: assistants.length > 0,
+        tasks,
+    });
+    const isReportDisabled = reportAvailability.disabled;
 
     const handleCopyToClipboard = async () => {
         if (isReportDisabled) {
             return;
         }
 
-        const reportContent = generateReport(tasks, flow);
+        const reportContent = generateReport(tasks, flow, assistantLogs, {
+            preferAssistantReport,
+        });
         const success = await copyToClipboard(reportContent);
 
         if (success) {
@@ -487,7 +512,9 @@ function FlowReportDropdown() {
         }
 
         try {
-            const reportContent = generateReport(tasks, flow);
+            const reportContent = generateReport(tasks, flow, assistantLogs, {
+                preferAssistantReport,
+            });
 
             const baseFileName = generateFileName(flow);
             const fileName = `${baseFileName}.md`;
