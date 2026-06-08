@@ -141,9 +141,7 @@ function Markdown({ children, className, searchValue }: MarkdownProps) {
     );
 
     const processTextNode = useMemo(() => {
-        const hasChildrenProp = (
-            node: unknown,
-        ): node is { key?: null | React.Key; props: { children: ReactNode } } =>
+        const hasChildrenProp = (node: unknown): node is { key?: null | React.Key; props: { children: ReactNode } } =>
             isValidElement(node) && (node.props as { children?: ReactNode }).children !== undefined;
 
         const fn = (nodeChildren: ReactNode): ReactNode => {

@@ -1,6 +1,5 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
 import { describe, expect, it } from 'vitest';
 
 const readSource = (path: string): string => readFileSync(join(process.cwd(), 'src', path), 'utf8');
@@ -46,7 +45,9 @@ describe('Korean supporting page UI copy', () => {
         const routeTitles = readSource('lib/route-titles/index.ts');
 
         expect(knowledgesList).toContain('지식');
-        expect(knowledgesList).toContain('AegisX 에이전트가 점검 중 다시 참고할 수 있는 질문, 답변, 가이드, 코드 지식을 관리합니다.');
+        expect(knowledgesList).toContain(
+            'AegisX 에이전트가 점검 중 다시 참고할 수 있는 질문, 답변, 가이드, 코드 지식을 관리합니다.',
+        );
         expect(knowledgesList).toContain('아직 지식 문서가 없습니다');
         expect(knowledgesList).not.toMatch(/>Knowledges<|No knowledge documents yet|New Knowledge/);
 
@@ -93,7 +94,9 @@ describe('Korean supporting page UI copy', () => {
         expect(providers).toContain('생성일');
         expect(providers).toContain('수정일');
         expect(providers).toContain('작업 메뉴 열기');
-        expect(providers).not.toMatch(/title="Name"|title="Type"|title="Created"|title="Updated"|aria-label="Open menu"/);
+        expect(providers).not.toMatch(
+            /title="Name"|title="Type"|title="Created"|title="Updated"|aria-label="Open menu"/,
+        );
 
         expect(providerDetail).toContain('검색어와 일치하는 항목이 없습니다.');
         expect(providerDetail).toContain('사용자 지정 값으로 사용');
@@ -105,7 +108,9 @@ describe('Korean supporting page UI copy', () => {
         expect(providerDetail).toContain('가격 설정');
         expect(providerDetail).toContain('취소');
         expect(providerDetail).toContain('삭제');
-        expect(providerDetail).not.toMatch(/Search \$\{label.toLowerCase\(\)\}|No \{label.toLowerCase\(\)\} found|Use "\{search\}" as custom|Please fix the following validation errors|'Cancel'|>Cancel<|'Deleting\.\.\.'|>Deleting\.\.\.<|'Testing\.\.\.'|>Testing\.\.\.<|'Stay'|New Provider|Provider Settings|Configure a new language model provider|Update provider settings and configuration|Agent Configurations|Configure settings for each agent type|Provider Test Results|Reasoning Configuration|Price Configuration|Price per 1M|Model is required|Provider name is required|Provider type is required/);
+        expect(providerDetail).not.toMatch(
+            /Search \$\{label.toLowerCase\(\)\}|No \{label.toLowerCase\(\)\} found|Use "\{search\}" as custom|Please fix the following validation errors|'Cancel'|>Cancel<|'Deleting\.\.\.'|>Deleting\.\.\.<|'Testing\.\.\.'|>Testing\.\.\.<|'Stay'|New Provider|Provider Settings|Configure a new language model provider|Update provider settings and configuration|Agent Configurations|Configure settings for each agent type|Provider Test Results|Reasoning Configuration|Price Configuration|Price per 1M|Model is required|Provider name is required|Provider type is required/,
+        );
 
         expect(prompts).toContain('에이전트 프롬프트');
         expect(prompts).toContain('에이전트 이름');
@@ -113,7 +118,9 @@ describe('Korean supporting page UI copy', () => {
         expect(prompts).toContain('도구 프롬프트');
         expect(prompts).toContain('시스템 도구와 유틸리티용 프롬프트 템플릿');
         expect(prompts).toContain('프롬프트를 기본 템플릿으로 되돌릴까요?');
-        expect(prompts).not.toMatch(/Agent Name|Tool Name|System Prompt|Human Prompt|Prompt Templates|>Template<|Loading prompts|Error loading prompts|Prompt templates could not be loaded|No prompts available|Agent Prompts|System and human prompts for AI agents|Filter agents|>Tool Prompts<|Prompt templates for system tools and utilities|Filter tools|cancelText="Cancel"|confirmText="Reset"/);
+        expect(prompts).not.toMatch(
+            /Agent Name|Tool Name|System Prompt|Human Prompt|Prompt Templates|>Template<|Loading prompts|Error loading prompts|Prompt templates could not be loaded|No prompts available|Agent Prompts|System and human prompts for AI agents|Filter agents|>Tool Prompts<|Prompt templates for system tools and utilities|Filter tools|cancelText="Cancel"|confirmText="Reset"/,
+        );
 
         expect(promptDetail).toContain('초기화 중...');
         expect(promptDetail).toContain('유효성 검사');
@@ -121,7 +128,9 @@ describe('Korean supporting page UI copy', () => {
         expect(promptDetail).toContain('프롬프트 데이터를 불러오지 못했습니다');
         expect(promptDetail).toContain('프롬프트를 찾을 수 없습니다');
         expect(promptDetail).toContain('이 프롬프트를 기본값으로 초기화할까요?');
-        expect(promptDetail).not.toMatch(/Resetting\.\.\.|>Validate<|Save Changes|Reset Prompt|system prompt|human prompt|Error loading prompt data|Prompt not found|Please wait while we fetch prompt information|Loading prompt data|could not be found or is not supported for editing|cancelText="Cancel"|>Cancel</);
+        expect(promptDetail).not.toMatch(
+            /Resetting\.\.\.|>Validate<|Save Changes|Reset Prompt|system prompt|human prompt|Error loading prompt data|Prompt not found|Please wait while we fetch prompt information|Loading prompt data|could not be found or is not supported for editing|cancelText="Cancel"|>Cancel</,
+        );
 
         expect(apiTokens).toContain('토큰 이름은 255자 이하여야 합니다');
         expect(apiTokens).toContain('만료일이 필요합니다');
@@ -129,6 +138,8 @@ describe('Korean supporting page UI copy', () => {
         expect(apiTokens).toContain('폐기됨');
         expect(apiTokens).toContain('토큰 ID 복사');
         expect(apiTokens).toContain('API 토큰이 생성되었습니다');
-        expect(apiTokens).not.toMatch(/Token name must be 255 characters or less|Expiration date is required|>active<|>revoked<|>expired<|Pick date|Copy Token|>Close<|API Token Created|Copy this token now|Please wait while we fetch your API tokens|Loading tokens|Error loading tokens|aria-label="Submit"|aria-label="Cancel"|aria-label="Open menu"|>Edit</);
+        expect(apiTokens).not.toMatch(
+            /Token name must be 255 characters or less|Expiration date is required|>active<|>revoked<|>expired<|Pick date|Copy Token|>Close<|API Token Created|Copy this token now|Please wait while we fetch your API tokens|Loading tokens|Error loading tokens|aria-label="Submit"|aria-label="Cancel"|aria-label="Open menu"|>Edit</,
+        );
     });
 });

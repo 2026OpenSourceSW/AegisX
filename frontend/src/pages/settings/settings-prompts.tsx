@@ -838,9 +838,7 @@ function SettingsPrompts() {
                             <h2 className="text-lg font-semibold">에이전트 프롬프트</h2>
                             <Badge variant="secondary">{agentPrompts.length}</Badge>
                         </div>
-                        <p className="text-muted-foreground text-sm">
-                            AI 에이전트가 사용할 시스템 및 사용자 프롬프트
-                        </p>
+                        <p className="text-muted-foreground text-sm">AI 에이전트가 사용할 시스템 및 사용자 프롬프트</p>
                         <DataTable<AgentPromptTableData>
                             columns={agentColumns}
                             data={agentPrompts}
@@ -861,9 +859,7 @@ function SettingsPrompts() {
                             <h2 className="text-lg font-semibold">도구 프롬프트</h2>
                             <Badge variant="secondary">{toolPrompts.length}</Badge>
                         </div>
-                        <p className="text-muted-foreground text-sm">
-                            시스템 도구와 유틸리티용 프롬프트 템플릿
-                        </p>
+                        <p className="text-muted-foreground text-sm">시스템 도구와 유틸리티용 프롬프트 템플릿</p>
                         <DataTable<ToolPromptTableData>
                             columns={toolColumns}
                             data={toolPrompts}

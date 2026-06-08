@@ -466,8 +466,7 @@ function Knowledges() {
                                 onClick={() => navigate('/knowledges/new')}
                                 variant="secondary"
                             >
-                                <Plus />
-                                새 지식
+                                <Plus />새 지식
                             </Button>
                         }
                         description="AegisX 에이전트가 점검 중 다시 참고할 수 있는 질문, 답변, 가이드, 코드 지식을 관리합니다."

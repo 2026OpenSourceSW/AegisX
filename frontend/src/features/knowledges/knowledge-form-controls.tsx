@@ -159,7 +159,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                             >
                                 <FormControl>
                                     <SelectTrigger>
-                                            <SelectValue placeholder="유형 선택" />
+                                        <SelectValue placeholder="유형 선택" />
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>

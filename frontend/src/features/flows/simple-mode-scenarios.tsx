@@ -16,7 +16,8 @@ export interface ScenarioOption {
 }
 
 export const defaultScenario: ScenarioOption = {
-    description: '외부에서 접근 가능한 포트, 서비스, 기본 웹 응답을 짧은 범위로 확인하고 즉시 조치가 필요한 위험만 요약합니다.',
+    description:
+        '외부에서 접근 가능한 포트, 서비스, 기본 웹 응답을 짧은 범위로 확인하고 즉시 조치가 필요한 위험만 요약합니다.',
     duration: '5분~10분',
     icon: <Globe2 className="size-5" />,
     id: 'exposure',
