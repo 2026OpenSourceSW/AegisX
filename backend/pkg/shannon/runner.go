@@ -58,7 +58,7 @@ func (r *Runner) Run(ctx context.Context, req ScanRequest) (*ScanResult, error) 
 		return nil, fmt.Errorf("shannon command timed out: %w", runCtx.Err())
 	}
 	if err != nil {
-		return nil, fmt.Errorf("shannon command failed: %w: %s", err, stderr.String())
+		return nil, fmt.Errorf("shannon command failed: %w", err)
 	}
 
 	reportBytes, err := os.ReadFile(reportPath)
