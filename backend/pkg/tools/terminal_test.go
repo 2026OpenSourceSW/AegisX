@@ -378,6 +378,26 @@ func TestGetExecResultReturnsErrorOnNonZeroExitCode(t *testing.T) {
 	assert.Equal(t, "permission denied\n", output)
 }
 
+func TestGetExecResultReturnsSuccessOnEmptyZeroExit(t *testing.T) {
+	t.Parallel()
+
+	mock := &contextAwareMockDockerClient{
+		inspectResp: container.ExecInspect{ExitCode: 0},
+	}
+	term := &terminal{
+		flowID:       1,
+		containerID:  1,
+		containerLID: "test-container",
+		dockerClient: mock,
+		tlp:          &contextTestTermLogProvider{},
+	}
+
+	output, err := term.getExecResult(t.Context(), "exec-silent-success", time.Second)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "Command completed successfully with exit code 0. No output produced (silent success)", output)
+}
+
 func TestConfiguredExecTimeout(t *testing.T) {
 	t.Parallel()
 
