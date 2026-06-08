@@ -340,7 +340,7 @@ func (t *terminal) getExecResult(ctx context.Context, id string, timeout time.Du
 	}
 
 	// wait for the exec process to finish
-	_, err = t.dockerClient.ContainerExecInspect(ctx, id)
+	inspect, err := t.dockerClient.ContainerExecInspect(ctx, id)
 	if err != nil {
 		return "", fmt.Errorf("failed to inspect exec process: %w", err)
 	}
@@ -351,6 +351,14 @@ func (t *terminal) getExecResult(ctx context.Context, id string, timeout time.Du
 	_, err = t.tlp.PutMsg(ctx, database.TermlogTypeStdout, styledOutput, t.containerID, t.taskID, t.subtaskID)
 	if err != nil {
 		return "", fmt.Errorf("failed to put terminal log (stdout): %w", err)
+	}
+
+	if inspect.ExitCode != 0 {
+		output := strings.TrimSpace(results)
+		if output == "" {
+			output = "no output produced"
+		}
+		return results, fmt.Errorf("command exited with code %d: %s", inspect.ExitCode, truncateString(output, 500))
 	}
 
 	if results == "" {
