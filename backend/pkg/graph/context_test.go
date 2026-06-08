@@ -2,7 +2,10 @@ package graph
 
 import (
 	"context"
+	"database/sql"
 	"testing"
+
+	"pentagi/pkg/database"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -345,6 +348,34 @@ func TestValidatePermission_ZeroUserID(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, int64(0), uid)
 	assert.False(t, admin)
+}
+
+func TestValidatePermissionWithFlowIDIncludingDeleted_allowsDeletedOwnedFlow(t *testing.T) {
+	t.Parallel()
+
+	ctx := SetUserID(t.Context(), 7)
+	ctx = SetUserPermissions(ctx, []string{"flows.delete"})
+	db := deletedFlowPermissionDB{
+		flow: database.Flow{
+			ID:        101,
+			UserID:    7,
+			DeletedAt: sql.NullTime{Valid: true},
+		},
+	}
+
+	uid, err := validatePermissionWithFlowIDIncludingDeleted(ctx, "flows.delete", 101, db)
+	require.NoError(t, err)
+	assert.Equal(t, int64(7), uid)
+}
+
+type deletedFlowPermissionDB struct {
+	database.Querier
+
+	flow database.Flow
+}
+
+func (db deletedFlowPermissionDB) GetFlowIncludingDeleted(ctx context.Context, flowID int64) (database.Flow, error) {
+	return db.flow, nil
 }
 
 func TestValidatePermission_LargeUserID(t *testing.T) {
