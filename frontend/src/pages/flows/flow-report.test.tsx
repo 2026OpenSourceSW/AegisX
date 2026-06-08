@@ -92,8 +92,8 @@ describe('FlowReport', () => {
 
         renderFlowReport();
 
-        expect(screen.getByRole('heading', { name: 'Loading report' })).toBeInTheDocument();
-        expect(screen.getByText('Preparing the flow evidence and task summary.')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: '보고서 준비 중' })).toBeInTheDocument();
+        expect(screen.getByText('Flow 증거와 작업 요약을 준비하고 있습니다.')).toBeInTheDocument();
     });
 
     it('renders the error state when report data cannot be loaded', () => {
@@ -102,15 +102,15 @@ describe('FlowReport', () => {
 
         renderFlowReport();
 
-        expect(screen.getByRole('heading', { name: 'Error loading report' })).toBeInTheDocument();
-        expect(screen.getByText('Failed to load flow data')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Close' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: '보고서 불러오기 오류' })).toBeInTheDocument();
+        expect(screen.getByText('보고서 데이터를 불러오지 못했습니다')).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: '닫기' })).toBeInTheDocument();
     });
 
     it('renders markdown report content when data is available', () => {
         renderFlowReport();
 
-        expect(screen.getByRole('heading', { name: 'Flow security report' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'Flow 보안 보고서' })).toBeInTheDocument();
         expect(screen.getByText(/SQL injection evidence/)).toBeInTheDocument();
         expect(screen.getByText(/Markdown report body is preserved/)).toBeInTheDocument();
     });
@@ -118,8 +118,8 @@ describe('FlowReport', () => {
     it('renders the generating state when PDF download is requested', async () => {
         renderFlowReport('/flows/101/report?download=1');
 
-        expect(screen.getByRole('heading', { name: 'Generating PDF' })).toBeInTheDocument();
-        expect(screen.getByText('Creating the PDF document from the current report.')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: 'PDF 생성 중' })).toBeInTheDocument();
+        expect(screen.getByText('현재 보고서 내용으로 PDF 문서를 만들고 있습니다.')).toBeInTheDocument();
 
         await waitFor(() => {
             expect(reportMocks.generatePDFFromMarkdown).toHaveBeenCalledWith(
