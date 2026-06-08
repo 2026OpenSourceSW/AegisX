@@ -23,6 +23,7 @@ export function buildOwaspTopTen2025ReportGuidance(): readonly string[] {
         '보고서 분류: 발견 항목마다 OWASP Top 10:2025 기준으로 분류합니다.',
         `OWASP Top 10:2025 기준: ${owaspTopTen2025Categories.join('; ')}`,
         '보고서 구성: "쉬운 요약", "주요 발견 사항", "조치 우선순위" 순서로 간단히 정리합니다.',
+        '제목 규칙: clean Markdown heading hierarchy를 유지하고 제목에는 상태 이모지, 체크 표시, raw task or subtask IDs를 넣지 않습니다.',
         '쉬운 요약: 먼저 각 취약점의 위험, 영향, 우선 조치를 비전문가도 이해할 수 있게 짧게 정리합니다.',
         '주요 발견 사항: 각 항목마다 위험도, OWASP Top 10:2025 분류, 쉬운 설명, 근거, 영향, 조치 방법을 포함합니다.',
         '발견 없음: 확인된 취약점이 없으면 "확인된 취약점 없음"으로 적고, 점검 범위와 한계를 짧게 설명합니다.',
