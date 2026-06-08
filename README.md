@@ -126,110 +126,180 @@ flowchart TB
 
 ### Component Architecture
 
-AegisX keeps the upstream PentAGI runtime shape, but adds a guided Simple Mode and an optional Shannon boundary for white-box report import. Solid arrows are required runtime paths; dashed arrows are optional integrations.
+AegisX keeps the upstream PentAGI runtime shape, then adds a guided Simple Mode, Korean report experience, and an optional Shannon boundary for white-box report import. The component view is split into a layer map and two runtime flows so the core service shape stays readable.
+
+Layer legend:
+
+- **🖥️ Frontend**: React/Vite surfaces for Simple Mode, Expert Mode, reports, resources, and settings.
+- **⚙️ Backend**: Go API, GraphQL/REST boundaries, orchestration, tools, and Shannon integration.
+- **🗄️ Database**: PostgreSQL and pgvector stores rendered as cylinder nodes.
+- **🧩 Other Infrastructure**: Docker runtime, scraper, providers, observability, and external targets.
 
 <details>
-<summary><b>Container Architecture</b> (click to expand)</summary>
+<summary><b>Layered Component Architecture</b> (click to expand)</summary>
 
 ```mermaid
-graph TB
-    classDef frontend fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
-    classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16
-    classDef database fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03
-    classDef infra fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#3b0764
-    classDef external fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a
+flowchart TB
+    classDef frontend fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#0f172a
+    classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#0f172a
+    classDef database fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#0f172a
+    classDef infra fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#0f172a
+    classDef external fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#0f172a
 
     subgraph Frontend["Frontend Layer"]
         direction TB
-        UI["React + TypeScript UI<br/>Vite application"]
-        SimpleMode["Simple Mode<br/>Quick Scan<br/>guided target + scenario"]
-        ExpertMode["Advanced Mode (Expert UI)<br/>Automation / Assistant"]
-        Reports["Reports<br/>web view / Markdown / PDF"]
-        Settings["Settings<br/>providers / resources"]
-        UI --> SimpleMode
-        UI --> ExpertMode
-        UI --> Reports
-        UI --> Settings
+        WebUI["React + TypeScript UI<br/>Vite SPA"]
+        SimpleMode["Simple Mode<br/>Quick Scan scenario"]
+        ExpertMode["Expert Mode<br/>Automation / Assistant"]
+        ReportUI["Reports<br/>web / Markdown / PDF"]
+        ResourceUI["Resources + Settings<br/>providers / knowledge"]
+        WebUI --> SimpleMode
+        WebUI --> ExpertMode
+        WebUI --> ReportUI
+        WebUI --> ResourceUI
     end
 
     subgraph Backend["Backend Layer"]
         direction TB
-        GraphQL["GraphQL<br/>queries / mutations<br/>subscriptions"]
-        REST["REST<br/>files / settings / Shannon"]
-        API["Go API server<br/>Gin + gqlgen"]
-        Orchestration["Flow controller<br/>assistant and agents<br/>tool execution"]
-        ShannonBridge["Shannon bridge<br/>external runner boundary"]
-        GraphQL --> API
-        REST --> API
+        EdgeAPI["GraphQL + REST Boundary<br/>queries / mutations / exports"]
+        API["Go API Server<br/>Gin + gqlgen"]
+        Orchestration["Flow Orchestrator<br/>tasks / assistants / agents"]
+        Harness["Tool Harness<br/>terminal / scraper / screenshots"]
+        ShannonBridge["Shannon Bridge<br/>external report import"]
+        EdgeAPI --> API
         API --> Orchestration
+        Orchestration --> Harness
         API --> ShannonBridge
     end
 
     subgraph Database["Database Layer"]
         direction TB
         Migrations["goose migrations<br/>schema changes"]
-        AppDB[(PostgreSQL<br/>users / providers / flows / tasks / logs / reports)]
-        VectorDB[(pgvector<br/>resources / knowledge / vector memory)]
+        AppDB[(PostgreSQL<br/>users / flows / tasks / logs)]
+        VectorDB[(pgvector<br/>resources / knowledge vectors)]
         Migrations --> AppDB
-        AppDB --> VectorDB
+        AppDB --- VectorDB
     end
 
     subgraph Other["Other Infrastructure"]
         direction TB
-        Docker["Docker Compose runtime<br/>pentagi / pgvector / scraper"]
+        Docker["Docker Compose Runtime<br/>pentagi / pgvector / scraper"]
         Scraper["Isolated scraper<br/>browser service"]
-        Target["Authorized target<br/>owned or permitted system"]
-        Providers["LLM and search providers<br/>OpenAI-compatible gateways<br/>search APIs"]
-        ShannonExternal["Shannon external CLI / Docker worker"]
+        Providers["LLM + Search Providers<br/>OpenRouter / DeepSeek / custom"]
+        Target["Authorized Target<br/>owned or permitted system"]
+        Graphiti["Graphiti API<br/>optional knowledge graph"]
+        Neo4j[(Neo4j<br/>Graph database)]
+        Observability["OpenTelemetry + Grafana<br/>metrics / logs / traces"]
+        Langfuse["Langfuse<br/>optional LLM observability"]
+        ShannonExternal["Shannon CLI / Worker<br/>optional white-box analysis"]
         Docker --> Scraper
         Docker --> Target
-
-        Graphiti["Graphiti API<br/>optional knowledge graph"]
-        Neo4j[(Neo4j<br/>Graphiti graph DB)]
         Graphiti --> Neo4j
-
-        Observability["OpenTelemetry + Grafana<br/>optional metrics / logs / traces"]
-        Grafana["Grafana dashboards"]
-        Victoria[(VictoriaMetrics<br/>metrics)]
-        Loki[(Loki<br/>logs)]
-        JaegerStore[(Jaeger storage<br/>traces)]
-        Observability --> Grafana
-        Grafana --> Victoria
-        Victoria --> Loki
-        Loki --> JaegerStore
-
-        Langfuse["Langfuse<br/>optional LLM observability"]
-        ClickHouse[(ClickHouse<br/>LLM analytics)]
-        Redis[(Redis<br/>cache / queue support)]
-        MinIO[(MinIO<br/>object storage)]
-        Langfuse --> ClickHouse
-        ClickHouse --> Redis
-        Redis --> MinIO
     end
 
-    SimpleMode ==> GraphQL
-    ExpertMode ==> GraphQL
-    Reports ==> GraphQL
-    Reports --> REST
-    Settings --> REST
+    WebUI -- "GraphQL / REST" --> EdgeAPI
 
-    API ==> AppDB
-    Orchestration ==> VectorDB
-    Orchestration ==> Docker
+    API -- "SQL" --> AppDB
+    Orchestration -- "vector lookup" --> VectorDB
+    Harness ==> Docker
     Orchestration -.-> Providers
     Orchestration -.-> Graphiti
     API -.-> Observability
     API -.-> Langfuse
     ShannonBridge -.-> ShannonExternal
 
-    class UI,SimpleMode,ExpertMode,Reports,Settings frontend
-    class API,GraphQL,REST,Orchestration,ShannonBridge backend
-    class AppDB,VectorDB,Migrations,Neo4j,Victoria,Loki,JaegerStore,ClickHouse,Redis,MinIO database
-    class Docker,Scraper,Graphiti,Observability,Grafana,Langfuse infra
+    class WebUI,SimpleMode,ExpertMode,ReportUI,ResourceUI frontend
+    class EdgeAPI,API,Orchestration,Harness,ShannonBridge backend
+    class Migrations,AppDB,VectorDB,Neo4j database
+    class Docker,Scraper,Graphiti,Observability,Langfuse infra
     class Providers,Target,ShannonExternal external
 ```
 
 </details>
+
+<details>
+<summary><b>Simple Mode Flow</b> (click to expand)</summary>
+
+```mermaid
+graph LR
+    classDef user fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0f172a
+    classDef frontend fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#0f172a
+    classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#0f172a
+    classDef database fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#0f172a
+    classDef external fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#0f172a
+
+    User["Security Engineer"]
+    Consent["Ownership Check<br/>owned or authorized target"]
+    Scenario["Scenario Selection<br/>Quick Scan / guided options"]
+    Prompt["Pre-run Prompt<br/>generated prompt"]
+    Flow["Flow Orchestrator<br/>time-boxed non-destructive scan"]
+    Tools["Tool Harness<br/>HTTP checks / terminal / screenshots"]
+    Store[(PostgreSQL + pgvector<br/>flow logs / evidence)]
+    Report["Report<br/>web view / Markdown / PDF"]
+    Target["Authorized Target"]
+    Provider["LLM Provider<br/>DeepSeek / OpenRouter / custom"]
+
+    User --> Consent --> Scenario --> Prompt --> Flow
+    Flow --> Tools --> Target
+    Flow -.-> Provider
+    Flow --> Store
+    Store --> Report
+    Tools --> Report
+
+    class User user
+    class Consent,Scenario,Prompt,Report frontend
+    class Flow,Tools backend
+    class Store database
+    class Target,Provider external
+```
+
+</details>
+
+<details>
+<summary><b>Expert Mode Flow</b> (click to expand)</summary>
+
+```mermaid
+graph LR
+    classDef user fill:#e0f2fe,stroke:#0284c7,stroke-width:2px,color:#0f172a
+    classDef frontend fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#0f172a
+    classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#0f172a
+    classDef database fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#0f172a
+    classDef external fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#0f172a
+
+    User["Security Engineer"]
+    ExpertUI["Expert Mode UI<br/>Automation / Assistant"]
+    Automation["Automation Flow<br/>tasks / subtasks / terminal"]
+    Assistant["Assistant + Agents<br/>interactive investigation"]
+    Harness["Tool Harness<br/>terminal / scraper / files / screenshots"]
+    Logs[(PostgreSQL<br/>tasks / assistant logs / artifacts)]
+    Vectors[(pgvector<br/>resources / vector memory)]
+    Report["Report Menu<br/>task or assistant report"]
+    Target["Authorized Target"]
+    Providers["LLM + Search Providers"]
+
+    User --> ExpertUI
+    ExpertUI --> Automation
+    ExpertUI --> Assistant
+    Automation --> Harness
+    Assistant --> Harness
+    Assistant -.-> Providers
+    Harness --> Target
+    Automation --> Logs
+    Assistant --> Logs
+    Assistant --> Vectors
+    Logs --> Report
+    Vectors --> Report
+
+    class User user
+    class ExpertUI,Report frontend
+    class Automation,Assistant,Harness backend
+    class Logs,Vectors database
+    class Target,Providers external
+```
+
+</details>
+
+Legend: solid arrows are required runtime paths, dashed arrows are optional provider or observability integrations, and cylinder nodes are persistent stores.
 
 ### Frontend
 
