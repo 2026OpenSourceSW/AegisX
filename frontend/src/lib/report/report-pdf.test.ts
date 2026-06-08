@@ -5,6 +5,7 @@ import {
     generatePDFBlobNew,
     getPdfFontFamilyForTextRun,
     getPdfVectorFontFamilyForCharacter,
+    parseMarkdownTokens,
     splitTextForPdfFonts,
 } from './report-pdf';
 import {
@@ -106,5 +107,37 @@ curl -I https://example.local
         const pdfBody = await readBlobAsLatin1(blob);
 
         expect(pdfBody).not.toContain('/FontFile2');
+    });
+
+    it('parses markdown tables for PDF rendering instead of dropping report summaries', async () => {
+        const parsed = parseMarkdownTokens(`| 위험도 | OWASP Top 10:2025 유형 | 취약점 |
+| --- | --- | --- |
+| 🔴 HIGH | A02:2025 - Security Misconfiguration | Wildcard CORS(ACAO: *) |
+| 🟡 MEDIUM | A02:2025 - Security Misconfiguration | HSTS 누락 |`);
+
+        expect(parsed).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    rows: expect.arrayContaining([
+                        expect.arrayContaining([
+                            expect.objectContaining({
+                                inlineTokens: expect.arrayContaining([
+                                    expect.objectContaining({ text: '[HIGH] HIGH' }),
+                                ]),
+                            }),
+                        ]),
+                    ]),
+                    type: 'table',
+                }),
+            ]),
+        );
+
+        const blob = await generatePDFBlobNew(`# 핵심 발견 요약
+
+| 위험도 | OWASP Top 10:2025 유형 | 취약점 |
+| --- | --- | --- |
+| 🔴 HIGH | A02:2025 - Security Misconfiguration | Wildcard CORS(ACAO: *) |`);
+
+        expect(blob.size).toBeGreaterThan(0);
     });
 });

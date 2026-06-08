@@ -40,6 +40,9 @@ func TestQuickScanReportPromptStructure(t *testing.T) {
 			require.Contains(t, rendered, "Do not start headings with status emojis")
 			require.Contains(t, rendered, "raw task or subtask IDs")
 			require.Contains(t, rendered, "OWASP Top 10:2025")
+			require.Contains(t, rendered, "발견 항목 요약")
+			require.Contains(t, rendered, "위험도별 발견 항목")
+			require.Contains(t, rendered, "위험도 | OWASP Top 10:2025 유형 | 취약점")
 		})
 	}
 }

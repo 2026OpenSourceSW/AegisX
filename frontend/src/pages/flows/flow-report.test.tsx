@@ -55,7 +55,13 @@ const flowReportData: FlowReportQuery = {
             flowId: '101',
             id: '501',
             input: '# Scope\nAuthorized staging target only.',
-            result: 'Markdown report body is preserved.',
+            result: `## 주요 발견 사항
+
+| 위험도 | OWASP Top 10:2025 유형 | 취약점 |
+| --- | --- | --- |
+| 🔴 HIGH | A02:2025 - Security Misconfiguration | Wildcard CORS(ACAO: *) |
+
+Markdown report body is preserved.`,
             status: StatusType.Finished,
             subtasks: null,
             title: 'SQL injection evidence',
@@ -111,6 +117,9 @@ describe('FlowReport', () => {
         renderFlowReport();
 
         expect(screen.getByRole('heading', { name: 'Flow 보안 보고서' })).toBeInTheDocument();
+        expect(screen.getByText(/핵심 발견 요약/)).toBeInTheDocument();
+        expect(screen.getByText(/발견 항목 요약/)).toBeInTheDocument();
+        expect(screen.getByText(/Wildcard CORS/)).toBeInTheDocument();
         expect(screen.getByText(/SQL injection evidence/)).toBeInTheDocument();
         expect(screen.getByText(/Markdown report body is preserved/)).toBeInTheDocument();
     });

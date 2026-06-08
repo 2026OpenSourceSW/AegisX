@@ -4,13 +4,24 @@ import type { FlowFragmentFragment, TaskFragmentFragment } from '@/graphql/types
 
 import { StatusType } from '@/graphql/types';
 
+import { buildFindingSummaryMarkdown, reportSummaryHeading } from './report-summary';
+
 const reportHeadingStatusPattern = /^[✅❌⚡⏳📝]\s*/u;
 const reportHeadingIdPattern = /^\d+\.\s*/u;
 const markdownHeadingPattern = /^(#{1,6})\s+(.+)$/u;
 
 type ReportAnchors = {
+    contentHeadingAnchors: Map<string, TocHeading[]>;
+    resultAnchor: string;
     subtaskAnchors: Map<string, string>;
+    summaryHeadings: TocHeading[];
     taskAnchors: Map<string, string>;
+};
+
+type TocHeading = {
+    readonly anchor: string;
+    readonly level: number;
+    readonly title: string;
 };
 
 const normalizeReportHeadingText = (content: string, reportIds: ReadonlySet<string>): string => {
@@ -103,8 +114,13 @@ const shiftMarkdownHeaders = (text: string, shiftBy: number, reportIds: Readonly
         .join('\n');
 };
 
-const registerMarkdownHeadingAnchors = (slugger: GithubSlugger, text: string, reportIds: ReadonlySet<string>): void => {
+const registerMarkdownHeadingAnchors = (
+    slugger: GithubSlugger,
+    text: string,
+    reportIds: ReadonlySet<string>,
+): TocHeading[] => {
     let fenceMarker: null | string = null;
+    const headings: TocHeading[] = [];
 
     text.split('\n').forEach((line) => {
         const nextFenceMarker = getFenceMarker(line);
@@ -122,9 +138,16 @@ const registerMarkdownHeadingAnchors = (slugger: GithubSlugger, text: string, re
         const headingMatch = line.match(markdownHeadingPattern);
 
         if (headingMatch) {
-            slugger.slug(normalizeReportHeadingText(headingMatch[2], reportIds));
+            const title = normalizeReportHeadingText(headingMatch[2], reportIds);
+            headings.push({
+                anchor: slugger.slug(title),
+                level: headingMatch[1].length,
+                title,
+            });
         }
     });
+
+    return headings;
 };
 
 const sortByNumericId = <T extends { id: string }>(items: T[]): T[] => {
@@ -160,11 +183,15 @@ const collectReportIds = (tasks: TaskFragmentFragment[], flow?: FlowFragmentFrag
 const buildReportAnchors = (
     tasks: TaskFragmentFragment[],
     reportIds: ReadonlySet<string>,
+    summaryMarkdown: string,
     flow?: FlowFragmentFragment | null,
 ): ReportAnchors => {
     const slugger = new GithubSlugger();
     const anchors: ReportAnchors = {
+        contentHeadingAnchors: new Map(),
+        resultAnchor: '',
         subtaskAnchors: new Map(),
+        summaryHeadings: [],
         taskAnchors: new Map(),
     };
 
@@ -177,17 +204,32 @@ const buildReportAnchors = (
     }
 
     slugger.slug('목차');
-    slugger.slug('점검 결과');
+    anchors.summaryHeadings = registerMarkdownHeadingAnchors(slugger, summaryMarkdown, reportIds);
+    anchors.resultAnchor = slugger.slug('점검 결과');
 
     sortByNumericId(tasks).forEach((task) => {
-        anchors.taskAnchors.set(task.id, slugger.slug(normalizeReportHeadingText(task.title, reportIds)));
+        const taskTitle = normalizeReportHeadingText(task.title, reportIds);
+        anchors.taskAnchors.set(task.id, slugger.slug(taskTitle));
+        const taskContentHeadings: TocHeading[] = [];
 
         if (task.input?.trim()) {
-            registerMarkdownHeadingAnchors(slugger, task.input, reportIds);
+            taskContentHeadings.push(
+                ...registerMarkdownHeadingAnchors(slugger, task.input, reportIds).filter(
+                    (heading) => heading.title !== taskTitle,
+                ),
+            );
         }
 
         if (task.result?.trim()) {
-            registerMarkdownHeadingAnchors(slugger, task.result, reportIds);
+            taskContentHeadings.push(
+                ...registerMarkdownHeadingAnchors(slugger, task.result, reportIds).filter(
+                    (heading) => heading.title !== taskTitle,
+                ),
+            );
+        }
+
+        if (taskContentHeadings.length > 0) {
+            anchors.contentHeadingAnchors.set(`task:${task.id}`, taskContentHeadings);
         }
 
         if (task.subtasks && task.subtasks.length > 0) {
@@ -195,13 +237,26 @@ const buildReportAnchors = (
                 const subtaskTitle = normalizeReportHeadingText(subtask.title, reportIds);
                 const subtaskBodyAnchor = slugger.slug(subtaskTitle);
                 anchors.subtaskAnchors.set(subtask.id, subtaskBodyAnchor);
+                const subtaskContentHeadings: TocHeading[] = [];
 
                 if (subtask.description?.trim()) {
-                    registerMarkdownHeadingAnchors(slugger, subtask.description, reportIds);
+                    subtaskContentHeadings.push(
+                        ...registerMarkdownHeadingAnchors(slugger, subtask.description, reportIds).filter(
+                            (heading) => heading.title !== subtaskTitle,
+                        ),
+                    );
                 }
 
                 if (subtask.result?.trim()) {
-                    registerMarkdownHeadingAnchors(slugger, subtask.result, reportIds);
+                    subtaskContentHeadings.push(
+                        ...registerMarkdownHeadingAnchors(slugger, subtask.result, reportIds).filter(
+                            (heading) => heading.title !== subtaskTitle,
+                        ),
+                    );
+                }
+
+                if (subtaskContentHeadings.length > 0) {
+                    anchors.contentHeadingAnchors.set(`subtask:${subtask.id}`, subtaskContentHeadings);
                 }
             });
         }
@@ -228,13 +283,25 @@ const generateTableOfContents = (
 
     toc += '## 목차\n\n';
 
+    anchors.summaryHeadings.forEach((heading) => {
+        const indent = heading.title === reportSummaryHeading ? '' : '  ';
+        toc += `${indent}- [${heading.title}](#${heading.anchor})\n`;
+    });
+
+    toc += `- [점검 결과](#${anchors.resultAnchor || new GithubSlugger().slug('점검 결과')})\n`;
+
     const sortedTasks = sortByNumericId(tasks);
 
     sortedTasks.forEach((task) => {
         const taskTitle = normalizeReportHeadingText(task.title, reportIds);
         const taskAnchor = anchors.taskAnchors.get(task.id) ?? new GithubSlugger().slug(taskTitle);
 
-        toc += `- [${taskTitle}](#${taskAnchor})\n`;
+        toc += `  - [${taskTitle}](#${taskAnchor})\n`;
+
+        const taskContentHeadings = anchors.contentHeadingAnchors.get(`task:${task.id}`) ?? [];
+        taskContentHeadings.forEach((heading) => {
+            toc += `    - [${heading.title}](#${heading.anchor})\n`;
+        });
 
         if (task.subtasks && task.subtasks.length > 0) {
             const sortedSubtasks = sortByNumericId(task.subtasks);
@@ -242,7 +309,12 @@ const generateTableOfContents = (
             sortedSubtasks.forEach((subtask) => {
                 const subtaskTitle = normalizeReportHeadingText(subtask.title, reportIds);
                 const subtaskAnchor = anchors.subtaskAnchors.get(subtask.id) ?? new GithubSlugger().slug(subtaskTitle);
-                toc += `  - [${subtaskTitle}](#${subtaskAnchor})\n`;
+                toc += `    - [${subtaskTitle}](#${subtaskAnchor})\n`;
+
+                const subtaskContentHeadings = anchors.contentHeadingAnchors.get(`subtask:${subtask.id}`) ?? [];
+                subtaskContentHeadings.forEach((heading) => {
+                    toc += `      - [${heading.title}](#${heading.anchor})\n`;
+                });
             });
         }
     });
@@ -262,9 +334,11 @@ export const buildReportMarkdown = (tasks: TaskFragmentFragment[], flow?: FlowFr
     }
 
     const sortedTasks = sortByNumericId(tasks);
-    const anchors = buildReportAnchors(sortedTasks, reportIds, flow);
+    const summaryMarkdown = buildFindingSummaryMarkdown(sortedTasks);
+    const anchors = buildReportAnchors(sortedTasks, reportIds, summaryMarkdown, flow);
 
     let report = generateTableOfContents(sortedTasks, flow, anchors, reportIds);
+    report += `${summaryMarkdown}\n\n`;
     report += '## 점검 결과\n\n';
 
     sortedTasks.forEach((task, taskIndex) => {
