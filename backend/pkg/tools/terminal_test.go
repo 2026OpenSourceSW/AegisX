@@ -354,6 +354,30 @@ func TestFindMissingInContainerChecksExitCode(t *testing.T) {
 	assert.Contains(t, err.Error(), "exit code 2")
 }
 
+func TestGetExecResultReturnsErrorOnNonZeroExitCode(t *testing.T) {
+	t.Parallel()
+
+	mock := &contextAwareMockDockerClient{
+		attachOutput: []byte("permission denied\n"),
+		inspectResp:  container.ExecInspect{ExitCode: 7},
+	}
+	term := &terminal{
+		flowID:       1,
+		containerID:  1,
+		containerLID: "test-container",
+		dockerClient: mock,
+		tlp:          &contextTestTermLogProvider{},
+	}
+
+	output, err := term.getExecResult(t.Context(), "exec-nonzero", time.Second)
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "exited with code 7")
+		assert.Contains(t, err.Error(), "permission denied")
+	}
+	assert.Equal(t, "permission denied\n", output)
+}
+
 func TestConfiguredExecTimeout(t *testing.T) {
 	t.Parallel()
 
@@ -627,4 +651,37 @@ func TestTerminalHandle_allowsShortReconCommand_whenQuickScanEnabled(t *testing.
 
 	assert.NoError(t, err)
 	assert.Contains(t, output, "HTTP/2 200")
+}
+
+func TestTerminalHandlePropagatesNonZeroExitCode_whenQuickScanEnabled(t *testing.T) {
+	t.Parallel()
+
+	action := TerminalAction{
+		Input: "curl -I --max-time 20 https://example.com/missing",
+	}
+	args, err := json.Marshal(action)
+	assert.NoError(t, err)
+
+	mock := &contextAwareMockDockerClient{
+		isRunning:      true,
+		execCreateResp: container.ExecCreateResponse{ID: "exec-quick-recon-failed"},
+		attachOutput:   []byte("curl: (22) The requested URL returned error: 404\n"),
+		inspectResp:    container.ExecInspect{ExitCode: 22},
+	}
+	term := &terminal{
+		flowID:             1,
+		containerID:        1,
+		containerLID:       "test-container",
+		dockerClient:       mock,
+		tlp:                &contextTestTermLogProvider{},
+		quickScanEnabled:   true,
+		defaultExecTimeout: 120 * time.Second,
+	}
+
+	output, err := term.Handle(t.Context(), TerminalToolName, args)
+
+	assert.NoError(t, err)
+	assert.Contains(t, output, "terminal tool 'terminal' handled with error")
+	assert.Contains(t, output, "exited with code 22")
+	assert.Contains(t, output, "requested URL returned error")
 }
