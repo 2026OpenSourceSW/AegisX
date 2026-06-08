@@ -126,27 +126,110 @@ flowchart TB
 
 ### Component Architecture
 
+AegisX keeps the upstream PentAGI runtime shape, but adds a guided Simple Mode and an optional Shannon boundary for white-box report import. Solid arrows are required runtime paths; dashed arrows are optional integrations.
+
+<details>
+<summary><b>Container Architecture</b> (click to expand)</summary>
+
 ```mermaid
-flowchart TB
+graph TB
     classDef frontend fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
     classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16
     classDef database fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03
     classDef infra fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#3b0764
+    classDef external fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a
 
-    Frontend["Frontend Layer<br/>React + TypeScript / Vite<br/>Simple Mode, Expert Mode, Reports, Settings"]
-    Backend["Backend Layer<br/>Go API server / Gin + gqlgen<br/>GraphQL, REST, flow orchestration, tools, Shannon bridge"]
-    Database["Database Layer<br/>PostgreSQL + pgvector<br/>flows, tasks, agents, reports, vector memory"]
-    Infrastructure["Other Infrastructure<br/>Docker Compose runtime<br/>scraper, Graphiti / Neo4j, Grafana / Langfuse, LLM / search providers"]
+    subgraph Frontend["Frontend Layer"]
+        direction TB
+        UI["React + TypeScript UI<br/>Vite application"]
+        SimpleMode["Simple Mode<br/>Quick Scan<br/>guided target + scenario"]
+        ExpertMode["Advanced Mode (Expert UI)<br/>Automation / Assistant"]
+        Reports["Reports<br/>web view / Markdown / PDF"]
+        Settings["Settings<br/>providers / resources"]
+        UI --> SimpleMode
+        UI --> ExpertMode
+        UI --> Reports
+        UI --> Settings
+    end
 
-    Frontend ==>|"Apollo HTTP/WebSocket + Axios REST"| Backend
-    Backend ==>|"SQL + vector queries"| Database
-    Backend ==>|"containers, browser actions, traces, provider calls"| Infrastructure
+    subgraph Backend["Backend Layer"]
+        direction TB
+        GraphQL["GraphQL<br/>queries / mutations<br/>subscriptions"]
+        REST["REST<br/>files / settings / Shannon"]
+        API["Go API server<br/>Gin + gqlgen"]
+        Orchestration["Flow controller<br/>assistant and agents<br/>tool execution"]
+        ShannonBridge["Shannon bridge<br/>external runner boundary"]
+        GraphQL --> API
+        REST --> API
+        API --> Orchestration
+        API --> ShannonBridge
+    end
 
-    class Frontend frontend
-    class Backend backend
-    class Database database
-    class Infrastructure infra
+    subgraph Database["Database Layer"]
+        direction TB
+        Migrations["goose migrations<br/>schema changes"]
+        AppDB[(PostgreSQL<br/>users / providers / flows / tasks / logs / reports)]
+        VectorDB[(pgvector<br/>resources / knowledge / vector memory)]
+        Migrations --> AppDB
+        AppDB --> VectorDB
+    end
+
+    subgraph Other["Other Infrastructure"]
+        direction TB
+        Docker["Docker Compose runtime<br/>pentagi / pgvector / scraper"]
+        Scraper["Isolated scraper<br/>browser service"]
+        Target["Authorized target<br/>owned or permitted system"]
+        Providers["LLM and search providers<br/>OpenAI-compatible gateways<br/>search APIs"]
+        ShannonExternal["Shannon external CLI / Docker worker"]
+        Docker --> Scraper
+        Docker --> Target
+
+        Graphiti["Graphiti API<br/>optional knowledge graph"]
+        Neo4j[(Neo4j<br/>Graphiti graph DB)]
+        Graphiti --> Neo4j
+
+        Observability["OpenTelemetry + Grafana<br/>optional metrics / logs / traces"]
+        Grafana["Grafana dashboards"]
+        Victoria[(VictoriaMetrics<br/>metrics)]
+        Loki[(Loki<br/>logs)]
+        JaegerStore[(Jaeger storage<br/>traces)]
+        Observability --> Grafana
+        Grafana --> Victoria
+        Victoria --> Loki
+        Loki --> JaegerStore
+
+        Langfuse["Langfuse<br/>optional LLM observability"]
+        ClickHouse[(ClickHouse<br/>LLM analytics)]
+        Redis[(Redis<br/>cache / queue support)]
+        MinIO[(MinIO<br/>object storage)]
+        Langfuse --> ClickHouse
+        ClickHouse --> Redis
+        Redis --> MinIO
+    end
+
+    SimpleMode ==> GraphQL
+    ExpertMode ==> GraphQL
+    Reports ==> GraphQL
+    Reports --> REST
+    Settings --> REST
+
+    API ==> AppDB
+    Orchestration ==> VectorDB
+    Orchestration ==> Docker
+    Orchestration -.-> Providers
+    Orchestration -.-> Graphiti
+    API -.-> Observability
+    API -.-> Langfuse
+    ShannonBridge -.-> ShannonExternal
+
+    class UI,SimpleMode,ExpertMode,Reports,Settings frontend
+    class API,GraphQL,REST,Orchestration,ShannonBridge backend
+    class AppDB,VectorDB,Migrations,Neo4j,Victoria,Loki,JaegerStore,ClickHouse,Redis,MinIO database
+    class Docker,Scraper,Graphiti,Observability,Grafana,Langfuse infra
+    class Providers,Target,ShannonExternal external
 ```
+
+</details>
 
 ### Frontend
 
