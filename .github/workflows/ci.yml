@@ -17,6 +17,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: CI Policy
+        run: bash scripts/check-ci-required-steps.sh
+
       # Go setup and cache
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -54,41 +57,34 @@ jobs:
       - name: Frontend - Install dependencies
         working-directory: frontend
         run: pnpm install --frozen-lockfile
-        continue-on-error: true
 
       - name: Frontend - Prettier
         working-directory: frontend
         run: pnpm run prettier
-        continue-on-error: true
 
       - name: Frontend - Lint
         working-directory: frontend
         run: pnpm run lint
-        continue-on-error: true
 
       - name: Frontend - Test
         working-directory: frontend
         run: pnpm run test
-        continue-on-error: true
 
       # Backend lint and test
       - name: Backend - Download dependencies
         working-directory: backend
         run: go mod download
-        continue-on-error: true
 
       - name: Backend - Lint
         uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           working-directory: backend
-          args: --timeout=5m --issues-exit-code=0
-        continue-on-error: true
+          args: --enable-only=govet --timeout=5m
 
       - name: Backend - Test
         working-directory: backend
         run: go test ./... -v
-        continue-on-error: true
 
       - name: Backend - Test Build
         working-directory: backend
@@ -119,7 +115,6 @@ jobs:
           # Build for ARM64
           GOOS=linux GOARCH=arm64 go build -trimpath -ldflags "$LDFLAGS" -o /tmp/pentagi-arm64 ./cmd/pentagi
           echo "✓ Successfully built for linux/arm64"
-        continue-on-error: true
 
   docker-build:
     needs: lint-and-test
