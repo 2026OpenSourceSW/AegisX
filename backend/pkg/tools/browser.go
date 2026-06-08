@@ -22,9 +22,10 @@ import (
 )
 
 const (
-	minMdContentSize   = 50
-	minHtmlContentSize = 300
-	minImgContentSize  = 2048
+	minMdContentSize      = 50
+	minHtmlContentSize    = 300
+	minImgContentSize     = 2048
+	browserScraperTimeout = 65 * time.Second
 )
 
 // nonHTMLExtensions lists URL path suffixes that point to resources the scraper
@@ -68,28 +69,40 @@ var localZones = []string{
 }
 
 type browser struct {
-	flowID    int64
-	taskID    *int64
-	subtaskID *int64
-	dataDir   string
-	scPrvURL  string
-	scPubURL  string
-	scp       ScreenshotProvider
+	flowID     int64
+	taskID     *int64
+	subtaskID  *int64
+	dataDir    string
+	scPrvURL   string
+	scPubURL   string
+	scp        ScreenshotProvider
+	timeout    time.Duration
+	timeoutSet bool
 }
 
 func NewBrowserTool(
 	flowID int64, taskID, subtaskID *int64,
 	dataDir, scPrvURL, scPubURL string,
 	scp ScreenshotProvider,
+	timeout ...time.Duration,
 ) Tool {
+	scraperTimeout := browserScraperTimeout
+	timeoutSet := false
+	if len(timeout) > 0 {
+		scraperTimeout = timeout[0]
+		timeoutSet = true
+	}
+
 	return &browser{
-		flowID:    flowID,
-		taskID:    taskID,
-		subtaskID: subtaskID,
-		dataDir:   dataDir,
-		scPrvURL:  scPrvURL,
-		scPubURL:  scPubURL,
-		scp:       scp,
+		flowID:     flowID,
+		taskID:     taskID,
+		subtaskID:  subtaskID,
+		dataDir:    dataDir,
+		scPrvURL:   scPrvURL,
+		scPubURL:   scPubURL,
+		scp:        scp,
+		timeout:    scraperTimeout,
+		timeoutSet: timeoutSet,
 	}
 }
 
@@ -489,12 +502,7 @@ func (b *browser) getScreenshot(targetURL string) (string, error) {
 }
 
 func (b *browser) callScraper(url string) ([]byte, error) {
-	client := &http.Client{
-		Timeout: 65 * time.Second,
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
-	}
+	client := b.scraperClient()
 	resp, err := client.Get(url)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch data by scraper '%s': %w", url, err)
@@ -513,6 +521,26 @@ func (b *browser) callScraper(url string) ([]byte, error) {
 	}
 
 	return content, nil
+}
+
+func (b *browser) scraperClient() *http.Client {
+	return &http.Client{
+		Timeout: b.scraperTimeout(),
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		},
+	}
+}
+
+func (b *browser) scraperTimeout() time.Duration {
+	if b.timeoutSet {
+		return b.timeout
+	}
+	if b.timeout > 0 {
+		return b.timeout
+	}
+
+	return browserScraperTimeout
 }
 
 func (b *browser) IsAvailable() bool {

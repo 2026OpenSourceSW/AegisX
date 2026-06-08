@@ -823,6 +823,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(nil)),
 	)
 	if browser.IsAvailable() {
 		definitions = append(definitions, registryDefinitions[BrowserToolName])
@@ -1174,6 +1175,7 @@ func (fte *flowToolsExecutor) GetInstallerExecutor(cfg InstallerExecutorConfig) 
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1273,6 +1275,7 @@ func (fte *flowToolsExecutor) GetCoderExecutor(cfg CoderExecutorConfig) (Context
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1384,6 +1387,7 @@ func (fte *flowToolsExecutor) GetPentesterExecutor(cfg PentesterExecutorConfig) 
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1481,6 +1485,7 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1651,6 +1656,7 @@ func (fte *flowToolsExecutor) GetGeneratorExecutor(cfg GeneratorExecutorConfig) 
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(&cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1710,6 +1716,7 @@ func (fte *flowToolsExecutor) GetRefinerExecutor(cfg RefinerExecutorConfig) (Con
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(&cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1848,6 +1855,7 @@ func (fte *flowToolsExecutor) GetEnricherExecutor(cfg EnricherExecutorConfig) (C
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])

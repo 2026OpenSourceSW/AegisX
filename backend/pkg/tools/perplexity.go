@@ -422,5 +422,5 @@ func (p *perplexity) maxTokens() int {
 }
 
 func (p *perplexity) timeout() time.Duration {
-	return perplexityTimeout
+	return searchToolHTTPTimeout(p.cfg, perplexityTimeout)
 }

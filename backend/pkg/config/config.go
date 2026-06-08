@@ -197,8 +197,9 @@ type Config struct {
 
 	// HTTP client timeout in seconds for external API calls (LLM providers, search tools, etc.)
 	// A value of 0 means no timeout (not recommended).
-	HTTPClientTimeout          int `env:"HTTP_CLIENT_TIMEOUT" envDefault:"600"`
-	QuickScanHTTPClientTimeout int `env:"QUICK_SCAN_HTTP_CLIENT_TIMEOUT" envDefault:"30"`
+	HTTPClientTimeout          int  `env:"HTTP_CLIENT_TIMEOUT" envDefault:"600"`
+	QuickScanHTTPClientTimeout int  `env:"QUICK_SCAN_HTTP_CLIENT_TIMEOUT" envDefault:"30"`
+	QuickScanToolConfig        bool `env:"-"`
 
 	// === Observability: OpenTelemetry Collector ===
 	TelemetryEndpoint string `env:"OTEL_HOST"`

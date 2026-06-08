@@ -171,8 +171,10 @@ func TestToolConfigForTaskInput(t *testing.T) {
 	assert.NotSame(t, cfg, quickScanCfg)
 	assert.Equal(t, 120, quickScanCfg.TerminalToolTimeout)
 	assert.Equal(t, 30, quickScanCfg.HTTPClientTimeout)
+	assert.True(t, quickScanCfg.QuickScanToolConfig)
 	assert.Equal(t, 1200, cfg.TerminalToolTimeout)
 	assert.Equal(t, 600, cfg.HTTPClientTimeout)
+	assert.False(t, cfg.QuickScanToolConfig)
 
 	assert.Same(t, cfg, ToolConfigForTaskInput(cfg, "scan example.com"))
 	assert.Nil(t, ToolConfigForTaskInput(nil, "<빠른 점검>\nscan example.com"))
