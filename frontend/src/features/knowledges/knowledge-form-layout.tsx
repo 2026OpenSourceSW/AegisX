@@ -101,19 +101,19 @@ function KnowledgeIntroBlock({ isNew, knowledge }: KnowledgeIntroBlockProps) {
         <div className="flex flex-col gap-4">
             <div className="text-center">
                 <h1 className="text-2xl font-semibold">
-                    {isNew ? 'Create a new knowledge document' : 'Edit knowledge document'}
+                    {isNew ? '새 지식 문서 만들기' : '지식 문서 편집'}
                 </h1>
                 <p className="text-muted-foreground mt-2">
                     {isNew
-                        ? 'Add an entry to the vector knowledge base'
-                        : 'Edits to content or metadata will trigger re-embedding'}
+                        ? 'AegisX 에이전트가 점검 중 다시 참고할 질문, 답변, 가이드, 코드 지식을 추가합니다'
+                        : '내용이나 메타데이터를 수정하면 지식 문서가 다시 임베딩됩니다'}
                 </p>
             </div>
 
             {!isNew && knowledge ? (
                 <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
                     <Badge variant={knowledge.manual ? 'secondary' : 'outline'}>
-                        {knowledge.manual ? 'manual' : 'agent'}
+                        {knowledge.manual ? '직접 작성' : '에이전트'}
                     </Badge>
                     {knowledge.flowId ? <Badge variant="outline">flow #{knowledge.flowId}</Badge> : null}
                     {knowledge.taskId ? <Badge variant="outline">task #{knowledge.taskId}</Badge> : null}

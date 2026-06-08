@@ -60,7 +60,7 @@ import { baseUrl } from '@/models/api';
 
 type APIToken = ApiTokenFragmentFragment;
 
-const tokenNameSchema = z.string().trim().max(255, 'Token name must be 255 characters or less').default('');
+const tokenNameSchema = z.string().trim().max(255, '토큰 이름은 255자 이하여야 합니다').default('');
 
 const createTokenFormSchema = z.object({
     // Nullable in the form state (the date picker starts empty) but required
@@ -70,7 +70,7 @@ const createTokenFormSchema = z.object({
     expiresAt: z
         .date()
         .nullable()
-        .refine((value) => value !== null, { message: 'Expiration date is required' }),
+        .refine((value) => value !== null, { message: '만료일이 필요합니다' }),
     name: tokenNameSchema,
 });
 
@@ -107,15 +107,15 @@ const getStatusDisplay = (
     const expired = isTokenExpired(token);
 
     if (expired) {
-        return { label: 'expired', variant: 'destructive' };
+        return { label: '만료됨', variant: 'destructive' };
     }
 
     if (token.status === 'active') {
-        return { label: 'active', variant: 'default' };
+        return { label: '활성', variant: 'default' };
     }
 
     if (token.status === 'revoked') {
-        return { label: 'revoked', variant: 'outline' };
+        return { label: '폐기됨', variant: 'outline' };
     }
 
     return { label: token.status, variant: 'secondary' };
@@ -145,7 +145,7 @@ function SettingsAPITokensHeader({ onCreateClick }: { onCreateClick: () => void 
     return (
         <div className="flex items-center justify-between gap-4">
             <div className="flex min-w-0 flex-1 flex-col gap-2">
-                <p className="text-muted-foreground truncate">Manage API tokens for programmatic access</p>
+                <p className="text-muted-foreground truncate">프로그램 방식 접근에 사용할 API 토큰을 관리합니다</p>
                 <div className="flex gap-4 text-sm">
                     <a
                         className="text-primary inline-flex items-center gap-1 underline hover:no-underline"
@@ -174,7 +174,7 @@ function SettingsAPITokensHeader({ onCreateClick }: { onCreateClick: () => void 
                 variant="secondary"
             >
                 <Plus className="size-4" />
-                Create Token
+                토큰 만들기
             </Button>
         </div>
     );
@@ -211,7 +211,7 @@ function CreateRowActions({
     return (
         <div className="flex justify-end">
             <Button
-                aria-label={isLoading ? 'Submitting…' : 'Submit'}
+                aria-label={isLoading ? '제출 중...' : '제출'}
                 className="shrink-0"
                 disabled={isLoading || !isValid}
                 onClick={onSubmit}
@@ -221,7 +221,7 @@ function CreateRowActions({
                 {isLoading ? <Loader2 className="animate-spin" /> : <Check />}
             </Button>
             <Button
-                aria-label="Cancel"
+                aria-label="취소"
                 className="shrink-0"
                 onClick={onCancel}
                 size="icon-sm"
@@ -249,7 +249,7 @@ function EditRowActions({
     return (
         <div className="flex justify-end">
             <Button
-                aria-label={isLoading ? 'Submitting…' : 'Submit'}
+                aria-label={isLoading ? '제출 중...' : '제출'}
                 className="shrink-0"
                 disabled={isLoading || !isValid}
                 onClick={onSubmit}
@@ -259,7 +259,7 @@ function EditRowActions({
                 {isLoading ? <Loader2 className="animate-spin" /> : <Check />}
             </Button>
             <Button
-                aria-label="Cancel"
+                aria-label="취소"
                 className="shrink-0"
                 onClick={onCancel}
                 size="icon-sm"
@@ -437,7 +437,7 @@ function SettingsAPITokens() {
                 setDeletingToken(null);
                 setDeleteErrorMessage(null);
             } catch (error) {
-                setDeleteErrorMessage(error instanceof Error ? error.message : 'An error occurred while deleting');
+                setDeleteErrorMessage(error instanceof Error ? error.message : '삭제하는 중 오류가 발생했습니다');
             }
         },
         [deleteAPIToken],
@@ -447,12 +447,12 @@ function SettingsAPITokens() {
         const success = await copyToClipboard(tokenId);
 
         if (success) {
-            toast.success('Token ID copied to clipboard');
+            toast.success('토큰 ID를 클립보드에 복사했습니다');
 
             return;
         }
 
-        toast.error('Failed to copy token ID to clipboard');
+        toast.error('토큰 ID를 클립보드에 복사하지 못했습니다');
     }, []);
 
     const columns: ColumnDef<APIToken>[] = useMemo(
@@ -504,7 +504,7 @@ function SettingsAPITokens() {
 
                     return (
                         <div className="font-medium">
-                            {token.name || <span className="text-muted-foreground font-normal italic">(unnamed)</span>}
+                            {token.name || <span className="text-muted-foreground font-normal italic">(이름 없음)</span>}
                         </div>
                     );
                 },
@@ -512,7 +512,7 @@ function SettingsAPITokens() {
                 header: ({ column }) => (
                     <DataTableColumnHeader
                         column={column}
-                        title="Name"
+                        title="이름"
                     />
                 ),
                 meta: { searchable: true },
@@ -525,7 +525,7 @@ function SettingsAPITokens() {
                     const isCreating = token.id === 'create-new';
 
                     if (isCreating) {
-                        return <div className="text-muted-foreground text-sm">N/A</div>;
+                        return <div className="text-muted-foreground text-sm">없음</div>;
                     }
 
                     const tokenId = row.getValue('tokenId') as string;
@@ -534,7 +534,7 @@ function SettingsAPITokens() {
                         <div className="flex items-center gap-2">
                             <code className="text-sm">{tokenId}</code>
                             <Button
-                                aria-label="Copy token ID"
+                                aria-label="토큰 ID 복사"
                                 className="size-6 p-0"
                                 onClick={() => handleCopyTokenId(tokenId)}
                                 variant="ghost"
@@ -548,10 +548,10 @@ function SettingsAPITokens() {
                 header: ({ column }) => (
                     <DataTableColumnHeader
                         column={column}
-                        title="Token ID"
+                        title="토큰 ID"
                     />
                 ),
-                meta: { columnMenuLabel: 'Token ID', searchable: true },
+                meta: { columnMenuLabel: '토큰 ID', searchable: true },
                 size: 200,
             },
             {
@@ -561,7 +561,7 @@ function SettingsAPITokens() {
                     const isCreating = token.id === 'create-new';
 
                     if (isCreating) {
-                        return <Badge variant="default">active</Badge>;
+                        return <Badge variant="default">활성</Badge>;
                     }
 
                     const isEditing = editingTokenId === token.tokenId;
@@ -587,8 +587,8 @@ function SettingsAPITokens() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <SelectGroup>
-                                                <SelectItem value={TokenStatusEnum.Active}>active</SelectItem>
-                                                <SelectItem value={TokenStatusEnum.Revoked}>revoked</SelectItem>
+                                                <SelectItem value={TokenStatusEnum.Active}>활성</SelectItem>
+                                                <SelectItem value={TokenStatusEnum.Revoked}>폐기됨</SelectItem>
                                             </SelectGroup>
                                         </SelectContent>
                                     </Select>
@@ -602,7 +602,7 @@ function SettingsAPITokens() {
                 header: ({ column }) => (
                     <DataTableColumnHeader
                         column={column}
-                        title="Status"
+                        title="상태"
                     />
                 ),
                 meta: { searchable: true },
@@ -638,7 +638,7 @@ function SettingsAPITokens() {
                                                 {field.value ? (
                                                     format(field.value, 'd MMM yyyy', { locale: enUS })
                                                 ) : (
-                                                    <span>Pick date</span>
+                                                    <span>날짜 선택</span>
                                                 )}
                                             </Button>
                                         </PopoverTrigger>
@@ -667,7 +667,7 @@ function SettingsAPITokens() {
                 header: ({ column }) => (
                     <DataTableColumnHeader
                         column={column}
-                        title="Expires"
+                        title="만료일"
                     />
                 ),
                 size: 150,
@@ -685,7 +685,7 @@ function SettingsAPITokens() {
                     const isCreating = token.id === 'create-new';
 
                     if (isCreating) {
-                        return <div className="text-muted-foreground text-sm">N/A</div>;
+                        return <div className="text-muted-foreground text-sm">없음</div>;
                     }
 
                     const dateString = row.getValue('createdAt') as string;
@@ -695,10 +695,10 @@ function SettingsAPITokens() {
                 header: ({ column }) => (
                     <DataTableColumnHeader
                         column={column}
-                        title="Created"
+                        title="생성일"
                     />
                 ),
-                meta: { columnMenuLabel: 'Created' },
+                meta: { columnMenuLabel: '생성일' },
                 size: 120,
                 sortingFn: (rowA, rowB) => {
                     const dateA = new Date(rowA.getValue('createdAt') as string);
@@ -740,7 +740,7 @@ function SettingsAPITokens() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button
-                                        aria-label="Open menu"
+                                        aria-label="작업 메뉴 열기"
                                         className="shrink-0"
                                         size="icon-sm"
                                         variant="ghost"
@@ -754,11 +754,11 @@ function SettingsAPITokens() {
                                 >
                                     <DropdownMenuItem onClick={() => handleEdit(token)}>
                                         <Pencil />
-                                        Edit
+                                        편집
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleCopyTokenId(token.tokenId)}>
                                         <Copy />
-                                        Copy Token ID
+                                        토큰 ID 복사
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
@@ -768,12 +768,12 @@ function SettingsAPITokens() {
                                         {isDeleteLoading && deletingToken?.tokenId === token.tokenId ? (
                                             <>
                                                 <Loader2 className="animate-spin" />
-                                                Deleting...
+                                                삭제 중...
                                             </>
                                         ) : (
                                             <>
                                                 <Trash />
-                                                Delete
+                                                삭제
                                             </>
                                         )}
                                     </DropdownMenuItem>
@@ -817,21 +817,21 @@ function SettingsAPITokens() {
 
             return (
                 <>
-                    <ContextMenuItem onClick={() => handleEdit(token)}>
-                        <Pencil />
-                        Edit
-                    </ContextMenuItem>
-                    <ContextMenuItem onClick={() => handleCopyTokenId(token.tokenId)}>
-                        <Copy />
-                        Copy Token ID
-                    </ContextMenuItem>
+                <ContextMenuItem onClick={() => handleEdit(token)}>
+                    <Pencil />
+                    편집
+                </ContextMenuItem>
+                <ContextMenuItem onClick={() => handleCopyTokenId(token.tokenId)}>
+                    <Copy />
+                    토큰 ID 복사
+                </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
                         disabled={isDeleteLoading && deletingToken?.tokenId === token.tokenId}
                         onClick={() => handleDeleteDialogOpen(token)}
                     >
                         <Trash />
-                        {isDeleteLoading && deletingToken?.tokenId === token.tokenId ? 'Deleting...' : 'Delete'}
+                        {isDeleteLoading && deletingToken?.tokenId === token.tokenId ? '삭제 중...' : '삭제'}
                     </ContextMenuItem>
                 </>
             );
@@ -844,9 +844,9 @@ function SettingsAPITokens() {
             <div className="flex flex-col gap-4">
                 <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
                 <StatusCard
-                    description="Please wait while we fetch your API tokens"
+                    description="API 토큰을 불러오는 동안 잠시 기다려 주세요"
                     icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                    title="Loading tokens..."
+                    title="API 토큰 불러오는 중..."
                 />
             </div>
         );
@@ -858,7 +858,7 @@ function SettingsAPITokens() {
                 <SettingsAPITokensHeader onCreateClick={handleCreateNew} />
                 <Alert variant="destructive">
                     <AlertCircle className="size-4" />
-                    <AlertTitle>Error loading tokens</AlertTitle>
+                    <AlertTitle>API 토큰을 불러오지 못했습니다</AlertTitle>
                     <AlertDescription>{error.message}</AlertDescription>
                 </Alert>
             </div>
@@ -878,12 +878,12 @@ function SettingsAPITokens() {
                             variant="secondary"
                         >
                             <Plus className="size-4" />
-                            Create Token
+                            토큰 만들기
                         </Button>
                     }
-                    description="Create your first API token to access AegisX programmatically"
+                    description="AegisX에 프로그램 방식으로 접근할 첫 API 토큰을 만드세요"
                     icon={<Key className="text-muted-foreground size-8" />}
-                    title="No API tokens configured"
+                    title="설정된 API 토큰이 없습니다"
                 />
             </div>
         );
@@ -896,7 +896,7 @@ function SettingsAPITokens() {
             {(createError || updateError || deleteError || deleteErrorMessage) && (
                 <Alert variant="destructive">
                     <AlertCircle className="size-4" />
-                    <AlertTitle>Error</AlertTitle>
+                    <AlertTitle>오류</AlertTitle>
                     <AlertDescription>
                         {createError?.message || updateError?.message || deleteError?.message || deleteErrorMessage}
                     </AlertDescription>
@@ -906,8 +906,8 @@ function SettingsAPITokens() {
             <DataTable<APIToken>
                 columns={columns}
                 data={creatingToken ? [createNewTokenPlaceholder, ...tokens] : tokens}
-                empty={{ entityName: 'API tokens' }}
-                filterPlaceholder="Filter tokens..."
+                empty={{ entityName: 'API 토큰' }}
+                filterPlaceholder="토큰 검색..."
                 filterValue={filter}
                 onFilterChange={setFilter}
                 onPageChange={handlePageChange}
@@ -921,9 +921,9 @@ function SettingsAPITokens() {
             >
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>API Token Created</DialogTitle>
+                        <DialogTitle>API 토큰이 생성되었습니다</DialogTitle>
                         <DialogDescription>
-                            Copy this token now. You won't be able to see it again for security reasons.
+                            보안을 위해 이 토큰은 다시 표시되지 않습니다. 지금 복사해 두세요.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="bg-muted rounded p-4">
@@ -937,16 +937,16 @@ function SettingsAPITokens() {
                                     const success = await copyToClipboard(tokenSecret);
 
                                     if (success) {
-                                        toast.success('Token copied to clipboard');
+                                        toast.success('토큰을 클립보드에 복사했습니다');
                                     } else {
-                                        toast.error('Failed to copy token to clipboard');
+                                        toast.error('토큰을 클립보드에 복사하지 못했습니다');
                                     }
                                 }
                             }}
                             variant="secondary"
                         >
                             <Copy className="size-4" />
-                            Copy Token
+                            토큰 복사
                         </Button>
                         <Button
                             className="flex-1"
@@ -956,20 +956,20 @@ function SettingsAPITokens() {
                             }}
                             variant="outline"
                         >
-                            Close
+                            닫기
                         </Button>
                     </div>
                 </DialogContent>
             </Dialog>
 
             <ConfirmationDialog
-                cancelText="Cancel"
-                confirmText="Delete"
+                cancelText="취소"
+                confirmText="삭제"
                 handleConfirm={() => handleDelete(deletingToken?.tokenId)}
                 handleOpenChange={setIsDeleteDialogOpen}
                 isOpen={isDeleteDialogOpen}
                 itemName={deletingToken?.name || deletingToken?.tokenId}
-                itemType="token"
+                itemType="토큰"
             />
         </div>
     );
