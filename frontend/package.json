@@ -60,6 +60,7 @@
         "clsx": "^2.1.1",
         "cmdk": "^1.1.1",
         "date-fns": "^4.1.0",
+        "fontkit": "2.0.4",
         "github-slugger": "^2.0.0",
         "graphql": "^16.14.0",
         "graphql-ws": "^6.0.8",
