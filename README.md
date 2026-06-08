@@ -12,10 +12,10 @@
       </a>
     </td>
     <td align="center">
-      <a href="https://github.com/Kairos-T">
-        <img src="https://avatars.githubusercontent.com/u/80029462?v=4" width="72" height="72" alt="Kairos-T profile image" />
+      <a href="https://github.com/DDangtoad">
+        <img src="https://avatars.githubusercontent.com/u/164300816?v=4" width="72" height="72" alt="DDangtoad profile image" />
         <br />
-        <sub><b>@Kairos-T</b></sub>
+        <sub><b>@DDangtoad</b></sub>
       </a>
     </td>
     <td align="center">
