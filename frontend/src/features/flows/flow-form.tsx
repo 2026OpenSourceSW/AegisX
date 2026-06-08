@@ -826,7 +826,7 @@ export function FlowForm({
                                         </InputGroupButton>
                                     ) : (
                                         <InputGroupButton
-                                            aria-label={isCanceling ? 'Cancelling…' : 'Cancel'}
+                                            aria-label={isCanceling ? '취소 중...' : '취소'}
                                             className="shrink-0"
                                             disabled={isCanceling || !onCancel}
                                             onClick={() => onCancel?.()}
@@ -854,10 +854,11 @@ export function FlowForm({
                 type="file"
             />
             <ConfirmationDialog
+                cancelText="취소"
                 confirmIcon={<FileSymlink />}
-                confirmText="Replace"
+                confirmText="교체"
                 confirmVariant="default"
-                description="Current message has content. Replace with the selected template?"
+                description="현재 메시지에 내용이 있습니다. 선택한 템플릿으로 교체할까요?"
                 handleConfirm={handleConfirmReplaceTemplate}
                 handleOpenChange={(open) => {
                     if (!open) {
@@ -867,7 +868,7 @@ export function FlowForm({
                     setIsReplaceConfirmOpen(open);
                 }}
                 isOpen={isReplaceConfirmOpen}
-                title="Replace content?"
+                title="내용을 교체할까요?"
             />
         </Form>
     );

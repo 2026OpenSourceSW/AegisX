@@ -142,4 +142,35 @@ describe('Korean supporting page UI copy', () => {
             /Token name must be 255 characters or less|Expiration date is required|>active<|>revoked<|>expired<|Pick date|Copy Token|>Close<|API Token Created|Copy this token now|Please wait while we fetch your API tokens|Loading tokens|Error loading tokens|aria-label="Submit"|aria-label="Cancel"|aria-label="Open menu"|>Edit</,
         );
     });
+
+    it('localizes high-traffic auth, flow form, and report states', () => {
+        const flowForm = readSource('features/flows/flow-form.tsx');
+        const loginForm = readSource('features/authentication/login-form.tsx');
+        const passwordChangeForm = readSource('features/authentication/password-change-form.tsx');
+        const flowReport = readSource('pages/flows/flow-report.tsx');
+
+        expect(flowForm).toContain("aria-label={isCanceling ? '취소 중...' : '취소'}");
+        expect(flowForm).not.toMatch(/aria-label=\{isCanceling \? 'Cancelling…' : 'Cancel'\}/);
+
+        expect(loginForm).toContain("name: 'Google로 계속'");
+        expect(loginForm).toContain("name: 'GitHub로 계속'");
+        expect(loginForm).not.toMatch(/Continue with Google|Continue with GitHub|text-\[#1A2B4B\]/);
+
+        expect(passwordChangeForm).toContain('현재 비밀번호');
+        expect(passwordChangeForm).toContain('새 비밀번호 확인');
+        expect(passwordChangeForm).toContain('나중에 변경');
+        expect(passwordChangeForm).toContain('비밀번호 변경');
+        expect(passwordChangeForm).not.toMatch(
+            /Current Password|New Password|Confirm New Password|Skip for now|Update Password|Password successfully changed/,
+        );
+
+        expect(flowReport).toContain("state === 'loading' ? '보고서 준비 중' : 'PDF 생성 중'");
+        expect(flowReport).toContain("state === 'loading' ? '보고서' : 'PDF 내보내기'");
+        expect(flowReport).toContain('보고서 데이터를 불러오지 못했습니다');
+        expect(flowReport).toContain('보고서 불러오기 오류');
+        expect(flowReport).toContain('닫기');
+        expect(flowReport).not.toMatch(
+            /Loading report|Generating PDF|Report error|Error loading report|Failed to load flow data|Failed to generate PDF|Close|Flow security report|AegisX report/,
+        );
+    });
 });

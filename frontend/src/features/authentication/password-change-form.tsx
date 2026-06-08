@@ -13,12 +13,12 @@ import { api, type ApiErrorResponse, type ApiHttpError } from '@/lib/axios';
 
 const passwordChangeSchema = z
     .object({
-        confirmPassword: z.string().min(1, { message: 'Confirm your password' }),
-        currentPassword: z.string().min(1, { message: 'Current password is required' }),
+        confirmPassword: z.string().min(1, { message: '새 비밀번호를 한 번 더 입력하세요' }),
+        currentPassword: z.string().min(1, { message: '현재 비밀번호를 입력하세요' }),
         newPassword: z
             .string()
-            .min(8, { message: 'Password must be at least 8 characters' })
-            .max(100, { message: 'Password must not exceed 100 characters' })
+            .min(8, { message: '비밀번호는 8자 이상이어야 합니다' })
+            .max(100, { message: '비밀번호는 100자를 넘을 수 없습니다' })
             .refine(
                 (password) => {
                     if (password.length > 15) {
@@ -35,16 +35,16 @@ const passwordChangeSchema = z
                 },
                 {
                     message:
-                        'Password must be either longer than 15 characters, or at least 8 characters with a number, lowercase, uppercase, and special character (!@#$&*)',
+                        '비밀번호는 16자 이상이거나, 8자 이상이면서 숫자, 소문자, 대문자, 특수문자(!@#$&*)를 포함해야 합니다',
                 },
             ),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
-        message: "Passwords don't match",
+        message: '새 비밀번호가 서로 일치하지 않습니다',
         path: ['confirmPassword'],
     })
     .refine((data) => data.currentPassword !== data.newPassword, {
-        message: 'New password must be different from current password',
+        message: '새 비밀번호는 현재 비밀번호와 달라야 합니다',
         path: ['newPassword'],
     });
 
@@ -94,7 +94,7 @@ export function PasswordChangeForm({
             setShowNewPassword(false);
             setShowConfirmPassword(false);
 
-            toast.success('Password successfully changed');
+            toast.success('비밀번호가 변경되었습니다');
 
             if (onSuccess) {
                 onSuccess();
@@ -103,29 +103,29 @@ export function PasswordChangeForm({
             const error = err as ApiHttpError;
             const responseData = error.response?.data as ApiErrorResponse | undefined;
 
-            let errorMessage = 'Failed to change password';
+            let errorMessage = '비밀번호 변경에 실패했습니다';
 
             if (responseData?.msg) {
                 errorMessage = responseData.msg;
             } else if (responseData?.code) {
                 switch (responseData.code) {
                     case 'AuthRequired':
-                        errorMessage = 'Authentication required';
+                        errorMessage = '인증이 필요합니다';
                         break;
                     case 'Users.ChangePasswordCurrentUser.InvalidCurrentPassword':
-                        errorMessage = 'Current password is incorrect';
+                        errorMessage = '현재 비밀번호가 올바르지 않습니다';
                         break;
                     case 'Users.ChangePasswordCurrentUser.InvalidNewPassword':
-                        errorMessage = 'New password does not meet requirements';
+                        errorMessage = '새 비밀번호가 요구 조건을 충족하지 않습니다';
                         break;
                     case 'Users.ChangePasswordCurrentUser.InvalidPassword':
-                        errorMessage = 'Password validation failed';
+                        errorMessage = '비밀번호 유효성 검사에 실패했습니다';
                         break;
                     case 'Users.NotFound':
-                        errorMessage = 'User not found';
+                        errorMessage = '사용자를 찾을 수 없습니다';
                         break;
                     default:
-                        errorMessage = responseData.msg || error.message || 'Failed to change password';
+                        errorMessage = responseData.msg || error.message || '비밀번호 변경에 실패했습니다';
                 }
             } else if (error.message) {
                 errorMessage = error.message;
@@ -146,12 +146,12 @@ export function PasswordChangeForm({
                     name="currentPassword"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Current Password</FormLabel>
+                            <FormLabel>현재 비밀번호</FormLabel>
                             <FormControl>
                                 <div className="relative">
                                     <Input
                                         {...field}
-                                        placeholder="Enter your current password"
+                                        placeholder="현재 비밀번호 입력"
                                         type={showCurrentPassword ? 'text' : 'password'}
                                     />
                                     <Button
@@ -180,12 +180,12 @@ export function PasswordChangeForm({
                     name="newPassword"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>New Password</FormLabel>
+                            <FormLabel>새 비밀번호</FormLabel>
                             <FormControl>
                                 <div className="relative">
                                     <Input
                                         {...field}
-                                        placeholder="Enter new password"
+                                        placeholder="새 비밀번호 입력"
                                         type={showNewPassword ? 'text' : 'password'}
                                     />
                                     <Button
@@ -205,8 +205,8 @@ export function PasswordChangeForm({
                                 </div>
                             </FormControl>
                             <FormDescription className="text-xs">
-                                Must be 16+ characters, or 8+ with number, lowercase, uppercase, and special character
-                                (!@#$&*)
+                                16자 이상이거나, 8자 이상이면서 숫자, 소문자, 대문자, 특수문자(!@#$&*)를 포함해야
+                                합니다.
                             </FormDescription>
                             <FormMessage />
                         </FormItem>
@@ -218,12 +218,12 @@ export function PasswordChangeForm({
                     name="confirmPassword"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Confirm New Password</FormLabel>
+                            <FormLabel>새 비밀번호 확인</FormLabel>
                             <FormControl>
                                 <div className="relative">
                                     <Input
                                         {...field}
-                                        placeholder="Confirm new password"
+                                        placeholder="새 비밀번호 다시 입력"
                                         type={showConfirmPassword ? 'text' : 'password'}
                                     />
                                     <Button
@@ -257,7 +257,7 @@ export function PasswordChangeForm({
                             type="button"
                             variant="ghost"
                         >
-                            Skip for now
+                            나중에 변경
                         </Button>
                     )}
                     {isModal && (
@@ -266,11 +266,11 @@ export function PasswordChangeForm({
                             type="button"
                             variant="outline"
                         >
-                            Cancel
+                            취소
                         </Button>
                     )}
                     <FormSubmitButton>
-                        <span>Update Password</span>
+                        <span>비밀번호 변경</span>
                     </FormSubmitButton>
                 </div>
             </form>
