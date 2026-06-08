@@ -63,9 +63,11 @@ export interface FlowFormProps {
     isLoading?: boolean;
     isProviderDisabled?: boolean;
     isSubmitting?: boolean;
+    isTemplatePickerDisabled?: boolean;
     onCancel?: () => Promise<void> | void;
     onSubmit: (values: FlowFormValues) => Promise<void> | void;
     placeholder?: string;
+    shouldSyncMessageOnDefaultChange?: boolean;
     submitLabel?: string;
     type: 'assistant' | 'automation';
 }
@@ -79,9 +81,11 @@ export function FlowForm({
     isLoading,
     isProviderDisabled,
     isSubmitting,
+    isTemplatePickerDisabled = false,
     onCancel,
     onSubmit,
     placeholder = 'AegisX가 점검할 내용을 입력하세요...',
+    shouldSyncMessageOnDefaultChange = false,
     submitLabel,
     type,
 }: FlowFormProps) {
@@ -253,7 +257,25 @@ export function FlowForm({
     const isFormDisabled = isDisabled || isLoading || isSubmitting || isCanceling;
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const previousDefaultMessageRef = useRef(defaultValues?.message);
     const previousFormDisabledRef = useRef(isFormDisabled);
+
+    useEffect(() => {
+        const nextDefaultMessage = defaultValues?.message;
+        const previousDefaultMessage = previousDefaultMessageRef.current;
+
+        previousDefaultMessageRef.current = nextDefaultMessage;
+
+        if (!shouldSyncMessageOnDefaultChange || nextDefaultMessage === undefined) {
+            return;
+        }
+
+        if (nextDefaultMessage === previousDefaultMessage || getValues('message') === nextDefaultMessage) {
+            return;
+        }
+
+        setValue('message', nextDefaultMessage, { shouldDirty: false, shouldValidate: true });
+    }, [defaultValues?.message, getValues, setValue, shouldSyncMessageOnDefaultChange]);
 
     useEffect(() => {
         const wasDisabled = previousFormDisabledRef.current;
@@ -313,6 +335,10 @@ export function FlowForm({
 
     const handleApplyTemplate = useCallback(
         (template: Template) => {
+            if (isTemplatePickerDisabled) {
+                return;
+            }
+
             const currentMessage = getValues('message')?.trim() ?? '';
 
             if (currentMessage.length > 0) {
@@ -323,7 +349,7 @@ export function FlowForm({
                 setTemplateSearch('');
             }
         },
-        [getValues, setValue],
+        [getValues, isTemplatePickerDisabled, setValue],
     );
 
     const handleConfirmReplaceTemplate = useCallback(() => {
@@ -340,55 +366,68 @@ export function FlowForm({
     // scrolled-list layout.
     const renderTemplatePickerInner = () => (
         <>
-            <DropdownMenuGroup className="-m-1 rounded-none p-0">
-                <InputGroup className="-mb-1 rounded-none border-0 shadow-none [&:has([data-slot=input-group-control]:focus-visible)]:border-0 [&:has([data-slot=input-group-control]:focus-visible)]:ring-0">
-                    <InputGroupInput
-                        onChange={(event) => setTemplateSearch(event.target.value)}
-                        onClick={(event) => event.stopPropagation()}
-                        onKeyDown={(event) => event.stopPropagation()}
-                        placeholder="검색..."
-                        value={templateSearch}
-                    />
-                    {templateSearch && (
-                        <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    setTemplateSearch('');
-                                }}
-                            >
-                                <X />
-                            </InputGroupButton>
-                        </InputGroupAddon>
-                    )}
-                </InputGroup>
-                <DropdownMenuSeparator />
-            </DropdownMenuGroup>
-            <DropdownMenuGroup className="max-h-64 overflow-y-auto">
-                {!filteredTemplates.length ? (
+            {isTemplatePickerDisabled ? (
+                <DropdownMenuGroup className="max-h-64 overflow-y-auto">
                     <DropdownMenuItem
-                        className="min-h-16 justify-center"
+                        className="min-h-16 justify-center text-center whitespace-normal"
                         disabled
                     >
-                        {templateSearch ? '검색 결과가 없습니다' : '사용 가능한 템플릿이 없습니다'}
+                        간편 모드에서는 안내 프롬프트를 자동으로 사용합니다.
                     </DropdownMenuItem>
-                ) : (
-                    filteredTemplates.map((template) => (
-                        <DropdownMenuItem
-                            key={template.id}
-                            onSelect={() => {
-                                if (isFormDisabled) {
-                                    return;
-                                }
+                </DropdownMenuGroup>
+            ) : (
+                <>
+                    <DropdownMenuGroup className="-m-1 rounded-none p-0">
+                        <InputGroup className="-mb-1 rounded-none border-0 shadow-none [&:has([data-slot=input-group-control]:focus-visible)]:border-0 [&:has([data-slot=input-group-control]:focus-visible)]:ring-0">
+                            <InputGroupInput
+                                onChange={(event) => setTemplateSearch(event.target.value)}
+                                onClick={(event) => event.stopPropagation()}
+                                onKeyDown={(event) => event.stopPropagation()}
+                                placeholder="검색..."
+                                value={templateSearch}
+                            />
+                            {templateSearch && (
+                                <InputGroupAddon align="inline-end">
+                                    <InputGroupButton
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            setTemplateSearch('');
+                                        }}
+                                    >
+                                        <X />
+                                    </InputGroupButton>
+                                </InputGroupAddon>
+                            )}
+                        </InputGroup>
+                        <DropdownMenuSeparator />
+                    </DropdownMenuGroup>
+                    <DropdownMenuGroup className="max-h-64 overflow-y-auto">
+                        {!filteredTemplates.length ? (
+                            <DropdownMenuItem
+                                className="min-h-16 justify-center"
+                                disabled
+                            >
+                                {templateSearch ? '검색 결과가 없습니다' : '사용 가능한 템플릿이 없습니다'}
+                            </DropdownMenuItem>
+                        ) : (
+                            filteredTemplates.map((template) => (
+                                <DropdownMenuItem
+                                    key={template.id}
+                                    onSelect={() => {
+                                        if (isFormDisabled) {
+                                            return;
+                                        }
 
-                                handleApplyTemplate(template);
-                            }}
-                        >
-                            <span className="max-w-80 flex-1 truncate">{template.title}</span>
-                        </DropdownMenuItem>
-                    ))
-                )}
-            </DropdownMenuGroup>
+                                        handleApplyTemplate(template);
+                                    }}
+                                >
+                                    <span className="max-w-80 flex-1 truncate">{template.title}</span>
+                                </DropdownMenuItem>
+                            ))
+                        )}
+                    </DropdownMenuGroup>
+                </>
+            )}
         </>
     );
 

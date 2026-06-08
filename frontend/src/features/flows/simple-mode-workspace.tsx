@@ -134,12 +134,14 @@ export function SimpleModeWorkspace({
                             defaultValues={defaultValues}
                             isDisabled={!isSimpleReady}
                             isSubmitting={isLoading}
+                            isTemplatePickerDisabled
                             onSubmit={onSubmit}
                             placeholder={
                                 isSimpleReady
                                     ? '필요하면 점검 요청을 수정하세요...'
                                     : '대상 입력과 권한 확인을 완료하면 실행 요청이 준비됩니다.'
                             }
+                            shouldSyncMessageOnDefaultChange
                             submitLabel="점검 실행"
                             type="automation"
                         />

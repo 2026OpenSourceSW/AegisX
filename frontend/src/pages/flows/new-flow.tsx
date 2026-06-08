@@ -163,8 +163,14 @@ function NewFlow() {
         setIsLoading(true);
 
         try {
+            const submitValues =
+                mode === 'simple'
+                    ? { ...values, message: buildSimpleSubmitMessage(simpleMessage, values.message) }
+                    : values;
             const flowId =
-                activeFlowType === 'automation' ? await createFlow(values) : await createFlowWithAssistant(values);
+                activeFlowType === 'automation'
+                    ? await createFlow(submitValues)
+                    : await createFlowWithAssistant(submitValues);
 
             if (flowId) {
                 navigate(`/flows/${flowId}?tab=${activeFlowType}`);
@@ -222,3 +228,18 @@ function NewFlow() {
 }
 
 export default NewFlow;
+
+const buildSimpleSubmitMessage = (generatedMessage: string, currentMessage: string): string => {
+    const trimmedGeneratedMessage = generatedMessage.trim();
+    const trimmedCurrentMessage = currentMessage.trim();
+
+    if (!trimmedCurrentMessage || trimmedCurrentMessage === trimmedGeneratedMessage) {
+        return generatedMessage;
+    }
+
+    if (trimmedCurrentMessage.startsWith(trimmedGeneratedMessage)) {
+        return currentMessage;
+    }
+
+    return `${generatedMessage}\n\n사용자 추가 요청:\n${trimmedCurrentMessage}`;
+};

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -211,6 +211,90 @@ describe('NewFlow', () => {
         const guidedPayload = flowMocks.createFlow.mock.calls[0]?.[0];
         expect(guidedPayload?.message).toContain('A05:2025 - Injection');
         expect(guidedPayload?.message).toContain('각 취약점의 위험, 영향, 우선 조치');
+    });
+
+    it('keeps simple mode safety prompt instead of exposing templates', async () => {
+        const user = userEvent.setup();
+
+        renderNewFlow('/flows/new?mode=simple');
+
+        await user.type(screen.getByLabelText('점검 대상 (도메인 또는 IP)'), 'quick.example');
+        await user.click(screen.getByLabelText('본인이 소유하거나 점검 권한이 있는 대상입니다.'));
+        await user.click(await screen.findByRole('button', { name: '동의하고 계속하기' }));
+
+        await user.click(screen.getByRole('button', { name: '템플릿 및 자료' }));
+
+        expect(screen.queryByText('Exposure check')).not.toBeInTheDocument();
+        expect(screen.getByText('간편 모드에서는 안내 프롬프트를 자동으로 사용합니다.')).toBeInTheDocument();
+
+        await user.keyboard('{Escape}');
+        await user.click(screen.getByRole('button', { name: '점검 실행' }));
+
+        await waitFor(() => expect(flowMocks.createFlow).toHaveBeenCalledTimes(1));
+
+        const simplePayload = flowMocks.createFlow.mock.calls[0]?.[0];
+        expect(simplePayload?.message?.split('\n')[0]).toBe('<빠른 점검>');
+        expect(simplePayload?.message).toContain('승인된 보안 점검 대상: quick.example');
+        expect(simplePayload?.message).not.toBe('Check an authorized target for obvious exposure.');
+    });
+
+    it('submits regenerated simple prompt after manual edits and target changes', async () => {
+        const user = userEvent.setup();
+
+        renderNewFlow('/flows/new?mode=simple');
+
+        const targetInput = screen.getByLabelText('점검 대상 (도메인 또는 IP)');
+
+        await user.type(targetInput, 'old.example');
+        await user.click(screen.getByLabelText('본인이 소유하거나 점검 권한이 있는 대상입니다.'));
+        await user.click(await screen.findByRole('button', { name: '동의하고 계속하기' }));
+
+        const messageInput = screen.getByPlaceholderText('필요하면 점검 요청을 수정하세요...');
+        await user.clear(messageInput);
+        await user.type(messageInput, 'manual stale prompt for old.example');
+        fireEvent.change(targetInput, { target: { value: 'new.example' } });
+
+        await waitFor(() => expect(targetInput).toHaveValue('new.example'));
+        await waitFor(() => expect(screen.getByText('new.example')).toBeInTheDocument());
+        await waitFor(() => {
+            const regeneratedMessage = (messageInput as HTMLTextAreaElement).value;
+            expect(regeneratedMessage).toContain('승인된 보안 점검 대상: new.example');
+            expect(regeneratedMessage).not.toContain('old.example');
+            expect(regeneratedMessage).not.toBe('manual stale prompt for old.example');
+        });
+
+        await user.click(screen.getByRole('button', { name: '점검 실행' }));
+
+        await waitFor(() => expect(flowMocks.createFlow).toHaveBeenCalledTimes(1));
+
+        const simplePayload = flowMocks.createFlow.mock.calls[0]?.[0];
+        expect(simplePayload?.message?.split('\n')[0]).toBe('<빠른 점검>');
+        expect(simplePayload?.message).toContain('승인된 보안 점검 대상: new.example');
+        expect(simplePayload?.message).not.toContain('old.example');
+        expect(simplePayload?.message).not.toBe('manual stale prompt for old.example');
+    });
+
+    it('keeps final simple mode user notes under the safety prompt', async () => {
+        const user = userEvent.setup();
+
+        renderNewFlow('/flows/new?mode=simple');
+
+        await user.type(screen.getByLabelText('점검 대상 (도메인 또는 IP)'), 'quick.example');
+        await user.click(screen.getByLabelText('본인이 소유하거나 점검 권한이 있는 대상입니다.'));
+        await user.click(await screen.findByRole('button', { name: '동의하고 계속하기' }));
+
+        const messageInput = screen.getByPlaceholderText('필요하면 점검 요청을 수정하세요...');
+        fireEvent.change(messageInput, { target: { value: '관리자 로그인 경로도 함께 확인해 주세요.' } });
+
+        await user.click(screen.getByRole('button', { name: '점검 실행' }));
+
+        await waitFor(() => expect(flowMocks.createFlow).toHaveBeenCalledTimes(1));
+
+        const simplePayload = flowMocks.createFlow.mock.calls[0]?.[0];
+        expect(simplePayload?.message?.split('\n')[0]).toBe('<빠른 점검>');
+        expect(simplePayload?.message).toContain('승인된 보안 점검 대상: quick.example');
+        expect(simplePayload?.message).toContain('사용자 추가 요청:');
+        expect(simplePayload?.message).toContain('관리자 로그인 경로도 함께 확인해 주세요.');
     });
 
     it('does not mark non-quick simple scenarios as quick scans', async () => {
