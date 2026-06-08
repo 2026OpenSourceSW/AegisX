@@ -56,6 +56,8 @@ func TestParseFlags(t *testing.T) {
 }
 
 func TestValidateEnvPath(t *testing.T) {
+	chdirInstallerFiles(t)
+
 	tmpDir := t.TempDir()
 
 	tests := []struct {
@@ -124,6 +126,8 @@ func TestValidateEnvPath(t *testing.T) {
 }
 
 func TestCreateEmptyEnvFile(t *testing.T) {
+	chdirInstallerFiles(t)
+
 	tmpDir := t.TempDir()
 	path := filepath.Join(tmpDir, "test.env")
 
@@ -150,6 +154,11 @@ func TestCreateEmptyEnvFile(t *testing.T) {
 	if !containsString(contentStr, version.GetBinaryVersion()) {
 		t.Error("Expected file to contain version")
 	}
+}
+
+func chdirInstallerFiles(t *testing.T) {
+	t.Helper()
+	t.Chdir("files")
 }
 
 func TestInitializeState(t *testing.T) {

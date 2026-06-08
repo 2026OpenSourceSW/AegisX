@@ -377,7 +377,7 @@ func TestExecuteConcurrency(t *testing.T) {
 	term := NewTerminal(80, 24)
 
 	// try to execute two commands simultaneously
-	cmd1 := exec.Command("echo", "first")
+	cmd1 := sleepCommand()
 	err1 := term.Execute(cmd1)
 	if err1 != nil {
 		t.Fatalf("first Execute failed: %v", err1)
@@ -387,15 +387,24 @@ func TestExecuteConcurrency(t *testing.T) {
 	cmd2 := exec.Command("echo", "second")
 	err2 := term.Execute(cmd2)
 	if err2 == nil {
-		t.Error("second Execute should have failed while first is running")
+		t.Fatal("second Execute should have failed while first is running")
 	}
 	if !strings.Contains(err2.Error(), "already executing") {
 		t.Errorf("unexpected error message: %v", err2)
 	}
+	if err := term.Wait(); err != nil {
+		t.Fatalf("term.Wait failed: %v", err)
+	}
 }
 
-// verifies that waiting on the external cmd and then Terminal.Wait() makes
-// subsequent Execute calls safe (no race) in non-PTY mode
+func sleepCommand() *exec.Cmd {
+	if runtime.GOOS == "windows" {
+		return exec.Command("cmd", "/c", "ping -n 2 127.0.0.1 >NUL")
+	}
+
+	return exec.Command("sh", "-c", "sleep 0.2")
+}
+
 func TestWaitBeforeNextExecute_NoPty(t *testing.T) {
 	term := NewTerminal(80, 24, WithNoPty())
 
@@ -410,13 +419,9 @@ func TestWaitBeforeNextExecute_NoPty(t *testing.T) {
 		t.Fatalf("first Execute failed: %v", err)
 	}
 
-	// client waits for process completion first
-	if err := cmd1.Wait(); err != nil {
-		t.Fatalf("cmd1.Wait failed: %v", err)
+	if err := term.Wait(); err != nil {
+		t.Fatalf("term.Wait for cmd1 failed: %v", err)
 	}
-
-	// ensure terminal finished internal cleanup
-	term.Wait()
 
 	var cmd2 *exec.Cmd
 	if runtime.GOOS == "windows" {
@@ -429,10 +434,9 @@ func TestWaitBeforeNextExecute_NoPty(t *testing.T) {
 		t.Fatalf("second Execute failed after Wait(): %v", err)
 	}
 
-	if err := cmd2.Wait(); err != nil {
-		t.Fatalf("cmd2.Wait failed: %v", err)
+	if err := term.Wait(); err != nil {
+		t.Fatalf("term.Wait for cmd2 failed: %v", err)
 	}
-	term.Wait()
 
 	// verify content contains outputs from both commands
 	cleanView := ansi.Strip(term.View())
@@ -441,7 +445,6 @@ func TestWaitBeforeNextExecute_NoPty(t *testing.T) {
 	}
 }
 
-// verifies that waiting on cmd and then Terminal.Wait() is safe in PTY mode
 func TestWaitBeforeNextExecute_Pty(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("Skipping PTY test on Windows")
@@ -454,24 +457,56 @@ func TestWaitBeforeNextExecute_Pty(t *testing.T) {
 		t.Fatalf("first Execute failed: %v", err)
 	}
 
-	if err := cmd1.Wait(); err != nil {
-		t.Fatalf("cmd1.Wait failed: %v", err)
+	if err := term.Wait(); err != nil {
+		t.Fatalf("term.Wait for cmd1 failed: %v", err)
 	}
-	term.Wait()
 
 	cmd2 := exec.Command("sh", "-c", "echo two")
 	if err := term.Execute(cmd2); err != nil {
 		t.Fatalf("second Execute failed after Wait(): %v", err)
 	}
 
-	if err := cmd2.Wait(); err != nil {
-		t.Fatalf("cmd2.Wait failed: %v", err)
+	if err := term.Wait(); err != nil {
+		t.Fatalf("term.Wait for cmd2 failed: %v", err)
 	}
-	term.Wait()
 
 	cleanView := ansi.Strip(term.View())
 	if !(strings.Contains(cleanView, "one") && strings.Contains(cleanView, "two")) {
 		t.Fatalf("expected outputs not found in view: %q", cleanView)
+	}
+}
+
+func TestIsRunning_hasNoRaceWhileCommandExits(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping shell sleep test on Windows")
+	}
+
+	term := NewTerminal(80, 24, WithNoPty())
+	cmd := exec.Command("sh", "-c", "sleep 0.05")
+
+	if err := term.Execute(cmd); err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	waitDone := make(chan error, 1)
+	go func() {
+		waitDone <- term.Wait()
+	}()
+
+	for {
+		select {
+		case err := <-waitDone:
+			if err != nil {
+				t.Fatalf("term.Wait failed: %v", err)
+			}
+			if term.IsRunning() {
+				t.Fatal("terminal still reports running after Wait")
+			}
+			return
+		default:
+			_ = term.IsRunning()
+			runtime.Gosched()
+		}
 	}
 }
 

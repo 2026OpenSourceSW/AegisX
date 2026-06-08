@@ -98,13 +98,10 @@ func (p *processor) runCommand(cmd *exec.Cmd, stack ProductStack, state *operati
 			return fmt.Errorf("failed to execute command: %w", err)
 		}
 
-		logger.Log("waiting for command: %s", cmd.String())
-		if err := cmd.Wait(); err != nil {
+		logger.Log("waiting for terminal to finish: %s", cmd.String())
+		if err := state.terminal.Wait(); err != nil {
 			return fmt.Errorf("failed to wait for command: %w", err)
 		}
-
-		logger.Log("waiting for terminal to finish: %s", cmd.String())
-		state.terminal.Wait()
 		logger.Log("terminal finished: %s", cmd.String())
 
 		state.sendOutput(state.terminal.View(), false, stack)

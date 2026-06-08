@@ -91,7 +91,7 @@ type Terminal interface {
 	Append(content string)
 	Clear()
 	IsRunning() bool
-	Wait()
+	Wait() error
 
 	SetSize(width, height int)
 	GetSize() (width, height int)
@@ -114,10 +114,12 @@ type terminal struct {
 	cmdLines  []string
 
 	// output buffer
-	vt *vt.Terminal
-	mx *sync.Mutex
-	wg *sync.WaitGroup
-	id string
+	vt      *vt.Terminal
+	mx      *sync.Mutex
+	wg      *sync.WaitGroup
+	id      string
+	running bool
+	waitErr error
 
 	// notifier for single-subscriber update notifications
 	notifier *updateNotifier
@@ -177,6 +179,7 @@ func (t *terminal) Execute(cmd *exec.Cmd) error {
 	if t.cmd != nil || t.pty != nil || t.tty != nil || t.vt != nil {
 		return fmt.Errorf("terminal is already executing a command")
 	}
+	t.waitErr = nil
 
 	wrapError := func(err error) error {
 		if err != nil {
@@ -236,8 +239,10 @@ func (t *terminal) startCmd(cmd *exec.Cmd) error {
 		stdinPipe.Close()
 		return fmt.Errorf("failed to start command: %w", err)
 	}
+	t.running = true
 
 	// start managing the command output
+	t.wg.Add(1)
 	go t.manageCmd(stdoutPipe, stderrPipe, stdinPipe)
 
 	return nil
@@ -245,7 +250,6 @@ func (t *terminal) startCmd(cmd *exec.Cmd) error {
 
 // manageCmd manages command pipes and their output
 func (t *terminal) manageCmd(stdoutPipe, stderrPipe io.ReadCloser, stdinPipe io.WriteCloser) {
-	t.wg.Add(1)
 	defer t.wg.Done()
 
 	defer func() {
@@ -341,6 +345,8 @@ func (t *terminal) manageCmd(stdoutPipe, stderrPipe io.ReadCloser, stdinPipe io.
 		t.updateViewpoint()
 		t.mx.Unlock()
 	}
+
+	t.waitForCommand()
 }
 
 // cleanup properly releases all terminal resources (must be called with lock held)
@@ -367,7 +373,24 @@ func (t *terminal) cleanup() {
 		t.contents = append(t.contents, "")
 		t.cmdLines = nil
 	}
+	t.running = false
 	t.cmd = nil
+}
+
+func (t *terminal) waitForCommand() {
+	t.mx.Lock()
+	cmd := t.cmd
+	t.mx.Unlock()
+
+	if cmd == nil {
+		return
+	}
+
+	err := cmd.Wait()
+
+	t.mx.Lock()
+	defer t.mx.Unlock()
+	t.waitErr = err
 }
 
 func (t *terminal) updateViewpoint() {
@@ -462,11 +485,15 @@ func (t *terminal) IsRunning() bool {
 	t.mx.Lock()
 	defer t.mx.Unlock()
 
-	return t.cmd != nil && (t.cmd.ProcessState == nil || !t.cmd.ProcessState.Exited())
+	return t.running
 }
 
-func (t *terminal) Wait() {
+func (t *terminal) Wait() error {
 	t.wg.Wait()
+
+	t.mx.Lock()
+	defer t.mx.Unlock()
+	return t.waitErr
 }
 
 func (t *terminal) Init() tea.Cmd {
