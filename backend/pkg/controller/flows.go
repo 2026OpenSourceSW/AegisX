@@ -144,16 +144,14 @@ func (fc *flowController) CreateFlow(
 	functions *tools.Functions,
 	resources []database.UserResource,
 ) (FlowWorker, error) {
-	fc.mx.Lock()
-	defer fc.mx.Unlock()
-
-	fw, err := NewFlowWorker(ctx, newFlowWorkerCtx{
-		userID:    userID,
-		input:     input,
-		prvname:   prvname,
-		prvtype:   prvtype,
-		functions: functions,
-		resources: resources,
+	fwc := newFlowWorkerCtx{
+		userID:               userID,
+		input:                input,
+		prvname:              prvname,
+		prvtype:              prvtype,
+		functions:            functions,
+		resources:            resources,
+		flowCreatedPublished: true,
 		flowWorkerCtx: flowWorkerCtx{
 			db:     fc.db,
 			cfg:    fc.cfg,
@@ -171,14 +169,63 @@ func (fc *flowController) CreateFlow(
 				sc:   fc.sc,
 			},
 		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to create flow worker: %w", err)
 	}
 
-	fc.flows[fw.GetFlowID()] = fw
+	flow, err := createFlowRecord(ctx, fwc)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create flow: %w", err)
+	}
+
+	startCtx, cancel := context.WithCancel(context.WithoutCancel(ctx))
+	publisher := fc.subs.NewFlowPublisher(userID, flow.ID)
+	fw := newPendingFlowWorker(flow, fc.db, publisher, cancel)
+
+	containers, err := fc.db.GetFlowContainers(ctx, flow.ID)
+	if err != nil {
+		cancel()
+		return nil, fmt.Errorf("failed to get flow %d containers: %w", flow.ID, err)
+	}
+
+	fc.mx.Lock()
+	fc.flows[flow.ID] = fw
+	fc.mx.Unlock()
+
+	publisher.FlowCreated(ctx, flow, containers)
+	go fc.startCreatedFlowWorker(startCtx, flow, fwc, fw)
 
 	return fw, nil
+}
+
+func (fc *flowController) startCreatedFlowWorker(
+	ctx context.Context,
+	flow database.Flow,
+	fwc newFlowWorkerCtx,
+	pending *pendingFlowWorker,
+) {
+	fw, err := startFlowWorker(ctx, flow, fwc)
+	if err != nil {
+		pending.setStartupError(ctx, err)
+		return
+	}
+
+	replaced := false
+	fc.mx.Lock()
+	if current, ok := fc.flows[flow.ID]; ok && current == pending {
+		fc.flows[flow.ID] = fw
+		replaced = true
+	}
+	fc.mx.Unlock()
+
+	if !replaced {
+		cleanupCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), stopTaskTimeout)
+		defer cancel()
+		if err := fw.Finish(cleanupCtx); err != nil {
+			logrus.WithError(err).Warnf("failed to clean up flow %d after startup race", flow.ID)
+		}
+		return
+	}
+
+	pending.setReady(fw)
 }
 
 func (fc *flowController) CreateAssistant(

@@ -186,7 +186,7 @@ func (r *mutationResolver) FinishFlow(ctx context.Context, flowID int64) (model.
 
 // DeleteFlow is the resolver for the deleteFlow field.
 func (r *mutationResolver) DeleteFlow(ctx context.Context, flowID int64) (model.ResultType, error) {
-	uid, err := validatePermissionWithFlowID(ctx, "flows.delete", flowID, r.DB)
+	uid, err := validatePermissionWithFlowIDIncludingDeleted(ctx, "flows.delete", flowID, r.DB)
 	if err != nil {
 		return model.ResultTypeError, err
 	}
@@ -196,15 +196,16 @@ func (r *mutationResolver) DeleteFlow(ctx context.Context, flowID int64) (model.
 		"flow": flowID,
 	}).Debug("delete flow")
 
-	if fw, err := r.Controller.GetFlow(ctx, flowID); err == nil {
-		if err := fw.Finish(ctx); err != nil {
+	if err := r.Controller.FinishFlow(ctx, flowID); err != nil {
+		if !errors.Is(err, controller.ErrFlowNotFound) && !errors.Is(err, sql.ErrNoRows) {
 			return model.ResultTypeError, err
 		}
-	} else if !errors.Is(err, controller.ErrFlowNotFound) {
-		return model.ResultTypeError, err
+		if errors.Is(err, sql.ErrNoRows) {
+			r.Logger.WithError(err).Warnf("flow %d worker cleanup saw a stale DB row", flowID)
+		}
 	}
 
-	flow, err := r.DB.GetFlow(ctx, flowID)
+	flow, err := r.DB.GetFlowIncludingDeleted(ctx, flowID)
 	if err != nil {
 		return model.ResultTypeError, err
 	}
@@ -214,7 +215,8 @@ func (r *mutationResolver) DeleteFlow(ctx context.Context, flowID int64) (model.
 		return model.ResultTypeError, err
 	}
 
-	if _, err := r.DB.DeleteFlow(ctx, flow.ID); err != nil {
+	flow, err = r.DB.DeleteFlow(ctx, flow.ID)
+	if err != nil {
 		return model.ResultTypeError, err
 	}
 

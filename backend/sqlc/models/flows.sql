@@ -19,12 +19,25 @@ SELECT
 FROM flows f
 WHERE f.id = $1 AND f.deleted_at IS NULL;
 
+-- name: GetFlowIncludingDeleted :one
+SELECT
+  f.*
+FROM flows f
+WHERE f.id = $1;
+
 -- name: GetUserFlow :one
 SELECT
   f.*
 FROM flows f
 INNER JOIN users u ON f.user_id = u.id
 WHERE f.id = $1 AND f.user_id = $2 AND f.deleted_at IS NULL;
+
+-- name: GetUserFlowIncludingDeleted :one
+SELECT
+  f.*
+FROM flows f
+INNER JOIN users u ON f.user_id = u.id
+WHERE f.id = $1 AND f.user_id = $2;
 
 -- name: CreateFlow :one
 INSERT INTO flows (

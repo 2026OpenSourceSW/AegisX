@@ -123,6 +123,29 @@ func validatePermissionWithFlowID(
 	return uid, nil
 }
 
+func validatePermissionWithFlowIDIncludingDeleted(
+	ctx context.Context,
+	perm string,
+	flowID int64,
+	db database.Querier,
+) (int64, error) {
+	uid, admin, err := validatePermission(ctx, perm)
+	if err != nil {
+		return 0, err
+	}
+
+	flow, err := db.GetFlowIncludingDeleted(ctx, flowID)
+	if err != nil {
+		return 0, err
+	}
+
+	if !admin && flow.UserID != int64(uid) {
+		return 0, fmt.Errorf("not permitted")
+	}
+
+	return uid, nil
+}
+
 // validateUserResources checks that all given IDs exist and belong to uid (or uid is admin).
 // Returns the fetched UserResource records for use in copy operations.
 // An empty ids slice is valid and returns nil, nil.
