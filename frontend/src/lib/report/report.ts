@@ -1,11 +1,25 @@
-import type { FlowFragmentFragment, TaskFragmentFragment } from '@/graphql/types';
+import type { AssistantLogFragmentFragment, FlowFragmentFragment, TaskFragmentFragment } from '@/graphql/types';
 
 import { Log } from '@/lib/log';
 
+import { buildAssistantReportMarkdown } from './report-assistant-markdown';
 import { buildReportMarkdown } from './report-markdown';
 
-export const generateReport = (tasks: TaskFragmentFragment[], flow?: FlowFragmentFragment | null): string => {
-    return buildReportMarkdown(tasks, flow);
+interface GenerateReportOptions {
+    readonly preferAssistantReport?: boolean;
+}
+
+export const generateReport = (
+    tasks: readonly TaskFragmentFragment[],
+    flow?: FlowFragmentFragment | null,
+    assistantLogs: readonly AssistantLogFragmentFragment[] = [],
+    options: GenerateReportOptions = {},
+): string => {
+    if (tasks.length === 0 && (assistantLogs.length > 0 || options.preferAssistantReport)) {
+        return buildAssistantReportMarkdown(assistantLogs, flow);
+    }
+
+    return buildReportMarkdown([...tasks], flow);
 };
 
 export const generateFileName = (flow: FlowFragmentFragment): string => {

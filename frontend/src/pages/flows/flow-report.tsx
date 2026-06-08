@@ -7,7 +7,7 @@ import Markdown from '@/components/shared/markdown';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useFlowReportQuery } from '@/graphql/types';
+import { useAssistantLogsQuery, useAssistantsQuery, useFlowReportQuery } from '@/graphql/types';
 import { Log } from '@/lib/log';
 import { generateFileName, generatePDFFromMarkdown, generateReport } from '@/lib/report';
 
@@ -40,16 +40,47 @@ function FlowReport() {
         variables: { id: flowId ?? '' },
     });
 
+    const {
+        data: assistantsData,
+        error: assistantsError,
+        loading: assistantsLoading,
+    } = useAssistantsQuery({
+        errorPolicy: 'all',
+        skip: !flowId,
+        variables: { flowId: flowId ?? '' },
+    });
+
+    const firstAssistantId = assistantsData?.assistants?.at(0)?.id ?? null;
+
+    const {
+        data: assistantLogsData,
+        error: assistantLogsError,
+        loading: assistantLogsLoading,
+    } = useAssistantLogsQuery({
+        errorPolicy: 'all',
+        skip: !flowId || !firstAssistantId,
+        variables: { assistantId: firstAssistantId ?? '', flowId: flowId ?? '' },
+    });
+
     const flow = data?.flow ?? null;
-    const dataReady = !loading && !queryError && flow !== null;
+    const tasks = useMemo(() => data?.tasks ?? [], [data?.tasks]);
+    const assistantLogs = useMemo(() => assistantLogsData?.assistantLogs ?? [], [assistantLogsData?.assistantLogs]);
+    const hasAutomationTasks = tasks.length > 0;
+    const isAssistantReportLoading =
+        !hasAutomationTasks && (assistantsLoading || (Boolean(firstAssistantId) && assistantLogsLoading));
+    const reportQueryError =
+        queryError || (!hasAutomationTasks && (assistantsError ?? assistantLogsError)) || undefined;
+    const dataReady = !loading && !isAssistantReportLoading && !reportQueryError && flow !== null;
 
     const reportContent = useMemo(() => {
         if (!dataReady) {
             return '';
         }
 
-        return generateReport(data?.tasks ?? [], flow);
-    }, [dataReady, data?.tasks, flow]);
+        return generateReport(tasks, flow, assistantLogs, {
+            preferAssistantReport: !hasAutomationTasks && Boolean(firstAssistantId),
+        });
+    }, [dataReady, tasks, flow, assistantLogs, hasAutomationTasks, firstAssistantId]);
 
     const pdfPhase = pdfResult?.flowId === flowId ? pdfResult.phase : 'idle';
     const pdfError = pdfResult?.flowId === flowId ? pdfResult.error : null;
@@ -80,9 +111,9 @@ function FlowReport() {
     let state: ReportState;
     let errorMessage: null | string = null;
 
-    if (loading) {
+    if (loading || isAssistantReportLoading) {
         state = 'loading';
-    } else if (queryError || flow === null) {
+    } else if (reportQueryError || flow === null) {
         state = 'error';
         errorMessage = '보고서 데이터를 불러오지 못했습니다';
     } else if (pdfPhase === 'error') {

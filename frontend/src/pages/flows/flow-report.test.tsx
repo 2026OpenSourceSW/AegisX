@@ -2,13 +2,23 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { FlowReportQuery } from '@/graphql/types';
+import type { AssistantLogsQuery, AssistantsQuery, FlowReportQuery } from '@/graphql/types';
 
-import { ProviderType, StatusType } from '@/graphql/types';
+import { MessageLogType, ProviderType, ResultFormat, StatusType } from '@/graphql/types';
 
 import FlowReport from './flow-report';
 
 const reportMocks = vi.hoisted(() => ({
+    assistantLogsQueryResult: {
+        data: undefined,
+        error: undefined,
+        loading: false,
+    },
+    assistantsQueryResult: {
+        data: undefined,
+        error: undefined,
+        loading: false,
+    },
     generatePDFFromMarkdown: vi.fn<() => Promise<void>>(),
     queryResult: {
         data: undefined,
@@ -26,6 +36,8 @@ vi.mock('@/graphql/types', async (importOriginal) => {
 
     return {
         ...actual,
+        useAssistantLogsQuery: () => reportMocks.assistantLogsQueryResult,
+        useAssistantsQuery: () => reportMocks.assistantsQueryResult,
         useFlowReportQuery: () => reportMocks.queryResult,
     };
 });
@@ -70,6 +82,63 @@ Markdown report body is preserved.`,
     ],
 };
 
+const assistantOnlyReportData: FlowReportQuery = {
+    flow: {
+        createdAt: '2026-01-01T00:00:00Z',
+        id: '7',
+        provider: { name: 'deepseek', type: ProviderType.Deepseek },
+        status: StatusType.Waiting,
+        terminals: [],
+        title: '비파괴 웹 취약점 점검',
+        updatedAt: '2026-01-01T00:00:00Z',
+    },
+    tasks: [],
+};
+
+const assistantsData: AssistantsQuery = {
+    assistants: [
+        {
+            createdAt: '2026-01-01T00:00:00Z',
+            flowId: '7',
+            id: '1',
+            provider: { name: 'deepseek', type: ProviderType.Deepseek },
+            status: StatusType.Waiting,
+            title: '비파괴 웹 취약점 점검',
+            updatedAt: '2026-01-01T00:00:00Z',
+            useAgents: true,
+        },
+    ],
+};
+
+const assistantLogsData: AssistantLogsQuery = {
+    assistantLogs: [
+        {
+            appendPart: false,
+            assistantId: '1',
+            createdAt: '2026-01-01T00:00:00Z',
+            flowId: '7',
+            id: '1',
+            message: '[점검 대상]\n- 대상 URL: https://authorized.example/',
+            result: '',
+            resultFormat: ResultFormat.Markdown,
+            thinking: null,
+            type: MessageLogType.Input,
+        },
+        {
+            appendPart: false,
+            assistantId: '1',
+            createdAt: '2026-01-01T00:05:00Z',
+            flowId: '7',
+            id: '2',
+            message: '# 웹 애플리케이션 보안 점검 보고서\n\nWildcard CORS와 CSP 누락이 확인되었습니다.',
+            result: '',
+            resultFormat: ResultFormat.Markdown,
+            thinking: null,
+            type: MessageLogType.Answer,
+        },
+    ],
+};
+
 function renderFlowReport(initialEntry = '/flows/101/report') {
     render(
         <MemoryRouter initialEntries={[initialEntry]}>
@@ -87,6 +156,12 @@ describe('FlowReport', () => {
     beforeEach(() => {
         reportMocks.generatePDFFromMarkdown.mockReset();
         reportMocks.generatePDFFromMarkdown.mockReturnValue(new Promise(() => undefined));
+        reportMocks.assistantsQueryResult.data = undefined;
+        reportMocks.assistantsQueryResult.error = undefined;
+        reportMocks.assistantsQueryResult.loading = false;
+        reportMocks.assistantLogsQueryResult.data = undefined;
+        reportMocks.assistantLogsQueryResult.error = undefined;
+        reportMocks.assistantLogsQueryResult.loading = false;
         reportMocks.queryResult.data = flowReportData;
         reportMocks.queryResult.error = undefined;
         reportMocks.queryResult.loading = false;
@@ -122,6 +197,31 @@ describe('FlowReport', () => {
         expect(screen.getByText(/Wildcard CORS/)).toBeInTheDocument();
         expect(screen.getByText(/SQL injection evidence/)).toBeInTheDocument();
         expect(screen.getByText(/Markdown report body is preserved/)).toBeInTheDocument();
+    });
+
+    it('renders assistant-only report content when a flow has no automation tasks', () => {
+        reportMocks.queryResult.data = assistantOnlyReportData;
+        reportMocks.assistantsQueryResult.data = assistantsData;
+        reportMocks.assistantLogsQueryResult.data = assistantLogsData;
+
+        renderFlowReport('/flows/7/report');
+
+        expect(screen.getByRole('heading', { name: 'Flow 보안 보고서' })).toBeInTheDocument();
+        expect(screen.getByText(/어시스턴트 점검 보고서/)).toBeInTheDocument();
+        expect(screen.getByText(/비파괴 웹 취약점 점검/)).toBeInTheDocument();
+        expect(screen.getByText(/Wildcard CORS와 CSP 누락/)).toBeInTheDocument();
+        expect(screen.queryByText('No tasks available for this flow.')).not.toBeInTheDocument();
+    });
+
+    it('keeps assistant-only report wording when the assistant session has no report logs yet', () => {
+        reportMocks.queryResult.data = assistantOnlyReportData;
+        reportMocks.assistantsQueryResult.data = assistantsData;
+        reportMocks.assistantLogsQueryResult.data = { assistantLogs: [] };
+
+        renderFlowReport('/flows/7/report');
+
+        expect(screen.getByText(/보고서로 정리할 어시스턴트 응답이 아직 없습니다/)).toBeInTheDocument();
+        expect(screen.queryByText('No tasks available for this flow.')).not.toBeInTheDocument();
     });
 
     it('renders the generating state when PDF download is requested', async () => {

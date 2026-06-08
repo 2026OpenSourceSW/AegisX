@@ -40,7 +40,10 @@ function FlowTabs({ activeTab, onTabChange }: FlowTabsProps) {
         >
             <div className="bg-card max-w-full rounded-xl border p-2 shadow-sm">
                 <ScrollArea className="w-full pb-3">
-                    <TabsList className="bg-muted/80 flex w-fit">
+                    <TabsList
+                        aria-label="Flow detail sections"
+                        className="bg-muted/80 flex w-max min-w-max"
+                    >
                         {!isDesktop && <TabsTrigger value="automation">자동 점검</TabsTrigger>}
                         {!isDesktop && <TabsTrigger value="assistant">어시스턴트</TabsTrigger>}
                         {!isDesktop && <TabsTrigger value="dashboard">요약</TabsTrigger>}
