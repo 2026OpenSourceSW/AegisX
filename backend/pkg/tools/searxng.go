@@ -145,7 +145,7 @@ func (s *searxng) search(ctx context.Context, query string, maxResults int) (str
 		return "", fmt.Errorf("failed to create http client: %w", err)
 	}
 
-	client.Timeout = s.timeout()
+	client.Timeout = s.httpTimeout()
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL.String(), nil)
 	if err != nil {
@@ -255,11 +255,15 @@ func (s *searxng) timeRange() string {
 }
 
 func (s *searxng) timeout() time.Duration {
+	return s.httpTimeout()
+}
+
+func (s *searxng) httpTimeout() time.Duration {
 	if s.cfg == nil || s.cfg.SearxngTimeout <= 0 {
-		return defaultSearxngTimeout
+		return searchToolHTTPTimeout(s.cfg, defaultSearxngTimeout)
 	}
 
-	return time.Duration(s.cfg.SearxngTimeout) * time.Second
+	return searchToolHTTPTimeout(s.cfg, time.Duration(s.cfg.SearxngTimeout)*time.Second)
 }
 
 // SearxngResult represents a single result from Searxng

@@ -94,6 +94,7 @@ func ToolConfigForTaskInput(cfg *config.Config, input string) *config.Config {
 	}
 
 	quickScanCfg := *cfg
+	quickScanCfg.QuickScanToolConfig = true
 	quickScanCfg.TerminalToolTimeout = defaultQuickScanTerminalToolTimeout
 	if cfg.QuickScanTerminalToolTimeout > 0 {
 		quickScanCfg.TerminalToolTimeout = cfg.QuickScanTerminalToolTimeout
