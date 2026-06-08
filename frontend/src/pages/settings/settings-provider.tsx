@@ -735,7 +735,9 @@ function TestResultsDialog({ handleOpenChange, isOpen, results }: TestResultsDia
                                                                 <span>추론: {test.reasoning ? '예' : '아니요'}</span>
                                                             )}
                                                             {test.streaming !== undefined && (
-                                                                <span>스트리밍: {test.streaming ? '예' : '아니요'}</span>
+                                                                <span>
+                                                                    스트리밍: {test.streaming ? '예' : '아니요'}
+                                                                </span>
                                                             )}
                                                             {test.latency && <span>지연 시간: {test.latency}ms</span>}
                                                         </div>
@@ -1341,9 +1343,7 @@ function SettingsProvider() {
                     </h2>
 
                     <div className="text-muted-foreground">
-                        {isNew
-                            ? '새 언어 모델 Provider를 설정합니다'
-                            : 'Provider 설정과 구성을 업데이트합니다'}
+                        {isNew ? '새 언어 모델 Provider를 설정합니다' : 'Provider 설정과 구성을 업데이트합니다'}
                     </div>
                 </div>
 

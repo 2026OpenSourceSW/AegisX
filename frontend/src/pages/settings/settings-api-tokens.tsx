@@ -504,7 +504,9 @@ function SettingsAPITokens() {
 
                     return (
                         <div className="font-medium">
-                            {token.name || <span className="text-muted-foreground font-normal italic">(이름 없음)</span>}
+                            {token.name || (
+                                <span className="text-muted-foreground font-normal italic">(이름 없음)</span>
+                            )}
                         </div>
                     );
                 },
@@ -817,14 +819,14 @@ function SettingsAPITokens() {
 
             return (
                 <>
-                <ContextMenuItem onClick={() => handleEdit(token)}>
-                    <Pencil />
-                    편집
-                </ContextMenuItem>
-                <ContextMenuItem onClick={() => handleCopyTokenId(token.tokenId)}>
-                    <Copy />
-                    토큰 ID 복사
-                </ContextMenuItem>
+                    <ContextMenuItem onClick={() => handleEdit(token)}>
+                        <Pencil />
+                        편집
+                    </ContextMenuItem>
+                    <ContextMenuItem onClick={() => handleCopyTokenId(token.tokenId)}>
+                        <Copy />
+                        토큰 ID 복사
+                    </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem
                         disabled={isDeleteLoading && deletingToken?.tokenId === token.tokenId}

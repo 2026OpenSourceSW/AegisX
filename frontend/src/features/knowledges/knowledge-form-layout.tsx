@@ -100,9 +100,7 @@ function KnowledgeIntroBlock({ isNew, knowledge }: KnowledgeIntroBlockProps) {
     return (
         <div className="flex flex-col gap-4">
             <div className="text-center">
-                <h1 className="text-2xl font-semibold">
-                    {isNew ? '새 지식 문서 만들기' : '지식 문서 편집'}
-                </h1>
+                <h1 className="text-2xl font-semibold">{isNew ? '새 지식 문서 만들기' : '지식 문서 편집'}</h1>
                 <p className="text-muted-foreground mt-2">
                     {isNew
                         ? 'AegisX 에이전트가 점검 중 다시 참고할 질문, 답변, 가이드, 코드 지식을 추가합니다'

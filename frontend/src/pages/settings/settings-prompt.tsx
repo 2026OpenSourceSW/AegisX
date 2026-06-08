@@ -14,7 +14,14 @@ import {
 } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ReactDiffViewer from 'react-diff-viewer-continued';
-import { type Control, type ControllerRenderProps, type FieldValues, useController, useForm, useFormState } from 'react-hook-form';
+import {
+    type Control,
+    type ControllerRenderProps,
+    type FieldValues,
+    useController,
+    useForm,
+    useFormState,
+} from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 
@@ -143,7 +150,11 @@ function SettingsPrompt() {
 
     const isLoading = isCreateLoading || isUpdateLoading || isDeleteLoading || isValidateLoading;
 
-    const handleVariableClick = (variable: string, field: ControllerRenderProps<FieldValues, string>, formId: string) => {
+    const handleVariableClick = (
+        variable: string,
+        field: ControllerRenderProps<FieldValues, string>,
+        formId: string,
+    ) => {
         const textarea = document.querySelector(`#${formId} textarea`) as HTMLTextAreaElement;
 
         if (textarea) {

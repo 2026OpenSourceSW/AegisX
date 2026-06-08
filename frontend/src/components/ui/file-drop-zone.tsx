@@ -56,7 +56,7 @@ export function FileDropZone({
                 )}
             />
             <span className="text-sm font-medium">{isDragging ? 'Drop files here' : title}</span>
-            <span className="text-muted-foreground mt-1 max-w-md whitespace-pre-line text-xs">{description}</span>
+            <span className="text-muted-foreground mt-1 max-w-md text-xs whitespace-pre-line">{description}</span>
             <Button
                 className="mt-4 h-7 text-xs"
                 disabled={isUploading}

@@ -284,8 +284,7 @@ function Templates() {
                                 onClick={() => navigate('/templates/new')}
                                 variant="secondary"
                             >
-                                <Plus className="size-4" />
-                                새 템플릿
+                                <Plus className="size-4" />새 템플릿
                             </Button>
                         }
                         description="점검 보고서 작성에 반복해서 사용할 템플릿을 만들어 보세요"
