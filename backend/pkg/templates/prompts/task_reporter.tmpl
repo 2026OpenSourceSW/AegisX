@@ -71,7 +71,7 @@
       {{range .QuickScanRules}}<rule>{{.}}</rule>
       {{end}}
     </rules>
-    <report_instruction>Include 쉬운 요약, evidence, OWASP Top 10:2025 mapping, and 추가 정밀 점검 필요 for quick-scope uncertainty. Keep a clean Markdown heading hierarchy. Do not start headings with status emojis, checkmarks, or raw task or subtask IDs; put status words in body text only when needed.</report_instruction>
+    <report_instruction>Include 쉬운 요약, 발견 항목 요약, 위험도별 발견 항목, detailed 주요 발견 사항, evidence, OWASP Top 10:2025 mapping, and 추가 정밀 점검 필요 for quick-scope uncertainty. Put summary tables before detailed findings: 위험도 | OWASP Top 10:2025 유형 | 취약점 and 위험도 | 개수 | 항목. Keep a clean Markdown heading hierarchy. Do not start headings with status emojis, checkmarks, or raw task or subtask IDs; use risk-level emojis only inside tables or body text when helpful.</report_instruction>
   </quick_scan_profile>
   {{end}}
 </task_report_context>

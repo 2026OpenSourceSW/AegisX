@@ -285,6 +285,49 @@ const pdfStyles = StyleSheet.create({
         marginBottom: 8,
         textAlign: 'left',
     },
+    table: {
+        borderColor: '#cbd5e1',
+        borderLeftWidth: 1,
+        borderTopWidth: 1,
+        marginBottom: 10,
+        marginTop: 6,
+        width: '100%',
+    },
+    tableCell: {
+        borderBottomWidth: 1,
+        borderColor: '#cbd5e1',
+        borderRightWidth: 1,
+        flex: 1,
+        paddingBottom: 5,
+        paddingHorizontal: 6,
+        paddingTop: 5,
+    },
+    tableCellText: {
+        color: '#334155',
+        fontSize: 8.5,
+        lineHeight: 1.35,
+    },
+    tableHeaderCell: {
+        backgroundColor: '#f1f5f9',
+        borderBottomWidth: 1,
+        borderColor: '#cbd5e1',
+        borderRightWidth: 1,
+        flex: 1,
+        paddingBottom: 5,
+        paddingHorizontal: 6,
+        paddingTop: 5,
+    },
+    tableHeaderText: {
+        color: '#0f172a',
+        fontSize: 8.5,
+        fontWeight: 'bold',
+        lineHeight: 1.35,
+    },
+    tableRow: {
+        alignItems: 'stretch',
+        flexDirection: 'row',
+        width: '100%',
+    },
 });
 
 // @react-pdf/renderer has spotty emoji glyph support — substitute readable text tags instead.
@@ -303,7 +346,12 @@ const emojiMap: Record<string, string> = {
     '🔍': '[SEARCH]',
     '🔐': '[SEC]',
     '🔧': '[TOOL]',
+    '🔴': '[HIGH]',
     '🚀': '[START]',
+    '🟡': '[MEDIUM]',
+    '🟢': '[LOW]',
+    ℹ️: '[INFO]',
+    ℹ: '[INFO]',
 };
 
 const replaceEmojis = (text: string): string => {
@@ -326,12 +374,20 @@ interface InlineToken {
 }
 
 interface ParsedContent {
+    align?: Array<'center' | 'left' | 'right' | null>;
     content?: string;
+    header?: ParsedTableCell[];
     inlineTokens?: InlineToken[];
     items?: Array<{ inlineTokens: InlineToken[]; raw: string }>;
     level?: number;
     ordered?: boolean;
+    rows?: ParsedTableCell[][];
     type: string;
+}
+
+interface ParsedTableCell {
+    inlineTokens: InlineToken[];
+    raw: string;
 }
 
 const parseInlineTokens = (text: string): InlineToken[] => {
@@ -412,7 +468,19 @@ const parseInlineTokens = (text: string): InlineToken[] => {
     return tokens;
 };
 
-const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
+const parseTableCell = (cell: unknown): ParsedTableCell => {
+    const text =
+        typeof cell === 'object' && cell !== null && 'text' in cell
+            ? String((cell as { readonly text?: unknown }).text || '')
+            : String(cell || '');
+
+    return {
+        inlineTokens: parseInlineTokens(text),
+        raw: text,
+    };
+};
+
+export const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
     const tokens = marked.lexer(markdown);
     const result: ParsedContent[] = [];
 
@@ -463,6 +531,27 @@ const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
             }
 
             case 'space': {
+                break;
+            }
+
+            case 'table': {
+                const header = (Array.isArray(token.header) ? token.header : []).map(parseTableCell);
+                const rows = (Array.isArray(token.rows) ? token.rows : [])
+                    .map((row) => (Array.isArray(row) ? row.map(parseTableCell) : []))
+                    .filter((row) => row.length > 0);
+                const align = (Array.isArray(token.align) ? token.align : []).map((value) => {
+                    return value === 'center' || value === 'left' || value === 'right' ? value : null;
+                });
+
+                if (header.length > 0 || rows.length > 0) {
+                    result.push({
+                        align,
+                        header,
+                        rows,
+                        type: 'table',
+                    });
+                }
+
                 break;
             }
 
@@ -596,7 +685,68 @@ const getContentKey = (item: ParsedContent, fallback: string): string => {
         return `${item.type}-${item.items.map((listItem) => listItem.raw).join('-')}`;
     }
 
+    if ((item.header && item.header.length > 0) || (item.rows && item.rows.length > 0)) {
+        return `${item.type}-${item.header?.map((cell) => cell.raw).join('-') ?? ''}-${item.rows?.map((row) => row.map((cell) => cell.raw).join('-')).join('-') ?? ''}`;
+    }
+
     return fallback;
+};
+
+const emptyTableCell: ParsedTableCell = {
+    inlineTokens: [{ text: ' ', type: 'text' }],
+    raw: '',
+};
+
+const getTableColumnCount = (item: ParsedContent): number => {
+    return Math.max(item.header?.length ?? 0, ...(item.rows ?? []).map((row) => row.length), 1);
+};
+
+const normalizeTableRow = (row: readonly ParsedTableCell[], columnCount: number): ParsedTableCell[] => {
+    return Array.from({ length: columnCount }, (_, index) => row[index] ?? emptyTableCell);
+};
+
+const renderTableCell = (
+    cell: ParsedTableCell,
+    contentKey: string,
+    columnCount: number,
+    isHeader: boolean,
+    align: 'center' | 'left' | 'right' | null,
+) => {
+    const maxWidth = Math.max(42, PDF_CONTENT_WIDTH / columnCount - 14);
+    const color = isHeader ? '#0f172a' : '#334155';
+    const cellStyle = isHeader ? pdfStyles.tableHeaderCell : pdfStyles.tableCell;
+
+    if (hasCJKInlineTokens(cell.inlineTokens)) {
+        return (
+            <View
+                key={contentKey}
+                style={cellStyle}
+            >
+                {renderInlineTokensAsVectorText(
+                    cell.inlineTokens,
+                    `${contentKey}-table-vector`,
+                    8.5,
+                    color,
+                    maxWidth,
+                    1.35,
+                    isHeader,
+                )}
+            </View>
+        );
+    }
+
+    return (
+        <View
+            key={contentKey}
+            style={cellStyle}
+        >
+            <Text
+                style={[isHeader ? pdfStyles.tableHeaderText : pdfStyles.tableCellText, { textAlign: align ?? 'left' }]}
+            >
+                {renderInlineTokens(cell.inlineTokens, contentKey)}
+            </Text>
+        </View>
+    );
 };
 
 const renderPDFContent = (parsed: ParsedContent[]) => {
@@ -803,6 +953,67 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
                         >
                             {renderInlineTokens(item.inlineTokens, contentKey)}
                         </Text>
+                    );
+                }
+
+                case 'table': {
+                    const columnCount = getTableColumnCount(item);
+                    const header = normalizeTableRow(item.header ?? [], columnCount);
+                    const rows = (item.rows ?? []).map((row) => normalizeTableRow(row, columnCount));
+                    const tableRowOccurrences = new Map<string, number>();
+
+                    return (
+                        <View
+                            key={contentKey}
+                            style={pdfStyles.table}
+                        >
+                            {header.length > 0 && (
+                                <View
+                                    key={`${contentKey}-header`}
+                                    style={pdfStyles.tableRow}
+                                >
+                                    {header.map((cell, cellIndex) => {
+                                        const cellKey = createPdfNodeKey(
+                                            `${contentKey}-header-${cellIndex}-${cell.raw}`,
+                                            tableRowOccurrences,
+                                        );
+
+                                        return renderTableCell(
+                                            cell,
+                                            cellKey,
+                                            columnCount,
+                                            true,
+                                            item.align?.[cellIndex] ?? null,
+                                        );
+                                    })}
+                                </View>
+                            )}
+                            {rows.map((row, rowIndex) => {
+                                const rowKey = createPdfNodeKey(`${contentKey}-row-${rowIndex}`, tableRowOccurrences);
+
+                                return (
+                                    <View
+                                        key={rowKey}
+                                        style={pdfStyles.tableRow}
+                                    >
+                                        {row.map((cell, cellIndex) => {
+                                            const cellKey = createPdfNodeKey(
+                                                `${rowKey}-cell-${cellIndex}-${cell.raw}`,
+                                                tableRowOccurrences,
+                                            );
+
+                                            return renderTableCell(
+                                                cell,
+                                                cellKey,
+                                                columnCount,
+                                                false,
+                                                item.align?.[cellIndex] ?? null,
+                                            );
+                                        })}
+                                    </View>
+                                );
+                            })}
+                        </View>
                     );
                 }
 

@@ -281,6 +281,8 @@ func TestQuickScanPromptBlocks_renderOnlyWhenEnabled(t *testing.T) {
 				"QUICK SCAN PROFILE",
 				"OWASP Top 10:2025",
 				"쉬운 요약",
+				"발견 항목 요약",
+				"위험도별 발견 항목",
 				"추가 정밀 점검 필요",
 			},
 		},
@@ -290,6 +292,8 @@ func TestQuickScanPromptBlocks_renderOnlyWhenEnabled(t *testing.T) {
 			want: []string{
 				"<quick_scan_profile>",
 				"OWASP Top 10:2025",
+				"발견 항목 요약",
+				"위험도별 발견 항목",
 				"추가 정밀 점검 필요",
 			},
 		},

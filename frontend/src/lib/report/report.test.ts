@@ -54,6 +54,31 @@ const quickScanTask = {
     updatedAt: '2026-01-01T00:00:00Z',
 } satisfies TaskFragmentFragment;
 
+const findingSummaryTask = {
+    createdAt: '2026-01-01T00:00:00Z',
+    flowId: '2',
+    id: '7',
+    input: '<빠른 점검>\n승인된 보안 점검 대상: localhost:3010',
+    result: `## 주요 발견 사항
+
+| 위험도 | OWASP Top 10:2025 유형 | 취약점 |
+| --- | --- | --- |
+| 🔴 HIGH | A02:2025 - Security Misconfiguration | Wildcard CORS(ACAO: *) |
+| HIGH | A02:2025 - Security Misconfiguration | CSP 누락 |
+| 🟡 MEDIUM | A02:2025 - Security Misconfiguration | HSTS 누락 |
+| 🟢 LOW | 해당 없음/추가 확인 필요 | IPv6 미지원 |
+| ℹ️ INFO | 해당 없음/추가 확인 필요 | 정적 SPA(서버 공격표면 없음) |
+
+### 상세 근거
+
+- Access-Control-Allow-Origin: *
+- Content-Security-Policy 헤더가 없습니다.`,
+    status: StatusType.Finished,
+    subtasks: null,
+    title: '빠른 점검 결과 정리',
+    updatedAt: '2026-01-01T00:00:00Z',
+} satisfies TaskFragmentFragment;
+
 const getHeadings = (report: string): string[] => report.split('\n').filter((line) => /^#{1,6}\s+/.test(line));
 
 describe('generateReport', () => {
@@ -88,5 +113,37 @@ describe('generateReport', () => {
         expect(report).toContain('- 1. 3010/tcp open');
         expect(report).not.toContain('✅ 2. localhost:3010 빠른 보안 점검');
         expect(report).not.toContain('✅ 23. 외부 노출 스냅샷');
+    });
+
+    it('adds finding summary tables before detailed findings', () => {
+        const report = generateReport([findingSummaryTask], quickScanFlow);
+
+        expect(report).toContain('## 핵심 발견 요약');
+        expect(report).toContain('### 발견 항목 요약');
+        expect(report).toContain('| 위험도 | OWASP Top 10:2025 유형 | 취약점 |');
+        expect(report).toContain('| 🔴 HIGH | A02:2025 - Security Misconfiguration | Wildcard CORS(ACAO: *) |');
+        expect(report).toContain('| 🔴 HIGH | A02:2025 - Security Misconfiguration | CSP 누락 |');
+        expect(report).toContain('| 🟡 MEDIUM | A02:2025 - Security Misconfiguration | HSTS 누락 |');
+        expect(report).toContain('| 🟢 LOW | 해당 없음/추가 확인 필요 | IPv6 미지원 |');
+        expect(report).toContain('| ℹ️ INFO | 해당 없음/추가 확인 필요 | 정적 SPA(서버 공격표면 없음) |');
+        expect(report).toContain('### 위험도별 발견 항목');
+        expect(report).toContain('| 🔴 HIGH | 2 | Wildcard CORS(ACAO: *), CSP 누락 |');
+        expect(report).toContain('| 🟡 MEDIUM | 1 | HSTS 누락 |');
+        expect(report).toContain('| 🟢 LOW | 1 | IPv6 미지원 |');
+        expect(report).toContain('| ℹ️ INFO | 1 | 정적 SPA(서버 공격표면 없음) |');
+
+        expect(report.indexOf('## 핵심 발견 요약')).toBeLessThan(report.indexOf('#### 주요 발견 사항'));
+    });
+
+    it('adds generated summary and body sections to the table of contents', () => {
+        const report = generateReport([findingSummaryTask], quickScanFlow);
+
+        expect(report).toContain('- [핵심 발견 요약](#핵심-발견-요약)');
+        expect(report).toContain('  - [발견 항목 요약](#발견-항목-요약)');
+        expect(report).toContain('  - [위험도별 발견 항목](#위험도별-발견-항목)');
+        expect(report).toContain('- [점검 결과](#점검-결과)');
+        expect(report).toContain('  - [빠른 점검 결과 정리](#빠른-점검-결과-정리)');
+        expect(report).toContain('    - [주요 발견 사항](#주요-발견-사항)');
+        expect(report).toContain('    - [상세 근거](#상세-근거)');
     });
 });
