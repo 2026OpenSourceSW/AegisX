@@ -96,89 +96,56 @@ AegisX는 "AI가 알아서 공격한다"는 데모보다, 팀원이 실제로 �
 
 ```mermaid
 flowchart TB
-    classDef user fill:#08427b,stroke:#073b6f,color:#fff
-    classDef aegis fill:#1168bd,stroke:#0b4884,color:#fff
-    classDef external fill:#525252,stroke:#333,color:#fff
+    classDef userNode fill:#e0f2fe,stroke:#0369a1,stroke-width:2px,color:#082f49
+    classDef appNode fill:#dcfce7,stroke:#16a34a,stroke-width:3px,color:#052e16
+    classDef targetNode fill:#fee2e2,stroke:#dc2626,stroke-width:2px,color:#450a0a
+    classDef provider fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03
+    classDef optional fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#2e1065
 
-    user["Security tester or team member"]
-    aegisx["AegisX web application"]
-    target["Authorized target system"]
-    llm["LLM provider or OpenAI-compatible gateway"]
-    search["Search providers"]
-    shannon["Shannon external CLI or Docker worker"]
-    observability["Grafana / Langfuse / traces"]
+    user["Security tester<br/>or team member"]
+    app["AegisX<br/>web application"]
+    target["Authorized<br/>target system"]
+    llm["LLM provider<br/>or OpenAI-compatible gateway"]
+    search["Search<br/>providers"]
+    shannon["Shannon external<br/>CLI / Docker worker"]
+    observability["Grafana, Langfuse<br/>logs and traces"]
 
-    user -->|"HTTPS UI / REST / GraphQL"| aegisx
-    aegisx -->|"authorized scan traffic"| target
-    aegisx -->|"prompt + tool calls"| llm
-    aegisx -->|"optional search"| search
-    aegisx -->|"optional white-box report import"| shannon
-    aegisx -->|"metrics, logs, LLM traces"| observability
+    user -->|"HTTPS UI"| app
+    app -->|"authorized scan traffic"| target
+    app -->|"prompt + tool calls"| llm
+    app -.->|"optional search"| search
+    app -.->|"optional white-box report import"| shannon
+    app -.->|"metrics, logs, traces"| observability
 
-    class user user
-    class aegisx aegis
-    class target,llm,search,shannon,observability external
+    class user userNode
+    class app appNode
+    class target targetNode
+    class llm provider
+    class search,shannon,observability optional
 ```
 
 ### Component Architecture
 
 ```mermaid
-flowchart LR
-    subgraph Frontend["Frontend"]
-        React["React + TypeScript UI"]
-        Simple["Simple Mode / Quick Scan"]
-        Advanced["Advanced Mode"]
-        Reports["Report web view / MD / PDF"]
-        Settings["Provider, resource, prompt settings"]
-    end
+flowchart TB
+    classDef frontend fill:#dbeafe,stroke:#2563eb,stroke-width:2px,color:#1e3a8a
+    classDef backend fill:#dcfce7,stroke:#16a34a,stroke-width:2px,color:#052e16
+    classDef database fill:#fef3c7,stroke:#d97706,stroke-width:2px,color:#451a03
+    classDef infra fill:#f3e8ff,stroke:#9333ea,stroke-width:2px,color:#3b0764
 
-    subgraph Backend["Backend"]
-        GoAPI["Go API server"]
-        GraphQL["GraphQL subscriptions and queries"]
-        REST["REST endpoints"]
-        Agents["Flow, task, agent orchestration"]
-        Tools["Security tools and terminal execution"]
-        ShannonBridge["Shannon external runner boundary"]
-    end
+    Frontend["Frontend Layer<br/>React + TypeScript / Vite<br/>Simple Mode, Expert Mode, Reports, Settings"]
+    Backend["Backend Layer<br/>Go API server / Gin + gqlgen<br/>GraphQL, REST, flow orchestration, tools, Shannon bridge"]
+    Database["Database Layer<br/>PostgreSQL + pgvector<br/>flows, tasks, agents, reports, vector memory"]
+    Infrastructure["Other Infrastructure<br/>Docker Compose runtime<br/>scraper, Graphiti / Neo4j, Grafana / Langfuse, LLM / search providers"]
 
-    subgraph Database["Database"]
-        Postgres[("PostgreSQL")]
-        Pgvector[("pgvector")]
-        Migrations["goose migrations"]
-    end
+    Frontend ==>|"Apollo HTTP/WebSocket + Axios REST"| Backend
+    Backend ==>|"SQL + vector queries"| Database
+    Backend ==>|"containers, browser actions, traces, provider calls"| Infrastructure
 
-    subgraph Other["Other Infrastructure"]
-        Docker["Docker Compose runtime"]
-        Scraper["Isolated browser scraper"]
-        Graphiti["Graphiti API"]
-        Neo4j[("Neo4j")]
-        Grafana["Grafana / VictoriaMetrics / Loki / Jaeger"]
-        Langfuse["Langfuse / ClickHouse / Redis / MinIO"]
-        Providers["LLM providers and search APIs"]
-    end
-
-    React --> Simple
-    React --> Advanced
-    React --> Reports
-    React --> Settings
-    React -->|"Apollo HTTP / WebSocket"| GraphQL
-    React -->|"Axios REST"| REST
-
-    GoAPI --> GraphQL
-    GoAPI --> REST
-    GoAPI --> Agents
-    Agents --> Tools
-    Agents --> ShannonBridge
-    Agents --> Providers
-    GoAPI --> Postgres
-    GoAPI --> Pgvector
-    Migrations --> Postgres
-    Tools --> Docker
-    Tools --> Scraper
-    GoAPI --> Graphiti
-    Graphiti --> Neo4j
-    GoAPI --> Grafana
-    GoAPI --> Langfuse
+    class Frontend frontend
+    class Backend backend
+    class Database database
+    class Infrastructure infra
 ```
 
 ### Frontend
