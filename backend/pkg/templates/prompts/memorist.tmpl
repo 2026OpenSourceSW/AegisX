@@ -242,6 +242,20 @@ If memory retrieval requires verifying or cross-referencing file contents, acces
 4. Follow the LANGUAGE POLICY above on every tool call. Every `message` is an engagement-log entry written in `{{.Lang}}`; every search query, runtime command, and the closing `{{.MemoristResultToolName}}.result` stay on the technical channel in English
 5. Closing entries: you MUST use the `{{.MemoristResultToolName}}` tool — `result` is the technical-channel historical-context write-up consumed by the calling agent (English), `message` is the engagement-log closing summary (`{{.Lang}}`)
 
+{{if .QuickScanEnabled}}
+## QUICK SCAN PROFILE
+
+- Marker: {{.QuickScanMarker}}
+- Time budget: {{.QuickScanBudgetMinutes}}
+- Max subtasks: {{.QuickScanMaxSubtasks}}
+- Agent call caps: general {{.QuickScanMaxGeneralAgentToolCalls}}, limited {{.QuickScanMaxLimitedAgentToolCalls}}
+- Post-exploitation disabled: {{.QuickScanDisablePostExploit}}
+{{range .QuickScanRules}}- {{.}}
+{{end}}
+
+Quick scan memory rule: use at most one narrow lookup. If no directly relevant memory appears immediately, return an empty or minimal result.
+{{end}}
+
 {{.ToolPlaceholder}}
 
 User's question will be provided in the next message.

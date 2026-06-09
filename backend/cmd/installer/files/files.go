@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 )
 
 // FileStatus represents file integrity status
@@ -363,39 +362,45 @@ func (f *files) listFromFS(prefix string) ([]string, error) {
 	basePath := filepath.Join(f.linksDir, prefix)
 
 	// check if prefix path exists
-	if _, err := os.Stat(basePath); os.IsNotExist(err) {
+	info, err := os.Stat(basePath)
+	if os.IsNotExist(err) {
 		return files, nil
+	} else if err != nil {
+		return nil, err
 	}
 
-	// normalize prefix to forward slashes for consistent comparison
 	normalizedPrefix := filepath.ToSlash(prefix)
+	if !info.IsDir() {
+		return []string{normalizedPrefix}, nil
+	}
 
-	err := filepath.Walk(f.linksDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
+	walkRoot, err := filepath.EvalSymlinks(basePath)
+	if err != nil {
+		return nil, err
+	}
 
-		// skip directories
-		if info.IsDir() {
-			return nil
-		}
-
-		// get relative path from links directory
-		relPath, err := filepath.Rel(f.linksDir, path)
-		if err != nil {
-			return err
-		}
-
-		// normalize to forward slashes for consistent comparison with embedded FS
-		normalizedRelPath := filepath.ToSlash(relPath)
-
-		// check if path starts with prefix
-		if normalizedPrefix == "" || strings.HasPrefix(normalizedRelPath, normalizedPrefix) {
-			files = append(files, normalizedRelPath)
-		}
-
-		return nil
+	err = filepath.Walk(walkRoot, func(path string, info os.FileInfo, err error) error {
+		return appendListedFile(&files, walkRoot, normalizedPrefix, path, info, err)
 	})
 
 	return files, err
+}
+
+func appendListedFile(files *[]string, root, prefix, path string, info os.FileInfo, walkErr error) error {
+	if walkErr != nil {
+		return walkErr
+	}
+
+	if info.IsDir() {
+		return nil
+	}
+
+	relPath, err := filepath.Rel(root, path)
+	if err != nil {
+		return err
+	}
+
+	listedPath := filepath.ToSlash(filepath.Join(prefix, relPath))
+	*files = append(*files, listedPath)
+	return nil
 }

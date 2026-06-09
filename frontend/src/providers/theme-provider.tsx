@@ -34,7 +34,7 @@ export function ThemeProvider({
         const storedTheme = localStorage.getItem(storageKey);
 
         if (!storedTheme) {
-            return 'system';
+            return defaultTheme;
         }
 
         return isThemeValid(storedTheme) ? storedTheme : defaultTheme;
@@ -58,12 +58,7 @@ export function ThemeProvider({
 
     const value = {
         setTheme: (theme: Theme) => {
-            if (theme === 'system') {
-                localStorage.removeItem(storageKey);
-            } else {
-                localStorage.setItem(storageKey, theme);
-            }
-
+            localStorage.setItem(storageKey, theme);
             setTheme(theme);
         },
         theme,

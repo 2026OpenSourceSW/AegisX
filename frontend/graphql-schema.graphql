@@ -13,6 +13,7 @@ fragment flowFragment on Flow {
     id
     title
     status
+    stateReason
     terminals {
         ...terminalFragment
     }

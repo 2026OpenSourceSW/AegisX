@@ -55,7 +55,7 @@ import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ResourcesCopyDialog } from '@/features/resources/resources-copy-dialog';
 import { ResourcesMkdirDialog } from '@/features/resources/resources-mkdir-dialog';
 import { ResourcesMoveDialog } from '@/features/resources/resources-move-dialog';
-import { buildResourcesDownloadHref, pluralizeItems, toFileNode } from '@/features/resources/resources-utils';
+import { buildResourcesDownloadHref, toFileNode } from '@/features/resources/resources-utils';
 import { useResourcesDelete } from '@/features/resources/use-resources-delete';
 import { useResourcesMove } from '@/features/resources/use-resources-move';
 import { useResourcesSearch } from '@/features/resources/use-resources-search';
@@ -147,7 +147,30 @@ function Resources() {
     // the row memo for the whole tree on unrelated re-renders.
     const fileManagerLabels = useMemo<FileManagerLabels>(
         () => ({
+            bulkCancel: '취소',
+            bulkMoreActions: '추가 작업',
+            collapseAllAriaLabel: '모든 폴더 접기',
+            columnModified: '수정일',
+            columnName: '이름',
+            columnSize: '크기',
+            expandAllAriaLabel: '모든 폴더 펼치기',
             formatModified: viewOptions.isModifiedRelative ? formatModifiedRelative : formatModifiedAbsolute,
+            pluralizeItems: (count) => `${count}개 항목`,
+            selectAllAriaLabel: '전체 선택',
+            selectedLabel: (count) => `${count}개 선택됨`,
+            sortHeaderAriaLabel: (column, direction) => {
+                const columnLabel = { modified: '수정일', name: '이름', size: '크기' }[column];
+
+                if (direction === 'asc') {
+                    return `${columnLabel} 기준 내림차순 정렬`;
+                }
+
+                if (direction === 'desc') {
+                    return `${columnLabel} 정렬 해제`;
+                }
+
+                return `${columnLabel} 기준 오름차순 정렬`;
+            },
         }),
         [viewOptions.isModifiedRelative],
     );
@@ -236,12 +259,12 @@ function Resources() {
         const wasCopied = await copyToClipboard(file.path);
 
         if (wasCopied) {
-            toast.success('Path copied to clipboard');
+            toast.success('경로를 클립보드에 복사했습니다');
 
             return;
         }
 
-        toast.error('Failed to copy path');
+        toast.error('경로 복사에 실패했습니다');
     }, []);
 
     /**
@@ -258,12 +281,12 @@ function Resources() {
         const wasCopied = await copyToClipboard(paths.join('\n'));
 
         if (wasCopied) {
-            toast.success(`${paths.length} ${pluralizeItems(paths.length)} copied to clipboard`);
+            toast.success(`${paths.length}개 경로를 클립보드에 복사했습니다`);
 
             return;
         }
 
-        toast.error('Failed to copy paths');
+        toast.error('경로 복사에 실패했습니다');
     }, []);
 
     /**
@@ -309,8 +332,8 @@ function Resources() {
             // Row download is the single-file specialisation of the bulk download:
             // we hand the URL builder a 1-element array so the same backend
             // contract (`?paths[]=`) is used everywhere.
-            downloadAction((file) => buildResourcesDownloadHref([file])),
-            copyPathAction(handleCopyPath),
+            { ...downloadAction((file) => buildResourcesDownloadHref([file])), label: '다운로드' },
+            { ...copyPathAction(handleCopyPath), label: '경로 복사' },
             // Directory-only actions — surfaced both in the row dropdown and
             // the right-click context menu (the manager renders both menus
             // from the same `actions` array). `appliesToFiles: false` keeps
@@ -320,7 +343,7 @@ function Resources() {
                 appliesToFiles: false,
                 icon: FolderPlus,
                 id: 'resources-mkdir-here',
-                label: 'New folder',
+                label: '새 폴더',
                 onSelect: handleMkdirHere,
                 separatorBefore: true,
             },
@@ -329,14 +352,14 @@ function Resources() {
                 appliesToFiles: false,
                 icon: Upload,
                 id: 'resources-upload-here',
-                label: 'Upload files',
+                label: '파일 업로드',
                 onSelect: handleUploadHere,
             },
             {
                 appliesToDirs: true,
                 icon: FileSymlink,
                 id: 'resources-rename',
-                label: 'Rename or move',
+                label: '이름 변경 또는 이동',
                 onSelect: (file) => setFilesToMove([file]),
                 separatorBefore: true,
             },
@@ -344,10 +367,10 @@ function Resources() {
                 appliesToDirs: true,
                 icon: Copy,
                 id: 'resources-copy',
-                label: 'Copy to…',
+                label: '복사 위치...',
                 onSelect: (file) => setFilesToCopy([file]),
             },
-            deleteAction(deletion.requestDelete),
+            { ...deleteAction(deletion.requestDelete), label: '삭제' },
         ],
         [deletion.requestDelete, handleCopyPath, handleMkdirHere, handleUploadHere],
     );
@@ -357,11 +380,16 @@ function Resources() {
     // actions in the overflow `…` menu, then destructive Delete on the right.
     const fileManagerBulkActions = useMemo<FileManagerBulkAction[]>(
         () => [
-            bulkDownloadAction(buildResourcesDownloadHref),
-            bulkMoveAction((files) => setFilesToMove(files)),
-            bulkCopyAction((files) => setFilesToCopy(files), { overflow: true }),
-            bulkCopyPathsAction(handleBulkCopyPaths),
-            bulkDeleteAction(deletion.deleteFiles),
+            bulkDownloadAction(buildResourcesDownloadHref, { label: '다운로드' }),
+            bulkMoveAction((files) => setFilesToMove(files), { label: '이동 위치...' }),
+            bulkCopyAction((files) => setFilesToCopy(files), { label: '복사 위치...', overflow: true }),
+            bulkCopyPathsAction(handleBulkCopyPaths, { label: '경로 복사' }),
+            bulkDeleteAction(deletion.deleteFiles, {
+                confirmDescription: (countLabel) => `${countLabel}을 삭제합니다. 이 작업은 되돌릴 수 없습니다.`,
+                confirmText: '삭제',
+                confirmTitle: (countLabel) => `${countLabel} 삭제`,
+                label: '삭제',
+            }),
         ],
         [deletion.deleteFiles, handleBulkCopyPaths],
     );
@@ -374,13 +402,13 @@ function Resources() {
             {
                 icon: FolderPlus,
                 id: 'resources-empty-mkdir',
-                label: 'New folder',
+                label: '새 폴더',
                 onSelect: () => setIsMkdirOpen(true),
             },
             {
                 icon: Upload,
                 id: 'resources-empty-upload',
-                label: 'Upload files',
+                label: '파일 업로드',
                 onSelect: upload.openFilePicker,
             },
         ],
@@ -408,7 +436,7 @@ function Resources() {
                     <BreadcrumbList className="min-w-0 flex-nowrap">
                         <BreadcrumbItem className="min-w-0">
                             <Folder className="size-4 shrink-0" />
-                            <BreadcrumbPage className="min-w-0 truncate">Resources</BreadcrumbPage>
+                            <BreadcrumbPage className="min-w-0 truncate">자료</BreadcrumbPage>
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
@@ -417,15 +445,15 @@ function Resources() {
                 <HeaderButton
                     disabled={upload.isUploading}
                     icon={<FolderPlus />}
-                    label="New folder"
+                    label="새 폴더"
                     onClick={() => setIsMkdirOpen(true)}
                     variant="outline"
                 />
                 <HeaderButton
-                    aria-label={upload.isUploading ? 'Uploading...' : 'Upload files'}
+                    aria-label={upload.isUploading ? '업로드 중...' : '파일 업로드'}
                     disabled={upload.isUploading}
                     icon={upload.isUploading ? <Loader2 className="animate-spin" /> : <Upload />}
-                    label={upload.isUploading ? 'Uploading...' : 'Upload files'}
+                    label={upload.isUploading ? '업로드 중...' : '파일 업로드'}
                     onClick={upload.openFilePicker}
                     variant="secondary"
                 />
@@ -437,13 +465,14 @@ function Resources() {
 
     const noResourcesState = (
         <FileDropZone
-            actionLabel="Upload files"
-            description="Upload documents so AegisX agents can reference them during your flows. You can also drag & drop files anywhere in this panel."
-            hint="Up to 300 MB per file · 2 GB per upload"
+            actionLabel="파일 업로드"
+            description={`AegisX 에이전트가 점검 중 참고할 문서를 업로드하세요.
+이 패널 어디로든 파일을 끌어다 놓을 수 있습니다.`}
+            hint="파일당 최대 300 MB · 업로드당 최대 2 GB"
             isDragging={isDragging}
             isUploading={upload.isUploading}
             onBrowse={upload.openFilePicker}
-            title="No resources yet"
+            title="아직 자료가 없습니다"
         />
     );
 
@@ -453,9 +482,9 @@ function Resources() {
                 <EmptyMedia variant="icon">
                     <Search />
                 </EmptyMedia>
-                <EmptyTitle>No matches</EmptyTitle>
+                <EmptyTitle>검색 결과가 없습니다</EmptyTitle>
                 <EmptyDescription>
-                    No resources match <code>{search.debouncedQuery.trim()}</code>. Try a different query.
+                    <code>{search.debouncedQuery.trim()}</code>와 일치하는 자료가 없습니다. 다른 검색어를 입력해 보세요.
                 </EmptyDescription>
             </EmptyHeader>
         </Empty>
@@ -483,7 +512,7 @@ function Resources() {
                     <div className="bg-primary/10 border-primary pointer-events-none absolute inset-2 z-30 flex items-center justify-center rounded-lg border-2 border-dashed">
                         <div className="text-primary flex flex-col items-center gap-2">
                             <FolderUp className="size-8" />
-                            <span className="text-sm font-medium">Drop files to upload</span>
+                            <span className="text-sm font-medium">파일을 놓으면 업로드됩니다</span>
                         </div>
                     </div>
                 )}
@@ -494,19 +523,19 @@ function Resources() {
                         metrics={[
                             {
                                 icon: <FileSymlink className="size-4" />,
-                                label: 'Total resources',
+                                label: '전체 자료',
                                 tone: 'text-primary',
                                 value: resourceSummary.total,
                             },
                             {
                                 icon: <Folder className="size-4" />,
-                                label: 'Folders',
+                                label: '폴더',
                                 tone: 'text-blue-600',
                                 value: resourceSummary.folders,
                             },
                             {
                                 icon: <FileText className="size-4" />,
-                                label: 'Files',
+                                label: '파일',
                                 tone: 'text-green-600',
                                 value: resourceSummary.files,
                             },
@@ -517,10 +546,10 @@ function Resources() {
                 <div className="flex items-center gap-2">
                     <InputGroup className="max-w-sm flex-1">
                         <InputGroupInput
-                            aria-label="Search resources"
+                            aria-label="자료 검색"
                             autoComplete="off"
                             onChange={(event) => search.setQuery(event.target.value)}
-                            placeholder="Search resources..."
+                            placeholder="자료 검색..."
                             type="text"
                             value={search.rawQuery}
                         />
@@ -538,7 +567,7 @@ function Resources() {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button
-                                aria-label="Column settings"
+                                aria-label="컬럼 설정"
                                 className="ml-auto"
                                 size="icon"
                                 variant="outline"
@@ -552,14 +581,14 @@ function Resources() {
                                 onCheckedChange={() => toggleViewOption('size')}
                                 onSelect={(event) => event.preventDefault()}
                             >
-                                Size
+                                크기
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem
                                 checked={viewOptions.modified}
                                 onCheckedChange={() => toggleViewOption('modified')}
                                 onSelect={(event) => event.preventDefault()}
                             >
-                                Modified
+                                수정일
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuCheckboxItem
@@ -567,7 +596,7 @@ function Resources() {
                                 onCheckedChange={() => toggleViewOption('foldersFirst')}
                                 onSelect={(event) => event.preventDefault()}
                             >
-                                Folders first
+                                폴더 먼저
                             </DropdownMenuCheckboxItem>
                             <DropdownMenuCheckboxItem
                                 checked={viewOptions.isModifiedRelative}
@@ -575,7 +604,7 @@ function Resources() {
                                 onCheckedChange={() => toggleViewOption('isModifiedRelative')}
                                 onSelect={(event) => event.preventDefault()}
                             >
-                                Relative dates
+                                상대 날짜
                             </DropdownMenuCheckboxItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -624,13 +653,13 @@ function Resources() {
                 />
 
                 <ConfirmationDialog
-                    confirmText="Delete"
+                    confirmText="삭제"
                     handleConfirm={deletion.confirmDelete}
                     handleOpenChange={handleDeleteDialogOpenChange}
                     isOpen={!!deletion.fileToDelete}
                     itemName={deletion.fileToDelete?.name}
-                    itemType={deletion.fileToDelete?.isDir ? 'directory' : 'resource'}
-                    title={deletion.fileToDelete?.isDir ? 'Delete directory' : 'Delete resource'}
+                    itemType={deletion.fileToDelete?.isDir ? '폴더' : '자료'}
+                    title={deletion.fileToDelete?.isDir ? '폴더 삭제' : '자료 삭제'}
                 />
             </div>
         </>

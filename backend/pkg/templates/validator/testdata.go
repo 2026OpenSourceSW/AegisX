@@ -73,9 +73,11 @@ func CreateDummyTemplateData() map[string]any {
 		"SummarizedContentPrefix": csum.SummarizedContentPrefix,
 
 		// Boolean flags
-		"UseAgents":            true,
-		"IsDefaultDockerImage": false,
-		"FlowManagerEnabled":   true,
+		"UseAgents":                   true,
+		"IsDefaultDockerImage":        false,
+		"FlowManagerEnabled":          true,
+		"QuickScanEnabled":            true,
+		"QuickScanDisablePostExploit": true,
 
 		// Docker and environment
 		"DockerImage": "vxcontrol/kali-linux:latest",
@@ -99,7 +101,17 @@ func CreateDummyTemplateData() map[string]any {
 		"ToolPlaceholder": providers.ToolPlaceholder,
 
 		// Numeric limits
-		"N": providers.TasksNumberLimit,
+		"N":                                 providers.TasksNumberLimit,
+		"QuickScanMaxSubtasks":              1,
+		"QuickScanMaxGeneralAgentToolCalls": 8,
+		"QuickScanMaxLimitedAgentToolCalls": 6,
+
+		"QuickScanMarker":        tools.QuickScanTaskMarker,
+		"QuickScanBudgetMinutes": "5~10분",
+		"QuickScanRules": []string{
+			"5~10분 안에 끝나는 범위로 점검합니다.",
+			"긴 정밀 스캔, 무차별 대입, 권한 범위 밖 탐색은 수행하지 않습니다.",
+		},
 
 		"UserFiles": "<user_files>\nUser-provided files for this flow. Use them as input data.\n" +
 			"<uploads>\n/work/uploads/test_file_1.txt\n</uploads>\n" +

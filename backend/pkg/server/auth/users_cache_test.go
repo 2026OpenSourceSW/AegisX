@@ -19,9 +19,10 @@ func setupUserTestDB(t *testing.T) *gorm.DB {
 	t.Helper()
 	db, err := gorm.Open("sqlite3", ":memory:")
 	require.NoError(t, err)
+	db.DB().SetMaxOpenConns(1)
+	db.DB().SetMaxIdleConns(1)
 
-	// Create users table
-	db.Exec(`
+	err = db.Exec(`
 		CREATE TABLE users (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			hash TEXT NOT NULL UNIQUE,
@@ -36,10 +37,10 @@ func setupUserTestDB(t *testing.T) *gorm.DB {
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			deleted_at DATETIME
 		)
-	`)
+	`).Error
+	require.NoError(t, err)
 
-	// Create user_preferences table
-	db.Exec(`
+	err = db.Exec(`
 		CREATE TABLE user_preferences (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			user_id INTEGER NOT NULL UNIQUE,
@@ -48,9 +49,8 @@ func setupUserTestDB(t *testing.T) *gorm.DB {
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 		)
-	`)
-
-	time.Sleep(200 * time.Millisecond) // wait for database to be ready
+	`).Error
+	require.NoError(t, err)
 
 	return db
 }

@@ -1,4 +1,4 @@
-import { Image } from 'lucide-react';
+import { ExternalLink, Image, ImageOff } from 'lucide-react';
 import { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -15,7 +15,9 @@ interface FlowScreenshotProps {
 }
 
 function FlowScreenshot({ screenshot }: FlowScreenshotProps) {
+    const fileUrl = `${baseUrl}/flows/${screenshot.flowId}/screenshots/${screenshot.id}/file`;
     const [isExpanded, setIsExpanded] = useState(false);
+    const [hasImageError, setHasImageError] = useState(false);
     const [isVisible, setIsVisible] = useState(false);
     const imageRef = useRef<HTMLDivElement>(null);
 
@@ -70,18 +72,36 @@ function FlowScreenshot({ screenshot }: FlowScreenshotProps) {
                         className={cn('mt-2 w-full', !isVisible ? 'animate-pulse' : '')}
                         ref={imageRef}
                     >
-                        {isVisible ? (
+                        {isVisible && hasImageError ? (
+                            <div className="border-destructive/30 bg-destructive/5 flex h-[240px] w-[320px] flex-col items-center justify-center gap-3 rounded-lg border p-4 text-center">
+                                <ImageOff className="text-destructive size-8" />
+                                <p className="text-sm font-medium">스크린샷 이미지를 불러오지 못했습니다.</p>
+                                <Link
+                                    className={cn(buttonVariants({ size: 'sm', variant: 'outline' }), 'gap-1')}
+                                    target="_blank"
+                                    to={fileUrl}
+                                >
+                                    <ExternalLink className="size-4" />새 창에서 열기
+                                </Link>
+                            </div>
+                        ) : isVisible ? (
                             <div className={`${isExpanded ? 'size-full' : 'h-[240px] w-[320px]'}`}>
-                                <img
-                                    alt={screenshot.name}
-                                    className={cn(
-                                        'size-full transition-all duration-200',
-                                        isExpanded ? 'cursor-zoom-out' : 'cursor-zoom-in object-cover object-top',
-                                    )}
-                                    loading="lazy"
+                                <button
+                                    className="size-full p-0"
                                     onClick={() => setIsExpanded(!isExpanded)}
-                                    src={`${baseUrl}/flows/${screenshot.flowId}/screenshots/${screenshot.id}/file`}
-                                />
+                                    type="button"
+                                >
+                                    <img
+                                        alt={screenshot.name}
+                                        className={cn(
+                                            'size-full transition-all duration-200',
+                                            isExpanded ? 'cursor-zoom-out' : 'cursor-zoom-in object-cover object-top',
+                                        )}
+                                        loading="lazy"
+                                        onError={() => setHasImageError(true)}
+                                        src={fileUrl}
+                                    />
+                                </button>
                             </div>
                         ) : (
                             <div className="h-[240px] w-[320px] rounded-lg bg-slate-200" />

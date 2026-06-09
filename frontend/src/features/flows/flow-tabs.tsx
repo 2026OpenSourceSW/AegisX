@@ -40,17 +40,20 @@ function FlowTabs({ activeTab, onTabChange }: FlowTabsProps) {
         >
             <div className="bg-card max-w-full rounded-xl border p-2 shadow-sm">
                 <ScrollArea className="w-full pb-3">
-                    <TabsList className="bg-muted/80 flex w-fit">
-                        {!isDesktop && <TabsTrigger value="automation">Automation</TabsTrigger>}
-                        {!isDesktop && <TabsTrigger value="assistant">Assistant</TabsTrigger>}
-                        {!isDesktop && <TabsTrigger value="dashboard">Dashboard</TabsTrigger>}
-                        <TabsTrigger value="terminal">Terminal</TabsTrigger>
-                        <TabsTrigger value="tasks">Tasks</TabsTrigger>
-                        <TabsTrigger value="agents">Agents</TabsTrigger>
-                        <TabsTrigger value="tools">Searches</TabsTrigger>
-                        <TabsTrigger value="vectorStores">Vector Store</TabsTrigger>
-                        <TabsTrigger value="files">Files</TabsTrigger>
-                        <TabsTrigger value="screenshots">Screenshots</TabsTrigger>
+                    <TabsList
+                        aria-label="Flow detail sections"
+                        className="bg-muted/80 flex w-max min-w-max"
+                    >
+                        {!isDesktop && <TabsTrigger value="automation">자동 점검</TabsTrigger>}
+                        {!isDesktop && <TabsTrigger value="assistant">어시스턴트</TabsTrigger>}
+                        {!isDesktop && <TabsTrigger value="dashboard">요약</TabsTrigger>}
+                        <TabsTrigger value="terminal">터미널</TabsTrigger>
+                        <TabsTrigger value="tasks">작업</TabsTrigger>
+                        <TabsTrigger value="agents">에이전트</TabsTrigger>
+                        <TabsTrigger value="tools">검색</TabsTrigger>
+                        <TabsTrigger value="vectorStores">벡터 저장소</TabsTrigger>
+                        <TabsTrigger value="files">파일</TabsTrigger>
+                        <TabsTrigger value="screenshots">스크린샷</TabsTrigger>
                     </TabsList>
                     <ScrollBar orientation="horizontal" />
                 </ScrollArea>

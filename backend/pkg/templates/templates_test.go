@@ -10,6 +10,8 @@ import (
 
 	"pentagi/pkg/templates"
 	"pentagi/pkg/templates/validator"
+
+	"github.com/stretchr/testify/require"
 )
 
 // TestPromptTemplatesIntegrity validates all prompt templates against their declared variables
@@ -240,6 +242,81 @@ func TestTemplateRenderability(t *testing.T) {
 	dummyData := validator.CreateDummyTemplateData()
 
 	testRenderability(t, reflect.ValueOf(defaultPrompts), dummyData, "DefaultPrompts")
+}
+
+func TestQuickScanPromptBlocks_renderOnlyWhenEnabled(t *testing.T) {
+	t.Parallel()
+
+	prompter := templates.NewDefaultPrompter()
+	quickData := validator.CreateDummyTemplateData()
+	quickData["QuickScanEnabled"] = true
+
+	testCases := []struct {
+		name       string
+		promptType templates.PromptType
+		want       []string
+	}{
+		{
+			name:       "pentester",
+			promptType: templates.PromptTypePentester,
+			want: []string{
+				"QUICK SCAN PROFILE",
+				"Metasploit workflows",
+				"추가 정밀 점검 필요",
+			},
+		},
+		{
+			name:       "generator",
+			promptType: templates.PromptTypeGenerator,
+			want: []string{
+				"QUICK SCAN PROFILE",
+				"external exposure snapshot",
+				"Max subtasks: 1",
+			},
+		},
+		{
+			name:       "reporter",
+			promptType: templates.PromptTypeReporter,
+			want: []string{
+				"QUICK SCAN PROFILE",
+				"OWASP Top 10:2025",
+				"쉬운 요약",
+				"발견 항목 요약",
+				"위험도별 발견 항목",
+				"추가 정밀 점검 필요",
+			},
+		},
+		{
+			name:       "task reporter",
+			promptType: templates.PromptTypeTaskReporter,
+			want: []string{
+				"<quick_scan_profile>",
+				"OWASP Top 10:2025",
+				"발견 항목 요약",
+				"위험도별 발견 항목",
+				"추가 정밀 점검 필요",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			rendered, err := prompter.RenderTemplate(tc.promptType, quickData)
+			require.NoError(t, err)
+			for _, want := range tc.want {
+				require.Contains(t, rendered, want)
+			}
+		})
+	}
+
+	normalData := validator.CreateDummyTemplateData()
+	normalData["QuickScanEnabled"] = false
+
+	rendered, err := prompter.RenderTemplate(templates.PromptTypePentester, normalData)
+	require.NoError(t, err)
+	require.NotContains(t, rendered, "QUICK SCAN PROFILE")
 }
 
 // testRenderability recursively tests if all prompts can be rendered with dummy data

@@ -47,12 +47,12 @@ const providerActions: AuthProviderAction[] = [
     {
         icon: <Google className="size-5" />,
         id: 'google',
-        name: 'Continue with Google',
+        name: 'Google로 계속',
     },
     {
         icon: <Github className="size-5" />,
         id: 'github',
-        name: 'Continue with GitHub',
+        name: 'GitHub로 계속',
     },
 ];
 
@@ -179,7 +179,7 @@ function LoginForm({ providers, returnUrl = '/dashboard' }: LoginFormProps) {
                 onSubmit={form.handleSubmit(handleSubmit)}
             >
                 <div className="grid gap-2 text-center">
-                    <h1 className="text-3xl font-bold text-[#1A2B4B]">AegisX</h1>
+                    <h1 className="text-foreground text-3xl font-bold">AegisX</h1>
                     <p className="text-muted-foreground text-sm leading-6">보안 점검 워크스페이스에 로그인하세요.</p>
                 </div>
 

@@ -35,19 +35,19 @@ const menuItems: readonly MenuItem[] = [
         icon: <Plug className="size-4" />,
         id: 'providers',
         path: '/settings/providers',
-        title: 'Providers',
+        title: 'Provider',
     },
     {
         icon: <FileText className="size-4" />,
         id: 'prompts',
         path: '/settings/prompts',
-        title: 'Prompts',
+        title: '프롬프트',
     },
     {
         icon: <Key className="size-4" />,
         id: 'api-tokens',
         path: '/settings/api-tokens',
-        title: 'API Tokens',
+        title: 'API 토큰',
     },
 ] as const;
 
@@ -59,24 +59,24 @@ function SettingsHeader() {
         const path = location.pathname;
 
         if (path === '/settings/providers/new') {
-            return 'Create Provider';
+            return 'Provider 만들기';
         }
 
         if (path.startsWith('/settings/providers/') && params.providerId && params.providerId !== 'new') {
-            return 'Edit Provider';
+            return 'Provider 편집';
         }
 
         if (path === '/settings/prompts/new') {
-            return 'Create Prompt';
+            return '프롬프트 만들기';
         }
 
         if (path.startsWith('/settings/prompts/') && params.promptId && params.promptId !== 'new') {
-            return 'Edit Prompt';
+            return '프롬프트 편집';
         }
 
         const activeItem = menuItems.find((item) => path.startsWith(item.path));
 
-        return activeItem?.title ?? 'Settings';
+        return activeItem?.title ?? '설정';
     }, [location.pathname, params]);
 
     return (
@@ -117,7 +117,7 @@ function SettingsSidebar() {
                             <SettingsIcon className="size-6" />
                         </div>
                         <div className="grid flex-1 text-left leading-tight">
-                            <span className="truncate font-semibold">Settings</span>
+                            <span className="truncate font-semibold">설정</span>
                         </div>
                     </SidebarMenuItem>
                 </SidebarMenu>
@@ -140,7 +140,7 @@ function SettingsSidebar() {
                 <SidebarMenuButton asChild>
                     <NavLink to="/flows">
                         <ArrowLeft className="size-4" />
-                        Back to App
+                        앱으로 돌아가기
                     </NavLink>
                 </SidebarMenuButton>
             </SidebarFooter>

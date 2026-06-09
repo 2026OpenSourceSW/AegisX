@@ -106,6 +106,7 @@ func (fp *flowProvider) GetAskAdviceHandler(ctx context.Context, taskID, subtask
 				"UserFiles":               fp.userFilesListing(),
 			},
 		}
+		fp.mergeQuickScanPromptContextForTask(ctx, taskID, enricherContext["system"])
 
 		enricherCtx, observation := obs.Observer.NewObservation(ctx)
 		enricherEvaluator := observation.Evaluator(
@@ -181,6 +182,7 @@ func (fp *flowProvider) GetAskAdviceHandler(ctx context.Context, taskID, subtask
 				"UserFiles":                 fp.userFilesListing(),
 			},
 		}
+		fp.mergeQuickScanPromptContextForTask(ctx, taskID, adviserContext["system"])
 
 		adviserCtx, observation := obs.Observer.NewObservation(ctx)
 		adviserEvaluator := observation.Evaluator(
@@ -288,6 +290,7 @@ func (fp *flowProvider) GetCoderHandler(ctx context.Context, taskID, subtaskID *
 				"UserFiles":               fp.userFilesListing(),
 			},
 		}
+		fp.mergeQuickScanPromptContextForTask(ctx, taskID, coderContext["system"])
 
 		coderCtx, observation := obs.Observer.NewObservation(ctx)
 		coderEvaluator := observation.Evaluator(
@@ -385,6 +388,7 @@ func (fp *flowProvider) GetInstallerHandler(ctx context.Context, taskID, subtask
 				"UserFiles":                 fp.userFilesListing(),
 			},
 		}
+		fp.mergeQuickScanPromptContextForTask(ctx, taskID, installerContext["system"])
 
 		installerCtx, observation := obs.Observer.NewObservation(ctx)
 		installerEvaluator := observation.Evaluator(
@@ -520,6 +524,7 @@ func (fp *flowProvider) GetMemoristHandler(ctx context.Context, taskID, subtaskI
 				"UserFiles":               fp.userFilesListing(),
 			},
 		}
+		fp.mergeQuickScanPromptContextForTask(ctx, taskID, memoristContext["system"])
 
 		memoristCtx, observation := obs.Observer.NewObservation(ctx)
 		memoristEvaluator := observation.Evaluator(
@@ -625,6 +630,7 @@ func (fp *flowProvider) GetPentesterHandler(ctx context.Context, taskID, subtask
 				"UserFiles":               fp.userFilesListing(),
 			},
 		}
+		fp.mergeQuickScanPromptContextForTask(ctx, taskID, pentesterContext["system"])
 
 		pentesterCtx, observation := obs.Observer.NewObservation(ctx)
 		pentesterEvaluator := observation.Evaluator(
@@ -717,6 +723,7 @@ func (fp *flowProvider) GetSubtaskSearcherHandler(ctx context.Context, taskID, s
 				"UserFiles":               fp.userFilesListing(),
 			},
 		}
+		fp.mergeQuickScanPromptContextForTask(ctx, taskID, searcherContext["system"])
 
 		searcherCtx, observation := obs.Observer.NewObservation(ctx)
 		searcherEvaluator := observation.Evaluator(
@@ -808,6 +815,7 @@ func (fp *flowProvider) GetTaskSearcherHandler(ctx context.Context, taskID int64
 				"UserFiles":               fp.userFilesListing(),
 			},
 		}
+		mergeQuickScanPromptContext(searcherContext["system"], tools.QuickScanProfileForTaskInput(fp.cfg, task.Input))
 
 		searcherCtx, observation := obs.Observer.NewObservation(ctx)
 		searcherEvaluator := observation.Evaluator(

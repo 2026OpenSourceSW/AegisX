@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { ArrowRight, CheckCircle2, ExternalLink, ShieldCheck, TerminalSquare } from 'lucide-react';
+import { ArrowRight, CheckCircle2, ShieldCheck, TerminalSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 import AegisXPageTopbar from '@/components/layouts/aegisx-page-topbar';
@@ -32,7 +32,7 @@ const modeCards: readonly ModeCard[] = [
     },
     {
         accent: 'secondary',
-        cta: 'Expert Mode 열기',
+        cta: 'Expert Mode 시작',
         description: 'AegisX의 기존 기능과 상세 실행 로그, 고급 설정을 그대로 사용할 수 있습니다.',
         href: '/flows/new?mode=expert',
         icon: <TerminalSquare className="size-6" />,
@@ -141,7 +141,7 @@ function ModeSelectionCard({ card }: { readonly card: ModeCard }) {
                 >
                     <Link to={card.href}>
                         <span className="min-w-0">{card.cta}</span>
-                        {isPrimary ? <ArrowRight className="size-4" /> : <ExternalLink className="size-4" />}
+                        <ArrowRight className="size-4" />
                     </Link>
                 </Button>
             </div>

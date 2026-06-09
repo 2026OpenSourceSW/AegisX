@@ -74,6 +74,7 @@ func (t *terminal) startPty(cmd *exec.Cmd) error {
 	if err := t.cmd.Start(); err != nil {
 		return tearDownPty(err)
 	}
+	t.running = true
 
 	// close parent's copy of slave side to ensure EOF is delivered when child exits
 	// child keeps its own descriptors; we must not hold t.tty open in parent
@@ -82,6 +83,7 @@ func (t *terminal) startPty(cmd *exec.Cmd) error {
 		t.tty = nil
 	}
 
+	t.wg.Add(1)
 	go t.managePty()
 
 	return nil
@@ -89,7 +91,6 @@ func (t *terminal) startPty(cmd *exec.Cmd) error {
 
 // managePty manages the pseudoterminal and its output
 func (t *terminal) managePty() {
-	t.wg.Add(1)
 	defer t.wg.Done()
 
 	defer func() {
@@ -143,7 +144,7 @@ func (t *terminal) managePty() {
 			handleError("error reading output", err)
 
 			// try to kill process if it's still running
-			if t.cmd != nil && t.cmd.Process != nil && (t.cmd.ProcessState == nil || !t.cmd.ProcessState.Exited()) {
+			if t.running && t.cmd != nil && t.cmd.Process != nil {
 				if killErr := t.cmd.Process.Kill(); killErr != nil {
 					handleError("failed to terminate process", killErr)
 				} else {
@@ -155,4 +156,6 @@ func (t *terminal) managePty() {
 			break
 		}
 	}
+
+	t.waitForCommand()
 }

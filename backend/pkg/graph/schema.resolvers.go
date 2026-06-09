@@ -36,6 +36,30 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// StateReason is the resolver for the stateReason field.
+func (r *flowResolver) StateReason(ctx context.Context, obj *model.Flow) (model.FlowStateReason, error) {
+	if obj == nil {
+		return model.FlowStateReasonNone, nil
+	}
+
+	tasks, err := r.DB.GetFlowTasks(ctx, obj.ID)
+	if err != nil {
+		return model.FlowStateReasonNone, fmt.Errorf("get flow tasks for state reason: %w", err)
+	}
+
+	assistants, err := r.DB.GetFlowAssistants(ctx, obj.ID)
+	if err != nil {
+		return model.FlowStateReasonNone, fmt.Errorf("get flow assistants for state reason: %w", err)
+	}
+
+	assistantLogs, err := r.getAssistantLogsForStateReason(ctx, obj.ID, tasks, assistants)
+	if err != nil {
+		return model.FlowStateReasonNone, err
+	}
+
+	return deriveFlowStateReason(obj.Status, tasks, assistants, assistantLogs), nil
+}
+
 // CreateFlow is the resolver for the createFlow field.
 func (r *mutationResolver) CreateFlow(ctx context.Context, modelProvider string, input string, resourceIds []int64) (*model.Flow, error) {
 	uid, _, err := validatePermission(ctx, "flows.create")
@@ -186,7 +210,7 @@ func (r *mutationResolver) FinishFlow(ctx context.Context, flowID int64) (model.
 
 // DeleteFlow is the resolver for the deleteFlow field.
 func (r *mutationResolver) DeleteFlow(ctx context.Context, flowID int64) (model.ResultType, error) {
-	uid, err := validatePermissionWithFlowID(ctx, "flows.delete", flowID, r.DB)
+	uid, err := validatePermissionWithFlowIDIncludingDeleted(ctx, "flows.delete", flowID, r.DB)
 	if err != nil {
 		return model.ResultTypeError, err
 	}
@@ -196,15 +220,16 @@ func (r *mutationResolver) DeleteFlow(ctx context.Context, flowID int64) (model.
 		"flow": flowID,
 	}).Debug("delete flow")
 
-	if fw, err := r.Controller.GetFlow(ctx, flowID); err == nil {
-		if err := fw.Finish(ctx); err != nil {
+	if err := r.Controller.FinishFlow(ctx, flowID); err != nil {
+		if !errors.Is(err, controller.ErrFlowNotFound) && !errors.Is(err, sql.ErrNoRows) {
 			return model.ResultTypeError, err
 		}
-	} else if !errors.Is(err, controller.ErrFlowNotFound) {
-		return model.ResultTypeError, err
+		if errors.Is(err, sql.ErrNoRows) {
+			r.Logger.WithError(err).Warnf("flow %d worker cleanup saw a stale DB row", flowID)
+		}
 	}
 
-	flow, err := r.DB.GetFlow(ctx, flowID)
+	flow, err := r.DB.GetFlowIncludingDeleted(ctx, flowID)
 	if err != nil {
 		return model.ResultTypeError, err
 	}
@@ -214,7 +239,8 @@ func (r *mutationResolver) DeleteFlow(ctx context.Context, flowID int64) (model.
 		return model.ResultTypeError, err
 	}
 
-	if _, err := r.DB.DeleteFlow(ctx, flow.ID); err != nil {
+	flow, err = r.DB.DeleteFlow(ctx, flow.ID)
+	if err != nil {
 		return model.ResultTypeError, err
 	}
 
@@ -2962,6 +2988,9 @@ func (r *subscriptionResolver) KnowledgeDocumentDeleted(ctx context.Context) (<-
 	return sub.KnowledgeDocumentDeleted(ctx)
 }
 
+// Flow returns FlowResolver implementation.
+func (r *Resolver) Flow() FlowResolver { return &flowResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
@@ -2971,6 +3000,7 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Subscription returns SubscriptionResolver implementation.
 func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
 
+type flowResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }

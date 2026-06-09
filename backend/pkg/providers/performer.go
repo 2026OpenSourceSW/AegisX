@@ -103,6 +103,7 @@ func (fp *flowProvider) performAgentChain(
 			maxCallsLimit = max(fp.maxLACallsLimit, maxAgentShutdownIterations*2)
 		}
 	}
+	maxCallsLimit = fp.maxAgentCallsForTask(ctx, optAgentType, taskID, maxCallsLimit)
 
 	for iteration := 0; ; iteration++ {
 		if iteration >= maxCallsLimit {

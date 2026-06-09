@@ -41,6 +41,7 @@ type Config struct {
 }
 
 type ResolverRoot interface {
+	Flow() FlowResolver
 	Mutation() MutationResolver
 	Query() QueryResolver
 	Subscription() SubscriptionResolver
@@ -218,13 +219,14 @@ type ComplexityRoot struct {
 	}
 
 	Flow struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Provider  func(childComplexity int) int
-		Status    func(childComplexity int) int
-		Terminals func(childComplexity int) int
-		Title     func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		CreatedAt   func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Provider    func(childComplexity int) int
+		StateReason func(childComplexity int) int
+		Status      func(childComplexity int) int
+		Terminals   func(childComplexity int) int
+		Title       func(childComplexity int) int
+		UpdatedAt   func(childComplexity int) int
 	}
 
 	FlowAssistant struct {
@@ -734,6 +736,9 @@ type ComplexityRoot struct {
 	}
 }
 
+type FlowResolver interface {
+	StateReason(ctx context.Context, obj *model.Flow) (model.FlowStateReason, error)
+}
 type MutationResolver interface {
 	CreateFlow(ctx context.Context, modelProvider string, input string, resourceIds []int64) (*model.Flow, error)
 	PutUserInput(ctx context.Context, flowID int64, input string, modelProvider *string, resourceIds []int64) (model.ResultType, error)
@@ -1683,6 +1688,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Flow.Provider(childComplexity), true
+
+	case "Flow.stateReason":
+		if e.complexity.Flow.StateReason == nil {
+			break
+		}
+
+		return e.complexity.Flow.StateReason(childComplexity), true
 
 	case "Flow.status":
 		if e.complexity.Flow.Status == nil {
@@ -14127,6 +14139,50 @@ func (ec *executionContext) fieldContext_Flow_status(_ context.Context, field gr
 	return fc, nil
 }
 
+func (ec *executionContext) _Flow_stateReason(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Flow_stateReason(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Flow().StateReason(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.FlowStateReason)
+	fc.Result = res
+	return ec.marshalNFlowStateReason2pentagiᚋpkgᚋgraphᚋmodelᚐFlowStateReason(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Flow_stateReason(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Flow",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type FlowStateReason does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Flow_terminals(ctx context.Context, field graphql.CollectedField, obj *model.Flow) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Flow_terminals(ctx, field)
 	if err != nil {
@@ -14365,6 +14421,8 @@ func (ec *executionContext) fieldContext_FlowAssistant_flow(_ context.Context, f
 				return ec.fieldContext_Flow_title(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
+			case "stateReason":
+				return ec.fieldContext_Flow_stateReason(ctx, field)
 			case "terminals":
 				return ec.fieldContext_Flow_terminals(ctx, field)
 			case "provider":
@@ -17739,6 +17797,8 @@ func (ec *executionContext) fieldContext_Mutation_createFlow(ctx context.Context
 				return ec.fieldContext_Flow_title(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
+			case "stateReason":
+				return ec.fieldContext_Flow_stateReason(ctx, field)
 			case "terminals":
 				return ec.fieldContext_Flow_terminals(ctx, field)
 			case "provider":
@@ -22480,6 +22540,8 @@ func (ec *executionContext) fieldContext_Query_flows(_ context.Context, field gr
 				return ec.fieldContext_Flow_title(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
+			case "stateReason":
+				return ec.fieldContext_Flow_stateReason(ctx, field)
 			case "terminals":
 				return ec.fieldContext_Flow_terminals(ctx, field)
 			case "provider":
@@ -22540,6 +22602,8 @@ func (ec *executionContext) fieldContext_Query_flow(ctx context.Context, field g
 				return ec.fieldContext_Flow_title(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
+			case "stateReason":
+				return ec.fieldContext_Flow_stateReason(ctx, field)
 			case "terminals":
 				return ec.fieldContext_Flow_terminals(ctx, field)
 			case "provider":
@@ -26351,6 +26415,8 @@ func (ec *executionContext) fieldContext_Subscription_flowCreated(_ context.Cont
 				return ec.fieldContext_Flow_title(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
+			case "stateReason":
+				return ec.fieldContext_Flow_stateReason(ctx, field)
 			case "terminals":
 				return ec.fieldContext_Flow_terminals(ctx, field)
 			case "provider":
@@ -26425,6 +26491,8 @@ func (ec *executionContext) fieldContext_Subscription_flowDeleted(_ context.Cont
 				return ec.fieldContext_Flow_title(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
+			case "stateReason":
+				return ec.fieldContext_Flow_stateReason(ctx, field)
 			case "terminals":
 				return ec.fieldContext_Flow_terminals(ctx, field)
 			case "provider":
@@ -26499,6 +26567,8 @@ func (ec *executionContext) fieldContext_Subscription_flowUpdated(_ context.Cont
 				return ec.fieldContext_Flow_title(ctx, field)
 			case "status":
 				return ec.fieldContext_Flow_status(ctx, field)
+			case "stateReason":
+				return ec.fieldContext_Flow_stateReason(ctx, field)
 			case "terminals":
 				return ec.fieldContext_Flow_terminals(ctx, field)
 			case "provider":
@@ -37679,34 +37749,70 @@ func (ec *executionContext) _Flow(ctx context.Context, sel ast.SelectionSet, obj
 		case "id":
 			out.Values[i] = ec._Flow_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "title":
 			out.Values[i] = ec._Flow_title(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "status":
 			out.Values[i] = ec._Flow_status(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "stateReason":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Flow_stateReason(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "terminals":
 			out.Values[i] = ec._Flow_terminals(ctx, field, obj)
 		case "provider":
 			out.Values[i] = ec._Flow_provider(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "createdAt":
 			out.Values[i] = ec._Flow_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		case "updatedAt":
 			out.Values[i] = ec._Flow_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				out.Invalids++
+				atomic.AddUint32(&out.Invalids, 1)
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -42667,6 +42773,16 @@ func (ec *executionContext) marshalNFlowFile2ᚖpentagiᚋpkgᚋgraphᚋmodelᚐ
 		return graphql.Null
 	}
 	return ec._FlowFile(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNFlowStateReason2pentagiᚋpkgᚋgraphᚋmodelᚐFlowStateReason(ctx context.Context, v interface{}) (model.FlowStateReason, error) {
+	var res model.FlowStateReason
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNFlowStateReason2pentagiᚋpkgᚋgraphᚋmodelᚐFlowStateReason(ctx context.Context, sel ast.SelectionSet, v model.FlowStateReason) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNFlowStats2pentagiᚋpkgᚋgraphᚋmodelᚐFlowStats(ctx context.Context, sel ast.SelectionSet, v model.FlowStats) graphql.Marshaler {

@@ -30,7 +30,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Form, FormControl, FormField } from '@/components/ui/form';
 import {
     InputGroup,
     InputGroupAddon,
@@ -39,9 +39,8 @@ import {
     InputGroupTextareaAutosize,
 } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AssistantAgentsControl } from '@/features/flows/assistant-agents-control';
 import { useResourcesUpload } from '@/features/resources/use-resources-upload';
 import { cn } from '@/lib/utils';
 import { getProviderDisplayName } from '@/models/provider';
@@ -63,9 +62,11 @@ export interface FlowFormProps {
     isLoading?: boolean;
     isProviderDisabled?: boolean;
     isSubmitting?: boolean;
+    isTemplatePickerDisabled?: boolean;
     onCancel?: () => Promise<void> | void;
     onSubmit: (values: FlowFormValues) => Promise<void> | void;
     placeholder?: string;
+    shouldSyncMessageOnDefaultChange?: boolean;
     submitLabel?: string;
     type: 'assistant' | 'automation';
 }
@@ -79,9 +80,11 @@ export function FlowForm({
     isLoading,
     isProviderDisabled,
     isSubmitting,
+    isTemplatePickerDisabled = false,
     onCancel,
     onSubmit,
     placeholder = 'AegisX가 점검할 내용을 입력하세요...',
+    shouldSyncMessageOnDefaultChange = false,
     submitLabel,
     type,
 }: FlowFormProps) {
@@ -253,7 +256,25 @@ export function FlowForm({
     const isFormDisabled = isDisabled || isLoading || isSubmitting || isCanceling;
 
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const previousDefaultMessageRef = useRef(defaultValues?.message);
     const previousFormDisabledRef = useRef(isFormDisabled);
+
+    useEffect(() => {
+        const nextDefaultMessage = defaultValues?.message;
+        const previousDefaultMessage = previousDefaultMessageRef.current;
+
+        previousDefaultMessageRef.current = nextDefaultMessage;
+
+        if (!shouldSyncMessageOnDefaultChange || nextDefaultMessage === undefined) {
+            return;
+        }
+
+        if (nextDefaultMessage === previousDefaultMessage || getValues('message') === nextDefaultMessage) {
+            return;
+        }
+
+        setValue('message', nextDefaultMessage, { shouldDirty: false, shouldValidate: true });
+    }, [defaultValues?.message, getValues, setValue, shouldSyncMessageOnDefaultChange]);
 
     useEffect(() => {
         const wasDisabled = previousFormDisabledRef.current;
@@ -313,6 +334,10 @@ export function FlowForm({
 
     const handleApplyTemplate = useCallback(
         (template: Template) => {
+            if (isTemplatePickerDisabled) {
+                return;
+            }
+
             const currentMessage = getValues('message')?.trim() ?? '';
 
             if (currentMessage.length > 0) {
@@ -323,7 +348,7 @@ export function FlowForm({
                 setTemplateSearch('');
             }
         },
-        [getValues, setValue],
+        [getValues, isTemplatePickerDisabled, setValue],
     );
 
     const handleConfirmReplaceTemplate = useCallback(() => {
@@ -340,55 +365,68 @@ export function FlowForm({
     // scrolled-list layout.
     const renderTemplatePickerInner = () => (
         <>
-            <DropdownMenuGroup className="-m-1 rounded-none p-0">
-                <InputGroup className="-mb-1 rounded-none border-0 shadow-none [&:has([data-slot=input-group-control]:focus-visible)]:border-0 [&:has([data-slot=input-group-control]:focus-visible)]:ring-0">
-                    <InputGroupInput
-                        onChange={(event) => setTemplateSearch(event.target.value)}
-                        onClick={(event) => event.stopPropagation()}
-                        onKeyDown={(event) => event.stopPropagation()}
-                        placeholder="검색..."
-                        value={templateSearch}
-                    />
-                    {templateSearch && (
-                        <InputGroupAddon align="inline-end">
-                            <InputGroupButton
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    setTemplateSearch('');
-                                }}
-                            >
-                                <X />
-                            </InputGroupButton>
-                        </InputGroupAddon>
-                    )}
-                </InputGroup>
-                <DropdownMenuSeparator />
-            </DropdownMenuGroup>
-            <DropdownMenuGroup className="max-h-64 overflow-y-auto">
-                {!filteredTemplates.length ? (
+            {isTemplatePickerDisabled ? (
+                <DropdownMenuGroup className="max-h-64 overflow-y-auto">
                     <DropdownMenuItem
-                        className="min-h-16 justify-center"
+                        className="min-h-16 justify-center text-center whitespace-normal"
                         disabled
                     >
-                        {templateSearch ? '검색 결과가 없습니다' : '사용 가능한 템플릿이 없습니다'}
+                        간편 모드에서는 안내 프롬프트를 자동으로 사용합니다.
                     </DropdownMenuItem>
-                ) : (
-                    filteredTemplates.map((template) => (
-                        <DropdownMenuItem
-                            key={template.id}
-                            onSelect={() => {
-                                if (isFormDisabled) {
-                                    return;
-                                }
+                </DropdownMenuGroup>
+            ) : (
+                <>
+                    <DropdownMenuGroup className="-m-1 rounded-none p-0">
+                        <InputGroup className="-mb-1 rounded-none border-0 shadow-none [&:has([data-slot=input-group-control]:focus-visible)]:border-0 [&:has([data-slot=input-group-control]:focus-visible)]:ring-0">
+                            <InputGroupInput
+                                onChange={(event) => setTemplateSearch(event.target.value)}
+                                onClick={(event) => event.stopPropagation()}
+                                onKeyDown={(event) => event.stopPropagation()}
+                                placeholder="검색..."
+                                value={templateSearch}
+                            />
+                            {templateSearch && (
+                                <InputGroupAddon align="inline-end">
+                                    <InputGroupButton
+                                        onClick={(event) => {
+                                            event.stopPropagation();
+                                            setTemplateSearch('');
+                                        }}
+                                    >
+                                        <X />
+                                    </InputGroupButton>
+                                </InputGroupAddon>
+                            )}
+                        </InputGroup>
+                        <DropdownMenuSeparator />
+                    </DropdownMenuGroup>
+                    <DropdownMenuGroup className="max-h-64 overflow-y-auto">
+                        {!filteredTemplates.length ? (
+                            <DropdownMenuItem
+                                className="min-h-16 justify-center"
+                                disabled
+                            >
+                                {templateSearch ? '검색 결과가 없습니다' : '사용 가능한 템플릿이 없습니다'}
+                            </DropdownMenuItem>
+                        ) : (
+                            filteredTemplates.map((template) => (
+                                <DropdownMenuItem
+                                    key={template.id}
+                                    onSelect={() => {
+                                        if (isFormDisabled) {
+                                            return;
+                                        }
 
-                                handleApplyTemplate(template);
-                            }}
-                        >
-                            <span className="max-w-80 flex-1 truncate">{template.title}</span>
-                        </DropdownMenuItem>
-                    ))
-                )}
-            </DropdownMenuGroup>
+                                        handleApplyTemplate(template);
+                                    }}
+                                >
+                                    <span className="max-w-80 flex-1 truncate">{template.title}</span>
+                                </DropdownMenuItem>
+                            ))
+                        )}
+                    </DropdownMenuGroup>
+                </>
+            )}
         </>
     );
 
@@ -651,34 +689,11 @@ export function FlowForm({
                                             control={control}
                                             name="useAgents"
                                             render={({ field: useAgentsField }) => (
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <FormItem className="flex flex-row items-center gap-0">
-                                                                <FormControl>
-                                                                    <Switch
-                                                                        checked={useAgentsField.value}
-                                                                        disabled={isFormDisabled}
-                                                                        onCheckedChange={useAgentsField.onChange}
-                                                                    />
-                                                                </FormControl>
-                                                                <FormLabel
-                                                                    className="flex cursor-pointer pl-2 text-xs font-normal"
-                                                                    onClick={() =>
-                                                                        useAgentsField.onChange(!useAgentsField.value)
-                                                                    }
-                                                                >
-                                                                    Agents 사용
-                                                                </FormLabel>
-                                                            </FormItem>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p className="max-w-48">
-                                                                복잡한 작업에 multi-agent 협업을 사용합니다.
-                                                            </p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
+                                                <AssistantAgentsControl
+                                                    checked={useAgentsField.value}
+                                                    disabled={isFormDisabled}
+                                                    onCheckedChange={useAgentsField.onChange}
+                                                />
                                             )}
                                         />
                                     )}
@@ -787,7 +802,7 @@ export function FlowForm({
                                         </InputGroupButton>
                                     ) : (
                                         <InputGroupButton
-                                            aria-label={isCanceling ? 'Cancelling…' : 'Cancel'}
+                                            aria-label={isCanceling ? '취소 중...' : '취소'}
                                             className="shrink-0"
                                             disabled={isCanceling || !onCancel}
                                             onClick={() => onCancel?.()}
@@ -815,10 +830,11 @@ export function FlowForm({
                 type="file"
             />
             <ConfirmationDialog
+                cancelText="취소"
                 confirmIcon={<FileSymlink />}
-                confirmText="Replace"
+                confirmText="교체"
                 confirmVariant="default"
-                description="Current message has content. Replace with the selected template?"
+                description="현재 메시지에 내용이 있습니다. 선택한 템플릿으로 교체할까요?"
                 handleConfirm={handleConfirmReplaceTemplate}
                 handleOpenChange={(open) => {
                     if (!open) {
@@ -828,7 +844,7 @@ export function FlowForm({
                     setIsReplaceConfirmOpen(open);
                 }}
                 isOpen={isReplaceConfirmOpen}
-                title="Replace content?"
+                title="내용을 교체할까요?"
             />
         </Form>
     );

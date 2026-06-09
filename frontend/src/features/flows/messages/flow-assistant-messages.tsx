@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import debounce from 'lodash/debounce';
 import { Check, ChevronDown, ListFilter, Loader2, Plus, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { z } from 'zod';
 
 import type { AssistantFragmentFragment, ProviderFragmentFragment } from '@/graphql/types';
@@ -81,18 +81,19 @@ function AssistantsDropdown({
             (accumulator, assistant, index) => {
                 const item = { assistant, index: index + 1 };
 
-                return {
-                    ...accumulator,
-                    active:
-                        assistant.status === StatusType.Running || assistant.status === StatusType.Waiting
-                            ? [...accumulator.active, item]
-                            : accumulator.active,
-                    failed: assistant.status === StatusType.Failed ? [...accumulator.failed, item] : accumulator.failed,
-                    finished:
-                        assistant.status === StatusType.Finished
-                            ? [...accumulator.finished, item]
-                            : accumulator.finished,
-                };
+                if (assistant.status === StatusType.Running || assistant.status === StatusType.Waiting) {
+                    accumulator.active.push(item);
+                }
+
+                if (assistant.status === StatusType.Failed) {
+                    accumulator.failed.push(item);
+                }
+
+                if (assistant.status === StatusType.Finished) {
+                    accumulator.finished.push(item);
+                }
+
+                return accumulator;
             },
             { active: [], failed: [], finished: [] },
         );
@@ -146,7 +147,7 @@ function AssistantsDropdown({
 
                 <div className="flex flex-1 items-center gap-2 overflow-hidden">
                     <span className="truncate text-sm">{assistant.title}</span>
-                    {!isValid && <span className="text-destructive shrink-0 text-xs">(unavailable)</span>}
+                    {!isValid && <span className="text-destructive shrink-0 text-xs">(사용 불가)</span>}
                 </div>
 
                 <Check
@@ -198,7 +199,7 @@ function AssistantsDropdown({
                             </>
                         ) : (
                             <span className="bg-muted text-muted-foreground flex h-5 shrink-0 items-center justify-center rounded px-1 text-xs font-medium">
-                                New
+                                새 대화
                             </span>
                         )}
                         <ChevronDown className="opacity-50" />
@@ -209,9 +210,9 @@ function AssistantsDropdown({
                     className="w-[400px] p-0"
                 >
                     <Command>
-                        <CommandInput placeholder="Search assistants..." />
+                        <CommandInput placeholder="어시스턴트 검색..." />
                         <CommandList>
-                            <CommandEmpty>No assistants found.</CommandEmpty>
+                            <CommandEmpty>어시스턴트를 찾을 수 없습니다.</CommandEmpty>
 
                             {!isDisabled && (
                                 <CommandGroup>
@@ -223,14 +224,13 @@ function AssistantsDropdown({
                                         }}
                                         value="create-new-assistant"
                                     >
-                                        <Plus />
-                                        Create new assistant
+                                        <Plus />새 어시스턴트 만들기
                                     </CommandItem>
                                 </CommandGroup>
                             )}
 
                             {assistantsGroup.active.length > 0 && (
-                                <CommandGroup heading={`Active (${assistantsGroup.active.length})`}>
+                                <CommandGroup heading={`진행 중 (${assistantsGroup.active.length})`}>
                                     {assistantsGroup.active.map(({ assistant, index }) =>
                                         renderAssistantItem(assistant, index),
                                     )}
@@ -238,7 +238,7 @@ function AssistantsDropdown({
                             )}
 
                             {assistantsGroup.finished.length > 0 && (
-                                <CommandGroup heading={`Finished (${assistantsGroup.finished.length})`}>
+                                <CommandGroup heading={`완료 (${assistantsGroup.finished.length})`}>
                                     {assistantsGroup.finished.map(({ assistant, index }) =>
                                         renderAssistantItem(assistant, index),
                                     )}
@@ -246,7 +246,7 @@ function AssistantsDropdown({
                             )}
 
                             {assistantsGroup.failed.length > 0 && (
-                                <CommandGroup heading={`Failed (${assistantsGroup.failed.length})`}>
+                                <CommandGroup heading={`실패 (${assistantsGroup.failed.length})`}>
                                     {assistantsGroup.failed.map(({ assistant, index }) =>
                                         renderAssistantItem(assistant, index),
                                     )}
@@ -258,14 +258,14 @@ function AssistantsDropdown({
             </Popover>
 
             <ConfirmationDialog
-                cancelText="Cancel"
-                confirmText="Delete"
+                cancelText="취소"
+                confirmText="삭제"
                 handleConfirm={handleConfirmDelete}
                 handleOpenChange={setDeleteDialogOpen}
                 isOpen={deleteDialogOpen}
                 itemName={currentAssistant?.title}
-                itemType="assistant"
-                title="Delete Assistant"
+                itemType="어시스턴트"
+                title="어시스턴트 삭제"
             />
         </>
     );
@@ -320,7 +320,7 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
         resolver: zodResolver(searchFormSchema),
     });
 
-    const searchValue = form.watch('search');
+    const searchValue = useWatch({ control: form.control, name: 'search' });
 
     const debouncedUpdateSearch = useMemo(
         () =>
@@ -345,8 +345,9 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
     }, [debouncedUpdateSearch]);
 
     useEffect(() => {
+        void flowId;
         form.reset({ search: '' });
-        setDebouncedSearchValue('');
+        queueMicrotask(() => setDebouncedSearchValue(''));
         debouncedUpdateSearch.cancel();
     }, [flowId, form, debouncedUpdateSearch]);
 
@@ -380,8 +381,8 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
         return selectedAssistantLogs.filter(
             (log) =>
                 log.message.toLowerCase().includes(search) ||
-                (log.result && log.result.toLowerCase().includes(search)) ||
-                (log.thinking && log.thinking.toLowerCase().includes(search)),
+                log.result?.toLowerCase().includes(search) ||
+                log.thinking?.toLowerCase().includes(search),
         );
     }, [selectedAssistantLogs, debouncedSearchValue]);
 
@@ -448,40 +449,40 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
 
     const placeholder = useMemo(() => {
         if (!flowId) {
-            return 'Select a flow...';
+            return '점검 내역을 선택하세요.';
         }
 
         if (isAssistantCreating) {
-            return 'Creating assistant...';
+            return '어시스턴트를 생성하는 중입니다.';
         }
 
         if (!selectedAssistant?.status) {
-            return 'Type a message to create a new assistant...';
+            return '새 어시스턴트를 만들려면 메시지를 입력하세요.';
         }
 
         switch (selectedAssistant.status) {
             case StatusType.Created: {
-                return 'Assistant is starting...';
+                return '어시스턴트를 시작하는 중입니다.';
             }
 
             case StatusType.Failed:
             case StatusType.Finished: {
-                return 'This assistant session has ended. Create a new one to continue.';
+                return '종료된 어시스턴트 세션입니다. 계속하려면 새로 생성하세요.';
             }
 
             case StatusType.Running: {
-                return 'Assistant is running... Click Stop to interrupt';
+                return '어시스턴트가 실행 중입니다. 중지하려면 중지 버튼을 누르세요.';
             }
 
             case StatusType.Waiting: {
-                return 'Continue the conversation...';
+                return '대화를 이어서 입력하세요.';
             }
 
             default: {
-                return 'Type your message...';
+                return '메시지를 입력하세요.';
             }
         }
-    }, [flowId, isAssistantCreating, selectedAssistant?.status]);
+    }, [flowId, isAssistantCreating, selectedAssistant]);
 
     const assistantStatus = selectedAssistant?.status;
     const isFormDisabled =
@@ -524,7 +525,7 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
                                                 {...field}
                                                 autoComplete="off"
                                                 disabled={isAssistantCreating}
-                                                placeholder="Search messages..."
+                                                placeholder="메시지 검색..."
                                                 type="text"
                                             />
                                             {field.value && (
@@ -557,8 +558,8 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
                         <EmptyMedia variant="icon">
                             <Loader2 className="animate-spin" />
                         </EmptyMedia>
-                        <EmptyTitle>Creating assistant...</EmptyTitle>
-                        <EmptyDescription>Please wait while we set up your new assistant</EmptyDescription>
+                        <EmptyTitle>어시스턴트를 생성하는 중입니다</EmptyTitle>
+                        <EmptyDescription>새 어시스턴트를 준비하는 동안 잠시 기다려 주세요</EmptyDescription>
                     </EmptyHeader>
                 </Empty>
             ) : selectedAssistantId ? (
@@ -599,8 +600,8 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
                             <EmptyMedia variant="icon">
                                 <ListFilter />
                             </EmptyMedia>
-                            <EmptyTitle>No messages found</EmptyTitle>
-                            <EmptyDescription>Try adjusting your search or filter parameters</EmptyDescription>
+                            <EmptyTitle>검색 결과가 없습니다</EmptyTitle>
+                            <EmptyDescription>검색어나 필터 조건을 조정해 보세요</EmptyDescription>
                         </EmptyHeader>
                         <EmptyContent>
                             <Button
@@ -608,7 +609,7 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
                                 variant="outline"
                             >
                                 <X />
-                                Reset filters
+                                필터 초기화
                             </Button>
                         </EmptyContent>
                     </Empty>
@@ -618,8 +619,8 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
                             <EmptyMedia variant="icon">
                                 <Plus />
                             </EmptyMedia>
-                            <EmptyTitle>No messages</EmptyTitle>
-                            <EmptyDescription>No messages found for this assistant</EmptyDescription>
+                            <EmptyTitle>메시지가 없습니다</EmptyTitle>
+                            <EmptyDescription>이 어시스턴트의 메시지를 찾을 수 없습니다</EmptyDescription>
                         </EmptyHeader>
                     </Empty>
                 )
@@ -629,8 +630,8 @@ function FlowAssistantMessages({ className }: FlowAssistantMessagesProps) {
                         <EmptyMedia variant="icon">
                             <Plus />
                         </EmptyMedia>
-                        <EmptyTitle>New assistant</EmptyTitle>
-                        <EmptyDescription>Type a message below to create a new assistant...</EmptyDescription>
+                        <EmptyTitle>새 어시스턴트</EmptyTitle>
+                        <EmptyDescription>아래에 메시지를 입력해 새 어시스턴트를 생성하세요</EmptyDescription>
                     </EmptyHeader>
                 </Empty>
             )}

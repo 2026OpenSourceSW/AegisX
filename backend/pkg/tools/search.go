@@ -236,15 +236,15 @@ func (s *search) Handle(ctx context.Context, name string, args json.RawMessage) 
 		}
 		opts := []langfuse.EventOption{
 			langfuse.WithEventName("store search answer to vector store"),
-			langfuse.WithEventInput(action.Question),
+			langfuse.WithEventInput(anonymizedQuestion),
 			langfuse.WithEventOutput(anonymizedAnswer),
 			langfuse.WithEventMetadata(eventMetadata),
 		}
 
 		logger = logger.WithFields(logrus.Fields{
-			"query":       action.Question[:min(len(action.Question), 1000)],
+			"query":       anonymizedQuestion[:min(len(anonymizedQuestion), 1000)],
 			"answer_type": action.Type,
-			"answer":      action.Answer[:min(len(action.Answer), 1000)],
+			"answer":      anonymizedAnswer[:min(len(anonymizedAnswer), 1000)],
 		})
 
 		// Build common metadata for the document.
@@ -373,9 +373,9 @@ func (s *search) Handle(ctx context.Context, name string, args json.RawMessage) 
 				agentCtx.ParentAgentType,
 				agentCtx.CurrentAgentType,
 				filtersData,
-				action.Question,
+				anonymizedQuestion,
 				database.VecstoreActionTypeStore,
-				action.Answer,
+				anonymizedAnswer,
 				s.taskID,
 				s.subtaskID,
 			)

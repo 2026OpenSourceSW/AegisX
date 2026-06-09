@@ -230,6 +230,20 @@ To signal that the task is complete, remove all remaining planned subtasks.
 - Task complete (remove all remaining planned subtasks):
   `[{"op": "remove", "id": 43}, {"op": "remove", "id": 44}, {"op": "remove", "id": 45}]`
 
+{{if .QuickScanEnabled}}
+## QUICK SCAN PROFILE
+
+- Marker: {{.QuickScanMarker}}
+- Time budget: {{.QuickScanBudgetMinutes}}
+- Max subtasks: {{.QuickScanMaxSubtasks}}
+- Agent call caps: general {{.QuickScanMaxGeneralAgentToolCalls}}, limited {{.QuickScanMaxLimitedAgentToolCalls}}
+- Post-exploitation disabled: {{.QuickScanDisablePostExploit}}
+{{range .QuickScanRules}}- {{.}}
+{{end}}
+
+Quick scan refiner rule: do not add broad new subtasks. Finish when available evidence is enough, or add at most one narrow follow-up within {{.QuickScanBudgetMinutes}}. Mark unresolved scope as "추가 정밀 점검 필요".
+{{end}}
+
 ## OUTPUT REQUIREMENTS
 
 You MUST complete your refinement by using the "{{.SubtaskPatchToolName}}" tool with:

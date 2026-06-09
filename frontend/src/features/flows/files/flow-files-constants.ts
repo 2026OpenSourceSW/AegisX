@@ -9,9 +9,9 @@ export const RESOURCES_PATH_PREFIX = 'resources';
 export const CONTAINER_PATH_PREFIX = 'container';
 
 export const ROOT_GROUPS: FileManagerRootGroup[] = [
-    { defaultOpen: true, icon: FolderUp, id: 'uploads', label: 'Uploads', pathPrefix: UPLOADS_PATH_PREFIX },
-    { defaultOpen: true, icon: Folder, id: 'resources', label: 'Resources', pathPrefix: RESOURCES_PATH_PREFIX },
-    { defaultOpen: true, icon: HardDrive, id: 'container', label: 'Container', pathPrefix: CONTAINER_PATH_PREFIX },
+    { defaultOpen: true, icon: FolderUp, id: 'uploads', label: '업로드', pathPrefix: UPLOADS_PATH_PREFIX },
+    { defaultOpen: true, icon: Folder, id: 'resources', label: '자료', pathPrefix: RESOURCES_PATH_PREFIX },
+    { defaultOpen: true, icon: HardDrive, id: 'container', label: '컨테이너', pathPrefix: CONTAINER_PATH_PREFIX },
 ];
 
 export const FLOW_FILES_API_PATH = (flowId: string) => `/flows/${flowId}/files/`;

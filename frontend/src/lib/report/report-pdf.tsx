@@ -3,14 +3,22 @@ import { marked } from 'marked';
 
 import { Log } from '@/lib/log';
 
+import {
+    ensurePdfVectorFontsLoaded,
+    getPublicFontSource,
+    type PdfVectorTextRun,
+    renderPdfVectorTextRuns,
+    type VectorFontFamily,
+} from './report-pdf-vector-text';
+
 // Register Noto Sans (covers Latin + Cyrillic + Greek + many other scripts)
 Font.register({
     family: 'NotoSans',
     fonts: [
-        { fontStyle: 'normal', fontWeight: 'normal', src: '/fonts/NotoSans-Regular.ttf' },
-        { fontStyle: 'normal', fontWeight: 'bold', src: '/fonts/NotoSans-Bold.ttf' },
-        { fontStyle: 'italic', fontWeight: 'normal', src: '/fonts/NotoSans-Italic.ttf' },
-        { fontStyle: 'italic', fontWeight: 'bold', src: '/fonts/NotoSans-BoldItalic.ttf' },
+        { fontStyle: 'normal', fontWeight: 'normal', src: getPublicFontSource('NotoSans-Regular.ttf') },
+        { fontStyle: 'normal', fontWeight: 'bold', src: getPublicFontSource('NotoSans-Bold.ttf') },
+        { fontStyle: 'italic', fontWeight: 'normal', src: getPublicFontSource('NotoSans-Italic.ttf') },
+        { fontStyle: 'italic', fontWeight: 'bold', src: getPublicFontSource('NotoSans-BoldItalic.ttf') },
     ],
 });
 
@@ -18,57 +26,144 @@ Font.register({
 Font.register({
     family: 'NotoSansMono',
     fonts: [
-        { fontStyle: 'normal', fontWeight: 'normal', src: '/fonts/NotoSansMono-Regular.ttf' },
-        { fontStyle: 'normal', fontWeight: 'bold', src: '/fonts/NotoSansMono-Bold.ttf' },
+        { fontStyle: 'normal', fontWeight: 'normal', src: getPublicFontSource('NotoSansMono-Regular.ttf') },
+        { fontStyle: 'normal', fontWeight: 'bold', src: getPublicFontSource('NotoSansMono-Bold.ttf') },
     ],
 });
 
-// Register Noto Sans SC (Simplified Chinese, covers CJK + Latin)
 Font.register({
     family: 'NotoSansSC',
     fonts: [
-        { fontStyle: 'normal', fontWeight: 'normal', src: '/fonts/NotoSansSC-Regular.otf' },
-        { fontStyle: 'normal', fontWeight: 'bold', src: '/fonts/NotoSansSC-Bold.otf' },
+        { fontStyle: 'normal', fontWeight: 'normal', src: getPublicFontSource('NotoSansSC-Regular.otf') },
+        { fontStyle: 'normal', fontWeight: 'bold', src: getPublicFontSource('NotoSansSC-Bold.otf') },
+    ],
+});
+
+Font.register({
+    family: 'AegisXReportKR',
+    fonts: [
+        { fontStyle: 'normal', fontWeight: 'normal', src: getPublicFontSource('AegisXReportKR-Regular.ttf') },
+        { fontStyle: 'normal', fontWeight: 'bold', src: getPublicFontSource('AegisXReportKR-Bold.ttf') },
     ],
 });
 
 // Disable word hyphenation (breaks CJK and Cyrillic incorrectly)
 Font.registerHyphenationCallback((word) => [word]);
 
-// Regex that matches any CJK unified ideographs or CJK punctuation/fullwidth chars
-const CJK_RE = /[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]+/g;
+const HANGUL_RE = /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF]/u;
+const CJK_RE =
+    /[\u1100-\u11FF\u3130-\u318F\uA960-\uA97F\uAC00-\uD7AF\uD7B0-\uD7FF\u3040-\u30FF\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF01-\uFF60\uFFE0-\uFFE6]/u;
+
+const hasCJKText = (text: string): boolean => CJK_RE.test(text);
+const PDF_CONTENT_WIDTH = 515;
+const PDF_CODE_BLOCK_WIDTH = 495;
+const PDF_LIST_CONTENT_WIDTH = 455;
+
+const hasCJKInlineTokens = (tokens: readonly InlineToken[]): boolean => {
+    return tokens.some((token) => hasCJKText(token.text));
+};
+
+export const getPdfVectorFontFamilyForCharacter = (character: string, preferMono = false): VectorFontFamily => {
+    if (preferMono && !hasCJKText(character)) {
+        return 'mono';
+    }
+
+    if (HANGUL_RE.test(character)) {
+        return 'korean';
+    }
+
+    if (CJK_RE.test(character)) {
+        return 'cjk';
+    }
+
+    return preferMono ? 'mono' : 'korean';
+};
+
+const appendVectorRun = (runs: PdfVectorTextRun[], run: PdfVectorTextRun): PdfVectorTextRun[] => {
+    const previous = runs.at(-1);
+
+    if (previous && previous.bold === run.bold && previous.color === run.color && previous.family === run.family) {
+        return [...runs.slice(0, -1), { ...previous, text: `${previous.text}${run.text}` }];
+    }
+
+    return [...runs, run];
+};
+
+const textToVectorRuns = (text: string, color: string, bold: boolean, preferMono = false): PdfVectorTextRun[] => {
+    return Array.from(text).reduce<PdfVectorTextRun[]>((runs, character) => {
+        return appendVectorRun(runs, {
+            bold,
+            color,
+            family: getPdfVectorFontFamilyForCharacter(character, preferMono),
+            text: character,
+        });
+    }, []);
+};
+
+const inlineTokensToVectorRuns = (
+    tokens: readonly InlineToken[],
+    defaultColor: string,
+    defaultBold = false,
+): PdfVectorTextRun[] => {
+    return tokens.flatMap((token) =>
+        textToVectorRuns(
+            token.text,
+            token.code ? '#dc2626' : token.link ? '#2563eb' : defaultColor,
+            defaultBold || !!token.bold || !!token.code,
+            !!token.code,
+        ),
+    );
+};
+
+const renderInlineTokensAsVectorText = (
+    tokens: readonly InlineToken[],
+    keyPrefix: string,
+    fontSize: number,
+    defaultColor: string,
+    maxWidth = PDF_CONTENT_WIDTH,
+    lineHeight = 1.5,
+    defaultBold = false,
+) => {
+    return renderPdfVectorTextRuns(inlineTokensToVectorRuns(tokens, defaultColor, defaultBold), {
+        fontSize,
+        keyPrefix,
+        lineHeight,
+        maxWidth,
+    });
+};
 
 interface TextSegment {
     isCJK: boolean;
     text: string;
 }
 
-/**
- * Splits a string into alternating non-CJK and CJK segments so each segment
- * can be rendered with the appropriate font family.
- */
-const splitByCJK = (text: string): TextSegment[] => {
-    const segments: TextSegment[] = [];
-    let lastIndex = 0;
+export const splitTextForPdfFonts = (text: string): TextSegment[] => {
+    return [{ isCJK: CJK_RE.test(text), text }];
+};
 
-    CJK_RE.lastIndex = 0;
-
-    let match: null | RegExpExecArray;
-
-    while ((match = CJK_RE.exec(text)) !== null) {
-        if (match.index > lastIndex) {
-            segments.push({ isCJK: false, text: text.slice(lastIndex, match.index) });
-        }
-
-        segments.push({ isCJK: true, text: match[0] });
-        lastIndex = match.index + match[0].length;
+export const getPdfFontFamilyForTextRun = (
+    text: string,
+    baseFamily: string,
+    boldFamily: string,
+    bold = false,
+): string => {
+    if (HANGUL_RE.test(text)) {
+        return 'AegisXReportKR';
     }
 
-    if (lastIndex < text.length) {
-        segments.push({ isCJK: false, text: text.slice(lastIndex) });
+    if (CJK_RE.test(text)) {
+        return 'NotoSansSC';
     }
 
-    return segments.length > 0 ? segments : [{ isCJK: false, text }];
+    return bold ? boldFamily : baseFamily;
+};
+
+export const createPdfNodeKey = (base: string, occurrences: Map<string, number>): string => {
+    const occurrence = (occurrences.get(base) ?? 0) + 1;
+
+    occurrences.set(base, occurrence);
+
+    return `${base}-${occurrence}`;
 };
 
 const pdfStyles = StyleSheet.create({
@@ -188,7 +283,50 @@ const pdfStyles = StyleSheet.create({
         color: '#475569',
         lineHeight: 1.6,
         marginBottom: 8,
-        textAlign: 'justify',
+        textAlign: 'left',
+    },
+    table: {
+        borderColor: '#cbd5e1',
+        borderLeftWidth: 1,
+        borderTopWidth: 1,
+        marginBottom: 10,
+        marginTop: 6,
+        width: '100%',
+    },
+    tableCell: {
+        borderBottomWidth: 1,
+        borderColor: '#cbd5e1',
+        borderRightWidth: 1,
+        flex: 1,
+        paddingBottom: 5,
+        paddingHorizontal: 6,
+        paddingTop: 5,
+    },
+    tableCellText: {
+        color: '#334155',
+        fontSize: 8.5,
+        lineHeight: 1.35,
+    },
+    tableHeaderCell: {
+        backgroundColor: '#f1f5f9',
+        borderBottomWidth: 1,
+        borderColor: '#cbd5e1',
+        borderRightWidth: 1,
+        flex: 1,
+        paddingBottom: 5,
+        paddingHorizontal: 6,
+        paddingTop: 5,
+    },
+    tableHeaderText: {
+        color: '#0f172a',
+        fontSize: 8.5,
+        fontWeight: 'bold',
+        lineHeight: 1.35,
+    },
+    tableRow: {
+        alignItems: 'stretch',
+        flexDirection: 'row',
+        width: '100%',
     },
 });
 
@@ -208,7 +346,12 @@ const emojiMap: Record<string, string> = {
     '🔍': '[SEARCH]',
     '🔐': '[SEC]',
     '🔧': '[TOOL]',
+    '🔴': '[HIGH]',
     '🚀': '[START]',
+    '🟡': '[MEDIUM]',
+    '🟢': '[LOW]',
+    ℹ️: '[INFO]',
+    ℹ: '[INFO]',
 };
 
 const replaceEmojis = (text: string): string => {
@@ -231,12 +374,20 @@ interface InlineToken {
 }
 
 interface ParsedContent {
+    align?: Array<'center' | 'left' | 'right' | null>;
     content?: string;
+    header?: ParsedTableCell[];
     inlineTokens?: InlineToken[];
     items?: Array<{ inlineTokens: InlineToken[]; raw: string }>;
     level?: number;
     ordered?: boolean;
+    rows?: ParsedTableCell[][];
     type: string;
+}
+
+interface ParsedTableCell {
+    inlineTokens: InlineToken[];
+    raw: string;
 }
 
 const parseInlineTokens = (text: string): InlineToken[] => {
@@ -317,7 +468,19 @@ const parseInlineTokens = (text: string): InlineToken[] => {
     return tokens;
 };
 
-const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
+const parseTableCell = (cell: unknown): ParsedTableCell => {
+    const text =
+        typeof cell === 'object' && cell !== null && 'text' in cell
+            ? String((cell as { readonly text?: unknown }).text || '')
+            : String(cell || '');
+
+    return {
+        inlineTokens: parseInlineTokens(text),
+        raw: text,
+    };
+};
+
+export const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
     const tokens = marked.lexer(markdown);
     const result: ParsedContent[] = [];
 
@@ -371,6 +534,27 @@ const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
                 break;
             }
 
+            case 'table': {
+                const header = (Array.isArray(token.header) ? token.header : []).map(parseTableCell);
+                const rows = (Array.isArray(token.rows) ? token.rows : [])
+                    .map((row) => (Array.isArray(row) ? row.map(parseTableCell) : []))
+                    .filter((row) => row.length > 0);
+                const align = (Array.isArray(token.align) ? token.align : []).map((value) => {
+                    return value === 'center' || value === 'left' || value === 'right' ? value : null;
+                });
+
+                if (header.length > 0 || rows.length > 0) {
+                    result.push({
+                        align,
+                        header,
+                        rows,
+                        type: 'table',
+                    });
+                }
+
+                break;
+            }
+
             default: {
                 if ('text' in token && typeof token.text === 'string') {
                     result.push({
@@ -382,16 +566,13 @@ const parseMarkdownTokens = (markdown: string): ParsedContent[] => {
         }
     };
 
-    tokens.forEach((token) => processToken(token as Record<string, unknown>));
+    tokens.forEach((token) => {
+        processToken(token as Record<string, unknown>);
+    });
 
     return result;
 };
 
-/**
- * Splits CJK segments out so each chunk renders with the matching font family —
- * Noto Sans for Latin/Cyrillic, Noto Sans SC for CJK. CJK fonts have no true italic
- * variant, so italic is dropped for those segments.
- */
 const renderTextWithCJK = (
     text: string,
     baseFamily: string,
@@ -400,17 +581,23 @@ const renderTextWithCJK = (
     bold = false,
     italic = false,
 ) => {
-    const segments = splitByCJK(text);
+    const segments = splitTextForPdfFonts(text);
 
     if (segments.length === 1 && !segments[0]?.isCJK) {
         return text;
     }
 
-    return segments.map((seg, idx) => {
-        const family = seg.isCJK ? (bold ? 'NotoSansSC' : 'NotoSansSC') : bold ? boldFamily : baseFamily;
+    const segmentOccurrences = new Map<string, number>();
+
+    return segments.map((seg) => {
+        const segmentKey = createPdfNodeKey(
+            `${keyPrefix}-cjk-${seg.isCJK ? 'cjk' : 'base'}-${seg.text}`,
+            segmentOccurrences,
+        );
+        const family = getPdfFontFamilyForTextRun(seg.text, baseFamily, boldFamily, bold);
         const style: Record<string, string> = { fontFamily: family };
 
-        if (bold && !seg.isCJK) {
+        if (bold) {
             style.fontWeight = 'bold';
         }
 
@@ -420,7 +607,7 @@ const renderTextWithCJK = (
 
         return (
             <Text
-                key={`${keyPrefix}-cjk-${idx}`}
+                key={segmentKey}
                 style={style}
             >
                 {seg.text}
@@ -430,8 +617,14 @@ const renderTextWithCJK = (
 };
 
 const renderInlineTokens = (tokens: InlineToken[], keyPrefix: string) => {
-    return tokens.map((token, idx) => {
+    const tokenOccurrences = new Map<string, number>();
+
+    return tokens.map((token) => {
         const textContent = token.text;
+        const tokenKey = createPdfNodeKey(
+            `${keyPrefix}-inline-${token.type}-${token.text}-${token.bold ? 'bold' : 'regular'}-${token.italic ? 'italic' : 'upright'}-${token.code ? 'code' : 'text'}-${token.link ?? 'plain'}`,
+            tokenOccurrences,
+        );
 
         const appliedStyles = [];
 
@@ -443,7 +636,7 @@ const renderInlineTokens = (tokens: InlineToken[], keyPrefix: string) => {
             appliedStyles.push(pdfStyles.bold);
         }
 
-        if (token.italic) {
+        if (token.italic && !hasCJKText(textContent)) {
             appliedStyles.push(pdfStyles.italic);
         }
 
@@ -456,19 +649,12 @@ const renderInlineTokens = (tokens: InlineToken[], keyPrefix: string) => {
             const isItalic = !!token.italic;
             const isCode = !!token.code;
             const rendered = isCode
-                ? textContent
-                : renderTextWithCJK(
-                      textContent,
-                      'NotoSans',
-                      'NotoSans',
-                      `${keyPrefix}-inline-${idx}`,
-                      isBold,
-                      isItalic,
-                  );
+                ? renderTextWithCJK(textContent, 'NotoSansMono', 'NotoSansMono', tokenKey, true)
+                : renderTextWithCJK(textContent, 'NotoSans', 'NotoSans', tokenKey, isBold, isItalic);
 
             return (
                 <Text
-                    key={`${keyPrefix}-inline-${idx}`}
+                    key={tokenKey}
                     style={appliedStyles}
                 >
                     {rendered}
@@ -476,31 +662,138 @@ const renderInlineTokens = (tokens: InlineToken[], keyPrefix: string) => {
             );
         }
 
-        const rendered = renderTextWithCJK(textContent, 'NotoSans', 'NotoSans', `${keyPrefix}-inline-${idx}`);
+        const rendered = renderTextWithCJK(textContent, 'NotoSans', 'NotoSans', tokenKey);
 
         if (typeof rendered === 'string') {
             return rendered;
         }
 
-        return <Text key={`${keyPrefix}-inline-${idx}`}>{rendered}</Text>;
+        return <Text key={tokenKey}>{rendered}</Text>;
     });
 };
 
+const getContentKey = (item: ParsedContent, fallback: string): string => {
+    if (item.content) {
+        return `${item.type}-${item.content}`;
+    }
+
+    if (item.inlineTokens && item.inlineTokens.length > 0) {
+        return `${item.type}-${item.inlineTokens.map((token) => token.text).join('-')}`;
+    }
+
+    if (item.items && item.items.length > 0) {
+        return `${item.type}-${item.items.map((listItem) => listItem.raw).join('-')}`;
+    }
+
+    if ((item.header && item.header.length > 0) || (item.rows && item.rows.length > 0)) {
+        return `${item.type}-${item.header?.map((cell) => cell.raw).join('-') ?? ''}-${item.rows?.map((row) => row.map((cell) => cell.raw).join('-')).join('-') ?? ''}`;
+    }
+
+    return fallback;
+};
+
+const emptyTableCell: ParsedTableCell = {
+    inlineTokens: [{ text: ' ', type: 'text' }],
+    raw: '',
+};
+
+const getTableColumnCount = (item: ParsedContent): number => {
+    return Math.max(item.header?.length ?? 0, ...(item.rows ?? []).map((row) => row.length), 1);
+};
+
+const normalizeTableRow = (row: readonly ParsedTableCell[], columnCount: number): ParsedTableCell[] => {
+    return Array.from({ length: columnCount }, (_, index) => row[index] ?? emptyTableCell);
+};
+
+const renderTableCell = (
+    cell: ParsedTableCell,
+    contentKey: string,
+    columnCount: number,
+    isHeader: boolean,
+    align: 'center' | 'left' | 'right' | null,
+) => {
+    const maxWidth = Math.max(42, PDF_CONTENT_WIDTH / columnCount - 14);
+    const color = isHeader ? '#0f172a' : '#334155';
+    const cellStyle = isHeader ? pdfStyles.tableHeaderCell : pdfStyles.tableCell;
+
+    if (hasCJKInlineTokens(cell.inlineTokens)) {
+        return (
+            <View
+                key={contentKey}
+                style={cellStyle}
+            >
+                {renderInlineTokensAsVectorText(
+                    cell.inlineTokens,
+                    `${contentKey}-table-vector`,
+                    8.5,
+                    color,
+                    maxWidth,
+                    1.35,
+                    isHeader,
+                )}
+            </View>
+        );
+    }
+
+    return (
+        <View
+            key={contentKey}
+            style={cellStyle}
+        >
+            <Text
+                style={[isHeader ? pdfStyles.tableHeaderText : pdfStyles.tableCellText, { textAlign: align ?? 'left' }]}
+            >
+                {renderInlineTokens(cell.inlineTokens, contentKey)}
+            </Text>
+        </View>
+    );
+};
+
 const renderPDFContent = (parsed: ParsedContent[]) => {
+    const contentOccurrences = new Map<string, number>();
+
     const elements = parsed
-        .map((item, index) => {
+        .map((item) => {
+            const contentKey = createPdfNodeKey(getContentKey(item, item.type), contentOccurrences);
+
             switch (item.type) {
                 case 'code': {
                     if (!item.content) {
                         return null;
                     }
 
+                    if (hasCJKText(item.content)) {
+                        const codeLines = item.content.split('\n');
+                        const codeLineOccurrences = new Map<string, number>();
+
+                        return (
+                            <View
+                                key={contentKey}
+                                style={pdfStyles.codeBlock}
+                            >
+                                {codeLines.map((line) => {
+                                    const lineKey = createPdfNodeKey(`${contentKey}-code-${line}`, codeLineOccurrences);
+
+                                    return renderPdfVectorTextRuns(
+                                        textToVectorRuns(line || ' ', '#e2e8f0', false, true),
+                                        {
+                                            fontSize: 8.5,
+                                            keyPrefix: lineKey,
+                                            lineHeight: 1.4,
+                                            maxWidth: PDF_CODE_BLOCK_WIDTH,
+                                        },
+                                    );
+                                })}
+                            </View>
+                        );
+                    }
+
                     return (
                         <Text
-                            key={`code-${index}`}
+                            key={contentKey}
                             style={pdfStyles.codeBlock}
                         >
-                            {item.content}
+                            {renderTextWithCJK(item.content, 'NotoSansMono', 'NotoSansMono', contentKey)}
                         </Text>
                     );
                 }
@@ -523,12 +816,56 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
                                     ? pdfStyles.h5
                                     : pdfStyles.h6;
 
+                    if (hasCJKInlineTokens(item.inlineTokens)) {
+                        const fontSize =
+                            item.level === 1
+                                ? 16
+                                : item.level === 2
+                                  ? 14
+                                  : item.level === 3
+                                    ? 13
+                                    : item.level === 4
+                                      ? 12
+                                      : item.level === 5
+                                        ? 11
+                                        : 10;
+                        const color =
+                            item.level === 1
+                                ? '#0f172a'
+                                : item.level === 2
+                                  ? '#1e293b'
+                                  : item.level === 3
+                                    ? '#334155'
+                                    : item.level === 4
+                                      ? '#475569'
+                                      : item.level === 5
+                                        ? '#64748b'
+                                        : '#94a3b8';
+
+                        return (
+                            <View
+                                key={contentKey}
+                                style={style}
+                            >
+                                {renderInlineTokensAsVectorText(
+                                    item.inlineTokens,
+                                    `${contentKey}-heading-vector`,
+                                    fontSize,
+                                    color,
+                                    PDF_CONTENT_WIDTH,
+                                    1.35,
+                                    true,
+                                )}
+                            </View>
+                        );
+                    }
+
                     return (
                         <Text
-                            key={`heading-${index}`}
+                            key={contentKey}
                             style={style}
                         >
-                            {renderInlineTokens(item.inlineTokens, `heading-${index}`)}
+                            {renderInlineTokens(item.inlineTokens, contentKey)}
                         </Text>
                     );
                 }
@@ -536,7 +873,7 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
                 case 'hr': {
                     return (
                         <View
-                            key={`hr-${index}`}
+                            key={contentKey}
                             style={pdfStyles.hr}
                         />
                     );
@@ -547,22 +884,43 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
                         return null;
                     }
 
+                    const listItemOccurrences = new Map<string, number>();
+
                     return (
                         <View
-                            key={`list-${index}`}
+                            key={contentKey}
                             style={pdfStyles.list}
                         >
-                            {item.items.map((listItem, li) => (
-                                <View
-                                    key={`li-${index}-${li}`}
-                                    style={pdfStyles.listItem}
-                                >
-                                    <Text style={pdfStyles.listBullet}>{item.ordered ? `${li + 1}.` : '•'}</Text>
-                                    <Text style={pdfStyles.listContent}>
-                                        {renderInlineTokens(listItem.inlineTokens, `li-${index}-${li}`)}
-                                    </Text>
-                                </View>
-                            ))}
+                            {item.items.map((listItem, li) => {
+                                const listItemKey = createPdfNodeKey(
+                                    `${contentKey}-li-${listItem.raw}`,
+                                    listItemOccurrences,
+                                );
+
+                                return (
+                                    <View
+                                        key={listItemKey}
+                                        style={pdfStyles.listItem}
+                                    >
+                                        <Text style={pdfStyles.listBullet}>{item.ordered ? `${li + 1}.` : '•'}</Text>
+                                        {hasCJKInlineTokens(listItem.inlineTokens) ? (
+                                            <View style={pdfStyles.listContent}>
+                                                {renderInlineTokensAsVectorText(
+                                                    listItem.inlineTokens,
+                                                    `${listItemKey}-list-vector`,
+                                                    10,
+                                                    '#334155',
+                                                    PDF_LIST_CONTENT_WIDTH,
+                                                )}
+                                            </View>
+                                        ) : (
+                                            <Text style={pdfStyles.listContent}>
+                                                {renderInlineTokens(listItem.inlineTokens, listItemKey)}
+                                            </Text>
+                                        )}
+                                    </View>
+                                );
+                            })}
                         </View>
                     );
                 }
@@ -572,13 +930,90 @@ const renderPDFContent = (parsed: ParsedContent[]) => {
                         return null;
                     }
 
+                    if (hasCJKInlineTokens(item.inlineTokens)) {
+                        return (
+                            <View
+                                key={contentKey}
+                                style={pdfStyles.paragraph}
+                            >
+                                {renderInlineTokensAsVectorText(
+                                    item.inlineTokens,
+                                    `${contentKey}-paragraph-vector`,
+                                    10,
+                                    '#475569',
+                                )}
+                            </View>
+                        );
+                    }
+
                     return (
                         <Text
-                            key={`para-${index}`}
+                            key={contentKey}
                             style={pdfStyles.paragraph}
                         >
-                            {renderInlineTokens(item.inlineTokens, `para-${index}`)}
+                            {renderInlineTokens(item.inlineTokens, contentKey)}
                         </Text>
+                    );
+                }
+
+                case 'table': {
+                    const columnCount = getTableColumnCount(item);
+                    const header = normalizeTableRow(item.header ?? [], columnCount);
+                    const rows = (item.rows ?? []).map((row) => normalizeTableRow(row, columnCount));
+                    const tableRowOccurrences = new Map<string, number>();
+
+                    return (
+                        <View
+                            key={contentKey}
+                            style={pdfStyles.table}
+                        >
+                            {header.length > 0 && (
+                                <View
+                                    key={`${contentKey}-header`}
+                                    style={pdfStyles.tableRow}
+                                >
+                                    {header.map((cell, cellIndex) => {
+                                        const cellKey = createPdfNodeKey(
+                                            `${contentKey}-header-${cellIndex}-${cell.raw}`,
+                                            tableRowOccurrences,
+                                        );
+
+                                        return renderTableCell(
+                                            cell,
+                                            cellKey,
+                                            columnCount,
+                                            true,
+                                            item.align?.[cellIndex] ?? null,
+                                        );
+                                    })}
+                                </View>
+                            )}
+                            {rows.map((row, rowIndex) => {
+                                const rowKey = createPdfNodeKey(`${contentKey}-row-${rowIndex}`, tableRowOccurrences);
+
+                                return (
+                                    <View
+                                        key={rowKey}
+                                        style={pdfStyles.tableRow}
+                                    >
+                                        {row.map((cell, cellIndex) => {
+                                            const cellKey = createPdfNodeKey(
+                                                `${rowKey}-cell-${cellIndex}-${cell.raw}`,
+                                                tableRowOccurrences,
+                                            );
+
+                                            return renderTableCell(
+                                                cell,
+                                                cellKey,
+                                                columnCount,
+                                                false,
+                                                item.align?.[cellIndex] ?? null,
+                                            );
+                                        })}
+                                    </View>
+                                );
+                            })}
+                        </View>
                     );
                 }
 
@@ -610,18 +1045,20 @@ function PDFReportDocument({ content }: { content: string }) {
 
 export const generatePDFFromMarkdownNew = async (content: string, fileName: string): Promise<void> => {
     try {
+        await ensurePdfVectorFontsLoaded();
+
         const doc = <PDFReportDocument content={content} />;
         const blob = await pdf(doc).toBlob();
 
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = `${fileName}.pdf`;
+        link.download = fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`;
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
         link.remove();
-        URL.revokeObjectURL(url);
+        window.setTimeout(() => URL.revokeObjectURL(url), 0);
     } catch (error) {
         Log.error('Failed to generate PDF:', error);
         throw error;
@@ -630,6 +1067,8 @@ export const generatePDFFromMarkdownNew = async (content: string, fileName: stri
 
 export const generatePDFBlobNew = async (content: string): Promise<Blob> => {
     try {
+        await ensurePdfVectorFontsLoaded();
+
         const doc = <PDFReportDocument content={content} />;
 
         return await pdf(doc).toBlob();

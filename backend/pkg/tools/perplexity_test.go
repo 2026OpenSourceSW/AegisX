@@ -479,7 +479,7 @@ func TestPerplexityHandle_StatusCodeErrors(t *testing.T) {
 }
 
 func TestPerplexityDefaultValues(t *testing.T) {
-	px := &perplexity{cfg: &config.Config{}}
+	px := &perplexity{cfg: &config.Config{HTTPClientTimeout: 600}}
 
 	if px.model() != perplexityModel {
 		t.Errorf("default model = %q, want %q", px.model(), perplexityModel)

@@ -94,7 +94,7 @@ export function KnowledgeContentField({
             name="content"
             render={({ field }) => (
                 <FormItem className={fillParent ? 'flex min-h-0 flex-1 flex-col' : undefined}>
-                    {showLabel ? <FormLabel>Content</FormLabel> : null}
+                    {showLabel ? <FormLabel>지식 내용</FormLabel> : null}
                     <FormControl>
                         <MarkdownEditor
                             className={fillParent ? 'min-h-0 flex-1' : 'min-h-[280px]'}
@@ -102,7 +102,7 @@ export function KnowledgeContentField({
                             disabled={isSaving}
                             onBlur={field.onBlur}
                             onChange={field.onChange}
-                            placeholder="Knowledge content (will be embedded into the vector store)"
+                            placeholder="AegisX 에이전트가 참고할 지식 내용을 입력하세요"
                             value={field.value}
                         />
                     </FormControl>
@@ -149,7 +149,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                     name="docType"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Document type</FormLabel>
+                            <FormLabel>문서 유형</FormLabel>
                             <Select
                                 disabled={isSaving}
                                 onValueChange={(value) =>
@@ -159,7 +159,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                             >
                                 <FormControl>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select type" />
+                                        <SelectValue placeholder="유형 선택" />
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
@@ -184,7 +184,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                         name="guideType"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Guide type</FormLabel>
+                                <FormLabel>가이드 유형</FormLabel>
                                 <Select
                                     disabled={isSaving}
                                     onValueChange={field.onChange}
@@ -192,7 +192,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                                 >
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select guide type" />
+                                            <SelectValue placeholder="가이드 유형 선택" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -218,7 +218,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                         name="answerType"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Answer type</FormLabel>
+                                <FormLabel>답변 유형</FormLabel>
                                 <Select
                                     disabled={isSaving}
                                     onValueChange={field.onChange}
@@ -226,7 +226,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                                 >
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select answer type" />
+                                            <SelectValue placeholder="답변 유형 선택" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -252,7 +252,7 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                         name="codeLang"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Code language</FormLabel>
+                                <FormLabel>코드 언어</FormLabel>
                                 {/*
                                  * `Autocomplete` is a free-text input with a
                                  * suggestion popover — the backend accepts any
@@ -269,12 +269,12 @@ export function KnowledgeMetaFields({ control, isNew, isSaving }: KnowledgeMetaF
                                             maxLength={KNOWLEDGE_LIMITS.codeLang}
                                             name={field.name}
                                             onBlur={field.onBlur}
-                                            placeholder="e.g. python, go, typescript"
+                                            placeholder="예: python, go, typescript"
                                             ref={field.ref}
                                         />
                                     </FormControl>
                                     <AutocompleteContent>
-                                        <AutocompleteEmpty>No matching language</AutocompleteEmpty>
+                                        <AutocompleteEmpty>일치하는 언어가 없습니다</AutocompleteEmpty>
                                         <AutocompleteGroup>
                                             {LANGUAGES.map((lang) => (
                                                 <AutocompleteItem

@@ -175,4 +175,18 @@ Your deliverable must be:
 - Comprehensive enough to address the original query
 - Optimized for both human and system processing
 
+{{if .QuickScanEnabled}}
+## QUICK SCAN PROFILE
+
+- Marker: {{.QuickScanMarker}}
+- Time budget: {{.QuickScanBudgetMinutes}}
+- Max subtasks: {{.QuickScanMaxSubtasks}}
+- Agent call caps: general {{.QuickScanMaxGeneralAgentToolCalls}}, limited {{.QuickScanMaxLimitedAgentToolCalls}}
+- Post-exploitation disabled: {{.QuickScanDisablePostExploit}}
+{{range .QuickScanRules}}- {{.}}
+{{end}}
+
+Quick scan search rule: run at most two targeted searches. If search/API calls are slow or incomplete, return the best available evidence and mark the gap as "추가 확인 필요".
+{{end}}
+
 {{.ToolPlaceholder}}

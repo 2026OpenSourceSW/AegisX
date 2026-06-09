@@ -3,15 +3,18 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { ThemeProvider } from '@/providers/theme-provider';
 
 import Dashboard from './dashboard';
 
 function renderDashboard() {
     render(
         <MemoryRouter>
-            <SidebarProvider>
-                <Dashboard />
-            </SidebarProvider>
+            <ThemeProvider>
+                <SidebarProvider>
+                    <Dashboard />
+                </SidebarProvider>
+            </ThemeProvider>
         </MemoryRouter>,
     );
 }
@@ -27,7 +30,7 @@ describe('Dashboard', () => {
             'href',
             '/flows/new?mode=simple',
         );
-        expect(screen.getByRole('link', { name: /Expert Mode 열기/ })).toHaveAttribute(
+        expect(screen.getByRole('link', { name: /Expert Mode 시작/ })).toHaveAttribute(
             'href',
             '/flows/new?mode=expert',
         );

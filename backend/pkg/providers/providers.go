@@ -451,6 +451,7 @@ func (pc *providerController) NewFlowProvider(
 	fp := &flowProvider{
 		db:              pc.db,
 		mx:              &sync.RWMutex{},
+		cfg:             pc.cfg,
 		embedder:        pc.embedder,
 		graphitiClient:  pc.graphitiClient,
 		flowID:          flowID,
@@ -503,6 +504,7 @@ func (pc *providerController) LoadFlowProvider(
 	fp := &flowProvider{
 		db:              pc.db,
 		mx:              &sync.RWMutex{},
+		cfg:             pc.cfg,
 		embedder:        pc.embedder,
 		graphitiClient:  pc.graphitiClient,
 		flowID:          flowID,
@@ -600,6 +602,7 @@ func (pc *providerController) NewAssistantProvider(
 		fp: flowProvider{
 			db:              pc.db,
 			mx:              &sync.RWMutex{},
+			cfg:             pc.cfg,
 			embedder:        pc.embedder,
 			graphitiClient:  pc.graphitiClient,
 			flowID:          flowID,
@@ -655,6 +658,7 @@ func (pc *providerController) LoadAssistantProvider(
 		fp: flowProvider{
 			db:              pc.db,
 			mx:              &sync.RWMutex{},
+			cfg:             pc.cfg,
 			embedder:        pc.embedder,
 			graphitiClient:  pc.graphitiClient,
 			flowID:          flowID,

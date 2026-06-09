@@ -131,7 +131,7 @@ export function KnowledgeHeader({
                 content: knowledge.content,
                 question: newQuestion,
             });
-            toast.success('Knowledge renamed successfully');
+            toast.success('지식 문서 이름을 변경했습니다');
             handleRenameCancel();
         } catch {
             // Error already handled in provider with toast
@@ -179,7 +179,7 @@ export function KnowledgeHeader({
                                         inputRef={editingInputRef}
                                         onCancel={handleRenameCancel}
                                         onSave={handleRenameSave}
-                                        placeholder="Knowledge question"
+                                        placeholder="지식 질문"
                                     />
                                 ) : canShowActions ? (
                                     <Tooltip>
@@ -188,14 +188,14 @@ export function KnowledgeHeader({
                                                 className="max-w-64 min-w-0 cursor-text truncate select-none"
                                                 onDoubleClick={handleRenameStart}
                                             >
-                                                {knowledgeName ?? 'Knowledge'}
+                                                {knowledgeName ?? '지식'}
                                             </BreadcrumbPage>
                                         </TooltipTrigger>
-                                        <TooltipContent>Double-click to rename</TooltipContent>
+                                        <TooltipContent>두 번 클릭해서 이름 변경</TooltipContent>
                                     </Tooltip>
                                 ) : (
                                     <BreadcrumbPage className="min-w-0 truncate">
-                                        {isNew ? 'New knowledge' : (knowledgeName ?? 'Knowledge')}
+                                        {isNew ? '새 지식 문서' : (knowledgeName ?? '지식')}
                                     </BreadcrumbPage>
                                 )}
                             </BreadcrumbItem>
@@ -208,14 +208,14 @@ export function KnowledgeHeader({
                             controller={knowledgeNav}
                             renderItem={renderKnowledgeItem}
                             sheetIcon={<LibraryBig className="size-4" />}
-                            sheetTitle="Knowledges"
+                            sheetTitle="지식"
                         />
                     )}
                     {canAnonymize && !isMobile && (
                         <HeaderButton
                             disabled={isAnonymizeDisabled}
                             icon={isAnonymizing ? <Spinner variant="circle" /> : <HatGlasses aria-hidden="true" />}
-                            label="Anonymize"
+                            label="익명화"
                             onClick={onAnonymize}
                             type="button"
                             variant="outline"
@@ -226,7 +226,7 @@ export function KnowledgeHeader({
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
-                                    aria-label="Knowledge actions"
+                                    aria-label="지식 작업"
                                     className="size-8 p-0"
                                     type="button"
                                     variant="ghost"
@@ -248,12 +248,12 @@ export function KnowledgeHeader({
                                             {isAnonymizing ? (
                                                 <>
                                                     <Loader2 className="size-4 animate-spin" />
-                                                    Anonymizing...
+                                                    익명화 중...
                                                 </>
                                             ) : (
                                                 <>
                                                     <HatGlasses className="size-4" />
-                                                    Anonymize
+                                                    익명화
                                                 </>
                                             )}
                                         </DropdownMenuItem>
@@ -267,11 +267,11 @@ export function KnowledgeHeader({
                                             onSelect={(event) => event.preventDefault()}
                                         >
                                             <LibraryBig className="size-4" />
-                                            Knowledges
+                                            지식
                                             <div className="-my-1.5 -mr-2 ml-auto flex items-center">
                                                 <DetailNavigationButtons<Knowledge>
                                                     controller={knowledgeNav}
-                                                    sheetTitle="Knowledges"
+                                                    sheetTitle="지식"
                                                     size="sm"
                                                 />
                                             </div>
@@ -283,7 +283,7 @@ export function KnowledgeHeader({
                                     <>
                                         <DropdownMenuItem onClick={handleRenameStart}>
                                             <Pencil className="size-3" />
-                                            Rename
+                                            이름 변경
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
@@ -293,12 +293,12 @@ export function KnowledgeHeader({
                                             {isDeleting ? (
                                                 <>
                                                     <Loader2 className="size-4 animate-spin" />
-                                                    Deleting...
+                                                    삭제 중...
                                                 </>
                                             ) : (
                                                 <>
                                                     <Trash className="size-4" />
-                                                    Delete
+                                                    삭제
                                                 </>
                                             )}
                                         </DropdownMenuItem>
@@ -314,17 +314,17 @@ export function KnowledgeHeader({
                     controller={knowledgeNav}
                     renderItem={renderKnowledgeItem}
                     sheetIcon={<LibraryBig className="size-4" />}
-                    sheetTitle="Knowledges"
+                    sheetTitle="지식"
                 />
             )}
             <ConfirmationDialog
-                cancelText="Cancel"
-                confirmText="Delete"
+                cancelText="취소"
+                confirmText="삭제"
                 handleConfirm={handleDelete}
                 handleOpenChange={setIsDeleteDialogOpen}
                 isOpen={isDeleteDialogOpen}
                 itemName={knowledgeName ?? undefined}
-                itemType="knowledge document"
+                itemType="지식 문서"
             />
         </>
     );

@@ -11,7 +11,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"pentagi/pkg/config"
 	"pentagi/pkg/database"
@@ -807,14 +806,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		return nil, fmt.Errorf("failed to get container %d: %w", fte.flowID, err)
 	}
 
-	term := NewTerminalTool(
-		fte.flowID, nil, nil,
-		container.ID,
-		container.LocalID.String,
-		fte.docker,
-		fte.tlp,
-		time.Duration(fte.cfg.TerminalToolTimeout)*time.Second,
-	)
+	term := fte.newTerminalToolForTask(nil, nil, container)
 
 	definitions := []llms.FunctionDefinition{
 		registryDefinitions[TerminalToolName],
@@ -831,6 +823,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(nil)),
 	)
 	if browser.IsAvailable() {
 		definitions = append(definitions, registryDefinitions[BrowserToolName])
@@ -853,6 +846,8 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		handlers[PentesterToolName] = cfg.Pentester
 		handlers[SearchToolName] = cfg.Searcher
 	} else {
+		toolCfg := fte.toolConfigForTask(nil)
+
 		memory := NewMemoryTool(
 			fte.flowID,
 			fte.store,
@@ -909,7 +904,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		}
 
 		google := NewGoogleTool(
-			fte.cfg,
+			toolCfg,
 			fte.flowID, nil, nil,
 			fte.slp,
 		)
@@ -919,7 +914,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		}
 
 		duckduckgo := NewDuckDuckGoTool(
-			fte.cfg,
+			toolCfg,
 			fte.flowID, nil, nil,
 			fte.slp,
 		)
@@ -929,7 +924,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		}
 
 		tavily := NewTavilyTool(
-			fte.cfg,
+			toolCfg,
 			fte.flowID, nil, nil,
 			fte.slp,
 			cfg.Summarizer,
@@ -940,7 +935,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		}
 
 		traversaal := NewTraversaalTool(
-			fte.cfg,
+			toolCfg,
 			fte.flowID, nil, nil,
 			fte.slp,
 		)
@@ -950,7 +945,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		}
 
 		perplexity := NewPerplexityTool(
-			fte.cfg,
+			toolCfg,
 			fte.flowID, nil, nil,
 			fte.slp,
 			cfg.Summarizer,
@@ -961,7 +956,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		}
 
 		searxng := NewSearxngTool(
-			fte.cfg,
+			toolCfg,
 			fte.flowID, nil, nil,
 			fte.slp,
 			cfg.Summarizer,
@@ -972,7 +967,7 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 		}
 
 		sploitus := NewSploitusTool(
-			fte.cfg,
+			toolCfg,
 			fte.flowID, nil, nil,
 			fte.slp,
 		)
@@ -1027,24 +1022,53 @@ func (fte *flowToolsExecutor) GetAssistantExecutor(cfg AssistantExecutorConfig) 
 	return ce, nil
 }
 
+func executorDefinitionsForToolNames(names []string) []llms.FunctionDefinition {
+	definitions := make([]llms.FunctionDefinition, 0, len(names))
+	for _, name := range names {
+		definitions = append(definitions, registryDefinitions[name])
+	}
+
+	return definitions
+}
+
+func executorHandlersForToolNames(names []string, available map[string]ExecutorHandler) map[string]ExecutorHandler {
+	handlers := make(map[string]ExecutorHandler, len(names))
+	for _, name := range names {
+		handlers[name] = available[name]
+	}
+
+	return handlers
+}
+
+func executorBarriersForToolNames(names []string) map[string]struct{} {
+	barriers := make(map[string]struct{}, len(names))
+	for _, name := range names {
+		barriers[name] = struct{}{}
+	}
+
+	return barriers
+}
+
 func (fte *flowToolsExecutor) GetPrimaryExecutor(cfg PrimaryExecutorConfig) (ContextToolsExecutor, error) {
+	quickScanEnabled := fte.quickScanProfileForTask(&cfg.TaskID).Enabled
+
 	if cfg.Barrier == nil {
 		return nil, fmt.Errorf("barrier (done) handler is required")
 	}
 
-	if cfg.Adviser == nil {
+	if !quickScanEnabled && cfg.Adviser == nil {
 		return nil, fmt.Errorf("adviser handler is required")
 	}
 
-	if cfg.Coder == nil {
+	if !quickScanEnabled && cfg.Coder == nil {
 		return nil, fmt.Errorf("coder handler is required")
 	}
 
-	if cfg.Installer == nil {
+	if !quickScanEnabled && cfg.Installer == nil {
 		return nil, fmt.Errorf("installer handler is required")
 	}
 
-	if cfg.Memorist == nil {
+	if !quickScanEnabled && cfg.Memorist == nil {
 		return nil, fmt.Errorf("memorist handler is required")
 	}
 
@@ -1056,44 +1080,32 @@ func (fte *flowToolsExecutor) GetPrimaryExecutor(cfg PrimaryExecutorConfig) (Con
 		return nil, fmt.Errorf("searcher handler is required")
 	}
 
-	ce := &customExecutor{
-		userID:    fte.userID,
-		flowID:    fte.flowID,
-		taskID:    &cfg.TaskID,
-		subtaskID: &cfg.SubtaskID,
-		mlp:       fte.mlp,
-		tclp:      fte.tclp,
-		vslp:      fte.vslp,
-		db:        fte.db,
-		store:     fte.store,
-		definitions: []llms.FunctionDefinition{
-			registryDefinitions[FinalyToolName],
-			registryDefinitions[AdviceToolName],
-			registryDefinitions[CoderToolName],
-			registryDefinitions[MaintenanceToolName],
-			registryDefinitions[MemoristToolName],
-			registryDefinitions[PentesterToolName],
-			registryDefinitions[SearchToolName],
-		},
-		handlers: map[string]ExecutorHandler{
-			FinalyToolName:      cfg.Barrier,
-			AdviceToolName:      cfg.Adviser,
-			CoderToolName:       cfg.Coder,
-			MaintenanceToolName: cfg.Installer,
-			MemoristToolName:    cfg.Memorist,
-			PentesterToolName:   cfg.Pentester,
-			SearchToolName:      cfg.Searcher,
-		},
-		barriers: map[string]struct{}{
-			FinalyToolName: {},
-		},
-		summarizer: cfg.Summarizer,
+	handlerByName := map[string]ExecutorHandler{
+		FinalyToolName:      cfg.Barrier,
+		AdviceToolName:      cfg.Adviser,
+		CoderToolName:       cfg.Coder,
+		MaintenanceToolName: cfg.Installer,
+		MemoristToolName:    cfg.Memorist,
+		PentesterToolName:   cfg.Pentester,
+		SearchToolName:      cfg.Searcher,
+		AskUserToolName:     cfg.Barrier,
 	}
+	toolNames := primaryExecutorToolNames(quickScanEnabled, fte.cfg.AskUser)
 
-	if fte.cfg.AskUser {
-		ce.definitions = append(ce.definitions, registryDefinitions[AskUserToolName])
-		ce.handlers[AskUserToolName] = cfg.Barrier
-		ce.barriers[AskUserToolName] = struct{}{}
+	ce := &customExecutor{
+		userID:      fte.userID,
+		flowID:      fte.flowID,
+		taskID:      &cfg.TaskID,
+		subtaskID:   &cfg.SubtaskID,
+		mlp:         fte.mlp,
+		tclp:        fte.tclp,
+		vslp:        fte.vslp,
+		db:          fte.db,
+		store:       fte.store,
+		definitions: executorDefinitionsForToolNames(toolNames),
+		handlers:    executorHandlersForToolNames(toolNames, handlerByName),
+		barriers:    executorBarriersForToolNames(primaryExecutorBarrierNames(quickScanEnabled, fte.cfg.AskUser)),
+		summarizer:  cfg.Summarizer,
 	}
 
 	return ce, nil
@@ -1121,16 +1133,7 @@ func (fte *flowToolsExecutor) GetInstallerExecutor(cfg InstallerExecutorConfig) 
 		return nil, fmt.Errorf("failed to get container %d: %w", fte.flowID, err)
 	}
 
-	term := NewTerminalTool(
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		container.ID,
-		container.LocalID.String,
-		fte.docker,
-		fte.tlp,
-		time.Duration(fte.cfg.TerminalToolTimeout)*time.Second,
-	)
+	term := fte.newTerminalToolForTask(cfg.TaskID, cfg.SubtaskID, container)
 
 	ce := &customExecutor{
 		userID:    fte.userID,
@@ -1172,6 +1175,7 @@ func (fte *flowToolsExecutor) GetInstallerExecutor(cfg InstallerExecutorConfig) 
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1227,16 +1231,7 @@ func (fte *flowToolsExecutor) GetCoderExecutor(cfg CoderExecutorConfig) (Context
 		return nil, fmt.Errorf("failed to get container %d: %w", fte.flowID, err)
 	}
 
-	term := NewTerminalTool(
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		container.ID,
-		container.LocalID.String,
-		fte.docker,
-		fte.tlp,
-		time.Duration(fte.cfg.TerminalToolTimeout)*time.Second,
-	)
+	term := fte.newTerminalToolForTask(cfg.TaskID, cfg.SubtaskID, container)
 
 	ce := &customExecutor{
 		userID:    fte.userID,
@@ -1280,6 +1275,7 @@ func (fte *flowToolsExecutor) GetCoderExecutor(cfg CoderExecutorConfig) (Context
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1321,23 +1317,25 @@ func (fte *flowToolsExecutor) GetCoderExecutor(cfg CoderExecutorConfig) (Context
 }
 
 func (fte *flowToolsExecutor) GetPentesterExecutor(cfg PentesterExecutorConfig) (ContextToolsExecutor, error) {
+	quickScanEnabled := fte.quickScanProfileForTask(cfg.TaskID).Enabled
+
 	if cfg.HackResult == nil {
 		return nil, fmt.Errorf("hack result handler is required")
 	}
 
-	if cfg.Adviser == nil {
+	if !quickScanEnabled && cfg.Adviser == nil {
 		return nil, fmt.Errorf("adviser handler is required")
 	}
 
-	if cfg.Coder == nil {
+	if !quickScanEnabled && cfg.Coder == nil {
 		return nil, fmt.Errorf("coder handler is required")
 	}
 
-	if cfg.Installer == nil {
+	if !quickScanEnabled && cfg.Installer == nil {
 		return nil, fmt.Errorf("installer handler is required")
 	}
 
-	if cfg.Memorist == nil {
+	if !quickScanEnabled && cfg.Memorist == nil {
 		return nil, fmt.Errorf("memorist handler is required")
 	}
 
@@ -1350,47 +1348,31 @@ func (fte *flowToolsExecutor) GetPentesterExecutor(cfg PentesterExecutorConfig) 
 		return nil, fmt.Errorf("failed to get container %d: %w", fte.flowID, err)
 	}
 
-	term := NewTerminalTool(
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		container.ID,
-		container.LocalID.String,
-		fte.docker,
-		fte.tlp,
-		time.Duration(fte.cfg.TerminalToolTimeout)*time.Second,
-	)
+	term := fte.newTerminalToolForTask(cfg.TaskID, cfg.SubtaskID, container)
+	handlerByName := map[string]ExecutorHandler{
+		HackResultToolName:  cfg.HackResult,
+		AdviceToolName:      cfg.Adviser,
+		CoderToolName:       cfg.Coder,
+		MaintenanceToolName: cfg.Installer,
+		MemoristToolName:    cfg.Memorist,
+		SearchToolName:      cfg.Searcher,
+		TerminalToolName:    term.Handle,
+		FileToolName:        term.Handle,
+	}
+	toolNames := pentesterExecutorToolNames(quickScanEnabled)
 
 	ce := &customExecutor{
-		userID:    fte.userID,
-		flowID:    fte.flowID,
-		taskID:    cfg.TaskID,
-		subtaskID: cfg.SubtaskID,
-		mlp:       fte.mlp,
-		tclp:      fte.tclp,
-		vslp:      fte.vslp,
-		db:        fte.db,
-		store:     fte.store,
-		definitions: []llms.FunctionDefinition{
-			registryDefinitions[HackResultToolName],
-			registryDefinitions[AdviceToolName],
-			registryDefinitions[CoderToolName],
-			registryDefinitions[MaintenanceToolName],
-			registryDefinitions[MemoristToolName],
-			registryDefinitions[SearchToolName],
-			registryDefinitions[TerminalToolName],
-			registryDefinitions[FileToolName],
-		},
-		handlers: map[string]ExecutorHandler{
-			HackResultToolName:  cfg.HackResult,
-			AdviceToolName:      cfg.Adviser,
-			CoderToolName:       cfg.Coder,
-			MaintenanceToolName: cfg.Installer,
-			MemoristToolName:    cfg.Memorist,
-			SearchToolName:      cfg.Searcher,
-			TerminalToolName:    term.Handle,
-			FileToolName:        term.Handle,
-		},
+		userID:      fte.userID,
+		flowID:      fte.flowID,
+		taskID:      cfg.TaskID,
+		subtaskID:   cfg.SubtaskID,
+		mlp:         fte.mlp,
+		tclp:        fte.tclp,
+		vslp:        fte.vslp,
+		db:          fte.db,
+		store:       fte.store,
+		definitions: executorDefinitionsForToolNames(toolNames),
+		handlers:    executorHandlersForToolNames(toolNames, handlerByName),
 		barriers: map[string]struct{}{
 			HackResultToolName: {},
 		},
@@ -1405,85 +1387,90 @@ func (fte *flowToolsExecutor) GetPentesterExecutor(cfg PentesterExecutorConfig) 
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
 		ce.handlers[BrowserToolName] = browser.Handle
 	}
 
-	guide := NewGuideTool(
-		fte.userID,
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		fte.replacer,
-		fte.store,
-		fte.embedder,
-		fte.db,
-		fte.cfg.EmbeddingMaxTextBytes,
-		fte.vslp,
-		fte.knp,
-	)
-	if guide.IsAvailable() {
-		ce.definitions = append(ce.definitions, registryDefinitions[StoreGuideToolName])
-		ce.definitions = append(ce.definitions, registryDefinitions[SearchGuideToolName])
-		ce.handlers[StoreGuideToolName] = guide.Handle
-		ce.handlers[SearchGuideToolName] = guide.Handle
-	}
+	if !quickScanEnabled {
+		guide := NewGuideTool(
+			fte.userID,
+			fte.flowID,
+			cfg.TaskID,
+			cfg.SubtaskID,
+			fte.replacer,
+			fte.store,
+			fte.embedder,
+			fte.db,
+			fte.cfg.EmbeddingMaxTextBytes,
+			fte.vslp,
+			fte.knp,
+		)
+		if guide.IsAvailable() {
+			ce.definitions = append(ce.definitions, registryDefinitions[StoreGuideToolName])
+			ce.definitions = append(ce.definitions, registryDefinitions[SearchGuideToolName])
+			ce.handlers[StoreGuideToolName] = guide.Handle
+			ce.handlers[SearchGuideToolName] = guide.Handle
+		}
 
-	graphitiSearch := NewGraphitiSearchTool(
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		fte.graphitiClient,
-	)
-	if graphitiSearch.IsAvailable() {
-		ce.definitions = append(ce.definitions, registryDefinitions[GraphitiSearchToolName])
-		ce.handlers[GraphitiSearchToolName] = graphitiSearch.Handle
-	}
+		graphitiSearch := NewGraphitiSearchTool(
+			fte.flowID,
+			cfg.TaskID,
+			cfg.SubtaskID,
+			fte.graphitiClient,
+		)
+		if graphitiSearch.IsAvailable() {
+			ce.definitions = append(ce.definitions, registryDefinitions[GraphitiSearchToolName])
+			ce.handlers[GraphitiSearchToolName] = graphitiSearch.Handle
+		}
 
-	sploitus := NewSploitusTool(
-		fte.cfg,
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		fte.slp,
-	)
-	if sploitus.IsAvailable() {
-		ce.definitions = append(ce.definitions, registryDefinitions[SploitusToolName])
-		ce.handlers[SploitusToolName] = sploitus.Handle
+		sploitus := NewSploitusTool(
+			fte.toolConfigForTask(cfg.TaskID),
+			fte.flowID,
+			cfg.TaskID,
+			cfg.SubtaskID,
+			fte.slp,
+		)
+		if sploitus.IsAvailable() {
+			ce.definitions = append(ce.definitions, registryDefinitions[SploitusToolName])
+			ce.handlers[SploitusToolName] = sploitus.Handle
+		}
 	}
 
 	return ce, nil
 }
 
 func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (ContextToolsExecutor, error) {
+	quickScanEnabled := fte.quickScanProfileForTask(cfg.TaskID).Enabled
+
 	if cfg.SearchResult == nil {
 		return nil, fmt.Errorf("search result handler is required")
 	}
 
-	if cfg.Memorist == nil {
+	if !quickScanEnabled && cfg.Memorist == nil {
 		return nil, fmt.Errorf("memorist handler is required")
 	}
 
+	handlerByName := map[string]ExecutorHandler{
+		SearchResultToolName: cfg.SearchResult,
+		MemoristToolName:     cfg.Memorist,
+	}
+	toolNames := searcherExecutorToolNames(quickScanEnabled)
+
 	ce := &customExecutor{
-		userID:    fte.userID,
-		flowID:    fte.flowID,
-		taskID:    cfg.TaskID,
-		subtaskID: cfg.SubtaskID,
-		mlp:       fte.mlp,
-		tclp:      fte.tclp,
-		vslp:      fte.vslp,
-		db:        fte.db,
-		store:     fte.store,
-		definitions: []llms.FunctionDefinition{
-			registryDefinitions[SearchResultToolName],
-			registryDefinitions[MemoristToolName],
-		},
-		handlers: map[string]ExecutorHandler{
-			SearchResultToolName: cfg.SearchResult,
-			MemoristToolName:     cfg.Memorist,
-		},
+		userID:      fte.userID,
+		flowID:      fte.flowID,
+		taskID:      cfg.TaskID,
+		subtaskID:   cfg.SubtaskID,
+		mlp:         fte.mlp,
+		tclp:        fte.tclp,
+		vslp:        fte.vslp,
+		db:          fte.db,
+		store:       fte.store,
+		definitions: executorDefinitionsForToolNames(toolNames),
+		handlers:    executorHandlersForToolNames(toolNames, handlerByName),
 		barriers: map[string]struct{}{
 			SearchResultToolName: {},
 		},
@@ -1498,6 +1485,7 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1505,7 +1493,7 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 	}
 
 	google := NewGoogleTool(
-		fte.cfg,
+		fte.toolConfigForTask(cfg.TaskID),
 		fte.flowID,
 		cfg.TaskID,
 		cfg.SubtaskID,
@@ -1517,7 +1505,7 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 	}
 
 	duckduckgo := NewDuckDuckGoTool(
-		fte.cfg,
+		fte.toolConfigForTask(cfg.TaskID),
 		fte.flowID,
 		cfg.TaskID,
 		cfg.SubtaskID,
@@ -1529,7 +1517,7 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 	}
 
 	tavily := NewTavilyTool(
-		fte.cfg,
+		fte.toolConfigForTask(cfg.TaskID),
 		fte.flowID,
 		cfg.TaskID,
 		cfg.SubtaskID,
@@ -1542,7 +1530,7 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 	}
 
 	traversaal := NewTraversaalTool(
-		fte.cfg,
+		fte.toolConfigForTask(cfg.TaskID),
 		fte.flowID,
 		cfg.TaskID,
 		cfg.SubtaskID,
@@ -1554,7 +1542,7 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 	}
 
 	perplexity := NewPerplexityTool(
-		fte.cfg,
+		fte.toolConfigForTask(cfg.TaskID),
 		fte.flowID,
 		cfg.TaskID,
 		cfg.SubtaskID,
@@ -1567,7 +1555,7 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 	}
 
 	searxng := NewSearxngTool(
-		fte.cfg,
+		fte.toolConfigForTask(cfg.TaskID),
 		fte.flowID,
 		cfg.TaskID,
 		cfg.SubtaskID,
@@ -1579,36 +1567,40 @@ func (fte *flowToolsExecutor) GetSearcherExecutor(cfg SearcherExecutorConfig) (C
 		ce.handlers[SearxngToolName] = searxng.Handle
 	}
 
-	sploitus := NewSploitusTool(
-		fte.cfg,
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		fte.slp,
-	)
-	if sploitus.IsAvailable() {
-		ce.definitions = append(ce.definitions, registryDefinitions[SploitusToolName])
-		ce.handlers[SploitusToolName] = sploitus.Handle
+	if searcherExecutorExploitSearchEnabled(quickScanEnabled) {
+		sploitus := NewSploitusTool(
+			fte.toolConfigForTask(cfg.TaskID),
+			fte.flowID,
+			cfg.TaskID,
+			cfg.SubtaskID,
+			fte.slp,
+		)
+		if sploitus.IsAvailable() {
+			ce.definitions = append(ce.definitions, registryDefinitions[SploitusToolName])
+			ce.handlers[SploitusToolName] = sploitus.Handle
+		}
 	}
 
-	search := NewSearchTool(
-		fte.userID,
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		fte.replacer,
-		fte.store,
-		fte.embedder,
-		fte.db,
-		fte.cfg.EmbeddingMaxTextBytes,
-		fte.vslp,
-		fte.knp,
-	)
-	if search.IsAvailable() {
-		ce.definitions = append(ce.definitions, registryDefinitions[SearchAnswerToolName])
-		ce.definitions = append(ce.definitions, registryDefinitions[StoreAnswerToolName])
-		ce.handlers[SearchAnswerToolName] = search.Handle
-		ce.handlers[StoreAnswerToolName] = search.Handle
+	memoryToolNames := searcherExecutorMemoryToolNames(quickScanEnabled)
+	if len(memoryToolNames) > 0 {
+		search := NewSearchTool(
+			fte.userID,
+			fte.flowID,
+			cfg.TaskID,
+			cfg.SubtaskID,
+			fte.replacer,
+			fte.store,
+			fte.embedder,
+			fte.db,
+			fte.cfg.EmbeddingMaxTextBytes,
+			fte.vslp,
+			fte.knp,
+		)
+		if search.IsAvailable() {
+			ce.definitions = append(ce.definitions, executorDefinitionsForToolNames(memoryToolNames)...)
+			ce.handlers[SearchAnswerToolName] = search.Handle
+			ce.handlers[StoreAnswerToolName] = search.Handle
+		}
 	}
 
 	return ce, nil
@@ -1628,16 +1620,7 @@ func (fte *flowToolsExecutor) GetGeneratorExecutor(cfg GeneratorExecutorConfig) 
 		return nil, fmt.Errorf("failed to get container %d: %w", fte.flowID, err)
 	}
 
-	term := NewTerminalTool(
-		fte.flowID,
-		&cfg.TaskID,
-		nil,
-		container.ID,
-		container.LocalID.String,
-		fte.docker,
-		fte.tlp,
-		time.Duration(fte.cfg.TerminalToolTimeout)*time.Second,
-	)
+	term := fte.newTerminalToolForTask(&cfg.TaskID, nil, container)
 
 	ce := &customExecutor{
 		userID: fte.userID,
@@ -1673,6 +1656,7 @@ func (fte *flowToolsExecutor) GetGeneratorExecutor(cfg GeneratorExecutorConfig) 
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(&cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1696,16 +1680,7 @@ func (fte *flowToolsExecutor) GetRefinerExecutor(cfg RefinerExecutorConfig) (Con
 		return nil, fmt.Errorf("failed to get container %d: %w", fte.flowID, err)
 	}
 
-	term := NewTerminalTool(
-		fte.flowID,
-		&cfg.TaskID,
-		nil,
-		container.ID,
-		container.LocalID.String,
-		fte.docker,
-		fte.tlp,
-		time.Duration(fte.cfg.TerminalToolTimeout)*time.Second,
-	)
+	term := fte.newTerminalToolForTask(&cfg.TaskID, nil, container)
 
 	ce := &customExecutor{
 		userID: fte.userID,
@@ -1741,6 +1716,7 @@ func (fte *flowToolsExecutor) GetRefinerExecutor(cfg RefinerExecutorConfig) (Con
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(&cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])
@@ -1760,16 +1736,7 @@ func (fte *flowToolsExecutor) GetMemoristExecutor(cfg MemoristExecutorConfig) (C
 		return nil, fmt.Errorf("failed to get container %d: %w", fte.flowID, err)
 	}
 
-	term := NewTerminalTool(
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		container.ID,
-		container.LocalID.String,
-		fte.docker,
-		fte.tlp,
-		time.Duration(fte.cfg.TerminalToolTimeout)*time.Second,
-	)
+	term := fte.newTerminalToolForTask(cfg.TaskID, cfg.SubtaskID, container)
 
 	ce := &customExecutor{
 		userID:    fte.userID,
@@ -1831,16 +1798,7 @@ func (fte *flowToolsExecutor) GetEnricherExecutor(cfg EnricherExecutorConfig) (C
 		return nil, fmt.Errorf("failed to get container %d: %w", fte.flowID, err)
 	}
 
-	term := NewTerminalTool(
-		fte.flowID,
-		cfg.TaskID,
-		cfg.SubtaskID,
-		container.ID,
-		container.LocalID.String,
-		fte.docker,
-		fte.tlp,
-		time.Duration(fte.cfg.TerminalToolTimeout)*time.Second,
-	)
+	term := fte.newTerminalToolForTask(cfg.TaskID, cfg.SubtaskID, container)
 
 	ce := &customExecutor{
 		userID:    fte.userID,
@@ -1897,6 +1855,7 @@ func (fte *flowToolsExecutor) GetEnricherExecutor(cfg EnricherExecutorConfig) (C
 		fte.cfg.ScraperPrivateURL,
 		fte.cfg.ScraperPublicURL,
 		fte.scp,
+		browserToolTimeout(fte.toolConfigForTask(cfg.TaskID)),
 	)
 	if browser.IsAvailable() {
 		ce.definitions = append(ce.definitions, registryDefinitions[BrowserToolName])

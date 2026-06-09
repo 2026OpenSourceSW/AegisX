@@ -189,6 +189,20 @@ Each subtask MUST:
 - The plan should account for multiple potential solution paths while remaining focused
 - Well-described subtasks with clear goals significantly increase likelihood of successful execution
 
+{{if .QuickScanEnabled}}
+## QUICK SCAN PROFILE
+
+- Marker: {{.QuickScanMarker}}
+- Time budget: {{.QuickScanBudgetMinutes}}
+- Max subtasks: {{.QuickScanMaxSubtasks}}
+- Agent call caps: general {{.QuickScanMaxGeneralAgentToolCalls}}, limited {{.QuickScanMaxLimitedAgentToolCalls}}
+- Post-exploitation disabled: {{.QuickScanDisablePostExploit}}
+{{range .QuickScanRules}}- {{.}}
+{{end}}
+
+Quick scan generator rule: create no more than {{.QuickScanMaxSubtasks}} subtask. Prefer one combined "external exposure snapshot + basic web response checks + concise findings" subtask. Do not plan broad exploit chains, package installation, long brute force, or memory expansion.
+{{end}}
+
 ## OUTPUT REQUIREMENTS
 
 You MUST complete your analysis by using the "{{.SubtaskListToolName}}" tool with:

@@ -124,6 +124,35 @@ func (q *Queries) GetFlow(ctx context.Context, id int64) (Flow, error) {
 	return i, err
 }
 
+const getFlowIncludingDeleted = `-- name: GetFlowIncludingDeleted :one
+SELECT
+  f.id, f.status, f.title, f.model, f.model_provider_name, f.language, f.functions, f.user_id, f.created_at, f.updated_at, f.deleted_at, f.trace_id, f.model_provider_type, f.tool_call_id_template
+FROM flows f
+WHERE f.id = $1
+`
+
+func (q *Queries) GetFlowIncludingDeleted(ctx context.Context, id int64) (Flow, error) {
+	row := q.db.QueryRowContext(ctx, getFlowIncludingDeleted, id)
+	var i Flow
+	err := row.Scan(
+		&i.ID,
+		&i.Status,
+		&i.Title,
+		&i.Model,
+		&i.ModelProviderName,
+		&i.Language,
+		&i.Functions,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.TraceID,
+		&i.ModelProviderType,
+		&i.ToolCallIDTemplate,
+	)
+	return i, err
+}
+
 const getFlowStats = `-- name: GetFlowStats :one
 
 SELECT
@@ -375,6 +404,41 @@ type GetUserFlowParams struct {
 
 func (q *Queries) GetUserFlow(ctx context.Context, arg GetUserFlowParams) (Flow, error) {
 	row := q.db.QueryRowContext(ctx, getUserFlow, arg.ID, arg.UserID)
+	var i Flow
+	err := row.Scan(
+		&i.ID,
+		&i.Status,
+		&i.Title,
+		&i.Model,
+		&i.ModelProviderName,
+		&i.Language,
+		&i.Functions,
+		&i.UserID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.DeletedAt,
+		&i.TraceID,
+		&i.ModelProviderType,
+		&i.ToolCallIDTemplate,
+	)
+	return i, err
+}
+
+const getUserFlowIncludingDeleted = `-- name: GetUserFlowIncludingDeleted :one
+SELECT
+  f.id, f.status, f.title, f.model, f.model_provider_name, f.language, f.functions, f.user_id, f.created_at, f.updated_at, f.deleted_at, f.trace_id, f.model_provider_type, f.tool_call_id_template
+FROM flows f
+INNER JOIN users u ON f.user_id = u.id
+WHERE f.id = $1 AND f.user_id = $2
+`
+
+type GetUserFlowIncludingDeletedParams struct {
+	ID     int64 `json:"id"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) GetUserFlowIncludingDeleted(ctx context.Context, arg GetUserFlowIncludingDeletedParams) (Flow, error) {
+	row := q.db.QueryRowContext(ctx, getUserFlowIncludingDeleted, arg.ID, arg.UserID)
 	var i Flow
 	err := row.Scan(
 		&i.ID,

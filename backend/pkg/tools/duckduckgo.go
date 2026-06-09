@@ -173,7 +173,7 @@ func (d *duckduckgo) search(ctx context.Context, query string, maxResults int) (
 		return "", fmt.Errorf("failed to create http client: %w", err)
 	}
 
-	client.Timeout = duckduckgoTimeout
+	client.Timeout = d.timeout()
 
 	// Execute request with retry logic
 	var response *searchResponse

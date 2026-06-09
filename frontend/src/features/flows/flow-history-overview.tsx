@@ -15,31 +15,31 @@ export function FlowHistoryOverview({ flows }: FlowHistoryOverviewProps) {
     const metrics = [
         {
             icon: <GitFork className="size-4" />,
-            label: 'Total',
+            label: '전체',
             value: summary.total,
             variant: 'text-primary',
         },
         {
             icon: <Activity className="size-4" />,
-            label: 'Active',
+            label: '진행 중',
             value: summary.active,
             variant: 'text-blue-600',
         },
         {
             icon: <Clock3 className="size-4" />,
-            label: 'Waiting',
+            label: '대기 중',
             value: summary.waiting,
             variant: 'text-yellow-600',
         },
         {
             icon: <CheckCircle2 className="size-4" />,
-            label: 'Finished',
+            label: '완료',
             value: summary.finished,
             variant: 'text-green-600',
         },
         {
             icon: <TriangleAlert className="size-4" />,
-            label: 'Failed',
+            label: '실패',
             value: summary.failed,
             variant: 'text-red-600',
         },

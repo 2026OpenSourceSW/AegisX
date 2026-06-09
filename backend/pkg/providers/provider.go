@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 
 	"pentagi/pkg/cast"
+	"pentagi/pkg/config"
 	"pentagi/pkg/csum"
 	"pentagi/pkg/database"
 	"pentagi/pkg/docker"
@@ -128,8 +129,9 @@ type subtasksInfo struct {
 }
 
 type flowProvider struct {
-	db database.Querier
-	mx *sync.RWMutex
+	db  database.Querier
+	mx  *sync.RWMutex
+	cfg *config.Config
 
 	embedder       embeddings.Embedder
 	graphitiClient *graphiti.Client
@@ -345,11 +347,14 @@ func (fp *flowProvider) GenerateSubtasks(ctx context.Context, taskID int64) ([]t
 			"Cwd":                     docker.WorkFolderPathInContainer,
 			"Lang":                    fp.language,
 			"CurrentTime":             getCurrentTime(),
-			"N":                       TasksNumberLimit,
+			"N":                       fp.maxSubtasksForTask(ctx, taskID, TasksNumberLimit),
 			"ToolPlaceholder":         ToolPlaceholder,
 			"UserFiles":               fp.userFilesListing(),
 		},
 	}
+	quickScanProfile := tools.QuickScanProfileForTaskInput(fp.cfg, tasksInfo.Task.Input)
+	mergeQuickScanPromptContext(generatorContext["user"], quickScanProfile)
+	mergeQuickScanPromptContext(generatorContext["system"], quickScanProfile)
 
 	ctx, observation := obs.Observer.NewObservation(ctx)
 	generatorEvaluator := observation.Evaluator(
@@ -437,11 +442,14 @@ func (fp *flowProvider) RefineSubtasks(ctx context.Context, taskID int64) ([]too
 			"Cwd":                     docker.WorkFolderPathInContainer,
 			"Lang":                    fp.language,
 			"CurrentTime":             getCurrentTime(),
-			"N":                       max(TasksNumberLimit-len(subtasksInfo.Completed), 0),
+			"N":                       fp.remainingSubtasksForTask(ctx, taskID, TasksNumberLimit, subtasksInfo.Completed),
 			"ToolPlaceholder":         ToolPlaceholder,
 			"UserFiles":               fp.userFilesListing(),
 		},
 	}
+	quickScanProfile := tools.QuickScanProfileForTaskInput(fp.cfg, tasksInfo.Task.Input)
+	mergeQuickScanPromptContext(refinerContext["user"], quickScanProfile)
+	mergeQuickScanPromptContext(refinerContext["system"], quickScanProfile)
 
 	ctx, observation := obs.Observer.NewObservation(ctx)
 	refinerEvaluator := observation.Evaluator(
@@ -536,6 +544,9 @@ func (fp *flowProvider) GetTaskResult(ctx context.Context, taskID int64) (*tools
 			"UserFiles":               fp.userFilesListing(),
 		},
 	}
+	quickScanProfile := tools.QuickScanProfileForTaskInput(fp.cfg, tasksInfo.Task.Input)
+	mergeQuickScanPromptContext(reporterContext["user"], quickScanProfile)
+	mergeQuickScanPromptContext(reporterContext["system"], quickScanProfile)
 
 	ctx, observation := obs.Observer.NewObservation(ctx)
 	reporterEvaluator := observation.Evaluator(
@@ -634,7 +645,7 @@ func (fp *flowProvider) PrepareAgentChain(ctx context.Context, taskID, subtaskID
 		return 0, fmt.Errorf("failed to update subtask context: %w", err)
 	}
 
-	systemAgentTmpl, err := fp.prompter.RenderTemplate(templates.PromptTypePrimaryAgent, map[string]any{
+	primaryContext := map[string]any{
 		"FinalyToolName":          tools.FinalyToolName,
 		"SearchToolName":          tools.SearchToolName,
 		"PentesterToolName":       tools.PentesterToolName,
@@ -653,7 +664,10 @@ func (fp *flowProvider) PrepareAgentChain(ctx context.Context, taskID, subtaskID
 		"CurrentTime":             getCurrentTime(),
 		"ToolPlaceholder":         ToolPlaceholder,
 		"UserFiles":               fp.userFilesListing(),
-	})
+	}
+	fp.mergeQuickScanPromptContextForTask(ctx, &taskID, primaryContext)
+
+	systemAgentTmpl, err := fp.prompter.RenderTemplate(templates.PromptTypePrimaryAgent, primaryContext)
 	if err != nil {
 		logger.WithError(err).Error("failed to get system prompt for primary agent template")
 		return 0, fmt.Errorf("failed to get system prompt for primary agent template: %w", err)

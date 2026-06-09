@@ -149,7 +149,7 @@ function Knowledges() {
                 content: knowledge.content,
                 question: newQuestion,
             });
-            toast.success('Knowledge renamed successfully');
+            toast.success('지식 문서 이름을 변경했습니다');
             setEditingKnowledgeId(null);
         } catch {
             // Error already handled in provider with toast
@@ -209,11 +209,11 @@ function Knowledges() {
             header: ({ column }) => (
                 <DataTableColumnHeader
                     column={column}
-                    title="Type"
+                    title="유형"
                 />
             ),
             maxSize: 180,
-            meta: { columnMenuLabel: 'Type', searchable: true },
+            meta: { columnMenuLabel: '유형', searchable: true },
             minSize: 110,
             size: 130,
         },
@@ -233,7 +233,7 @@ function Knowledges() {
                             inputRef={editingInputRef}
                             onCancel={handleKnowledgeRenameCancel}
                             onSave={handleKnowledgeRenameSave}
-                            placeholder="Knowledge question"
+                            placeholder="지식 질문"
                         />
                     );
                 }
@@ -250,10 +250,10 @@ function Knowledges() {
             header: ({ column }) => (
                 <DataTableColumnHeader
                     column={column}
-                    title="Question"
+                    title="질문"
                 />
             ),
-            meta: { columnMenuLabel: 'Question', searchable: true },
+            meta: { columnMenuLabel: '질문', searchable: true },
             minSize: 180,
             size: 280,
         },
@@ -298,7 +298,7 @@ function Knowledges() {
                             className="shrink-0 whitespace-nowrap"
                             variant={k.manual ? 'secondary' : 'outline'}
                         >
-                            {k.manual ? 'manual' : 'agent'}
+                            {k.manual ? '직접 작성' : '에이전트'}
                         </Badge>
                     </div>
                 );
@@ -324,7 +324,7 @@ function Knowledges() {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button
-                                    aria-label="Open menu"
+                                    aria-label="작업 메뉴 열기"
                                     className="size-8 p-0"
                                     onClick={(event) => event.stopPropagation()}
                                     variant="ghost"
@@ -339,11 +339,11 @@ function Knowledges() {
                             >
                                 <DropdownMenuItem onClick={() => handleOpen(k.id)}>
                                     <Pencil />
-                                    Edit
+                                    편집
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => handleKnowledgeRenameStart(k)}>
                                     <PencilLine />
-                                    Rename
+                                    이름 변경
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem
@@ -353,12 +353,12 @@ function Knowledges() {
                                     {deletingIds.has(k.id) ? (
                                         <>
                                             <Loader2 className="size-4 animate-spin" />
-                                            Deleting...
+                                            삭제 중...
                                         </>
                                     ) : (
                                         <>
                                             <Trash className="size-4" />
-                                            Delete
+                                            삭제
                                         </>
                                     )}
                                 </DropdownMenuItem>
@@ -381,11 +381,11 @@ function Knowledges() {
         <>
             <ContextMenuItem onClick={() => handleOpen(k.id)}>
                 <Pencil />
-                Edit
+                편집
             </ContextMenuItem>
             <ContextMenuItem onClick={() => handleKnowledgeRenameStart(k)}>
                 <PencilLine />
-                Rename
+                이름 변경
             </ContextMenuItem>
             <ContextMenuSeparator />
             <ContextMenuItem
@@ -393,7 +393,7 @@ function Knowledges() {
                 onClick={() => handleDeleteDialogOpen(k)}
             >
                 <Trash />
-                {deletingIds.has(k.id) ? 'Deleting...' : 'Delete'}
+                {deletingIds.has(k.id) ? '삭제 중...' : '삭제'}
             </ContextMenuItem>
         </>
     );
@@ -412,14 +412,14 @@ function Knowledges() {
                     <BreadcrumbList className="min-w-0 flex-nowrap">
                         <BreadcrumbItem className="min-w-0">
                             <LibraryBig className="size-4 shrink-0" />
-                            <BreadcrumbPage className="min-w-0 truncate">Knowledges</BreadcrumbPage>
+                            <BreadcrumbPage className="min-w-0 truncate">지식</BreadcrumbPage>
                         </BreadcrumbItem>
                     </BreadcrumbList>
                 </Breadcrumb>
             </div>
             <div className="flex shrink-0 items-center gap-2 px-4">
                 <InputSearch
-                    ariaLabel="Search knowledge documents"
+                    ariaLabel="지식 문서 검색"
                     // Use Mod+K — Mod+F is reserved as the page-wide default
                     // because we don't want to conflict with the browser's
                     // own find-in-page on every screen, but this list is one
@@ -427,12 +427,12 @@ function Knowledges() {
                     hotkey="k"
                     maxWidth={220}
                     onSearchChange={handleSemanticQueryChange}
-                    placeholder="Semantic search..."
+                    placeholder="의미 기반 검색..."
                     searchQuery={semanticQuery}
                 />
                 <HeaderButton
                     icon={<Plus />}
-                    label="New Knowledge"
+                    label="새 지식"
                     onClick={() => navigate('/knowledges/new')}
                     variant="secondary"
                 />
@@ -446,9 +446,9 @@ function Knowledges() {
                 {pageHeader}
                 <div className="flex flex-col gap-4 p-4">
                     <StatusCard
-                        description="Please wait while we fetch your knowledge documents"
+                        description="지식 문서를 불러오는 동안 잠시 기다려 주세요"
                         icon={<Loader2 className="text-muted-foreground size-16 animate-spin" />}
-                        title="Loading knowledges..."
+                        title="지식 문서 불러오는 중..."
                     />
                 </div>
             </>
@@ -466,13 +466,12 @@ function Knowledges() {
                                 onClick={() => navigate('/knowledges/new')}
                                 variant="secondary"
                             >
-                                <Plus />
-                                New Knowledge
+                                <Plus />새 지식
                             </Button>
                         }
-                        description="Create your first knowledge document to enrich the vector store"
+                        description="AegisX 에이전트가 점검 중 다시 참고할 수 있는 질문, 답변, 가이드, 코드 지식을 관리합니다."
                         icon={<LibraryBig className="text-muted-foreground size-8" />}
-                        title="No knowledge documents yet"
+                        title="아직 지식 문서가 없습니다"
                     />
                 </div>
             </>
@@ -487,25 +486,25 @@ function Knowledges() {
                     metrics={[
                         {
                             icon: <LibraryBig className="size-4" />,
-                            label: 'Total documents',
+                            label: '전체 문서',
                             tone: 'text-primary',
                             value: knowledgeSummary.total,
                         },
                         {
                             icon: <PencilLine className="size-4" />,
-                            label: 'Manual',
+                            label: '직접 작성',
                             tone: 'text-green-600',
                             value: knowledgeSummary.manual,
                         },
                         {
                             icon: <LibraryBig className="size-4" />,
-                            label: 'Agent generated',
+                            label: '에이전트 생성',
                             tone: 'text-blue-600',
                             value: knowledgeSummary.agent,
                         },
                         {
                             icon: <GitFork className="size-4" />,
-                            label: 'Linked flows',
+                            label: '연결된 점검',
                             tone: 'text-yellow-600',
                             value: knowledgeSummary.linkedFlows,
                         },
@@ -514,8 +513,8 @@ function Knowledges() {
                 <DataTable
                     columns={columns}
                     data={knowledges}
-                    empty={{ entityName: 'knowledge documents' }}
-                    filterPlaceholder="Filter knowledge documents..."
+                    empty={{ entityName: '지식 문서' }}
+                    filterPlaceholder="지식 문서 검색..."
                     filterValue={filter}
                     onFilterChange={setFilter}
                     onRowClick={(k) => {
@@ -527,13 +526,13 @@ function Knowledges() {
                 />
 
                 <ConfirmationDialog
-                    cancelText="Cancel"
-                    confirmText="Delete"
+                    cancelText="취소"
+                    confirmText="삭제"
                     handleConfirm={handleDelete}
                     handleOpenChange={setIsDeleteDialogOpen}
                     isOpen={isDeleteDialogOpen}
                     itemName={deletingKnowledge?.question}
-                    itemType="knowledge document"
+                    itemType="지식 문서"
                 />
             </div>
         </>

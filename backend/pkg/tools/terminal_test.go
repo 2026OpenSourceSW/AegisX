@@ -5,6 +5,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net"
@@ -353,6 +354,50 @@ func TestFindMissingInContainerChecksExitCode(t *testing.T) {
 	assert.Contains(t, err.Error(), "exit code 2")
 }
 
+func TestGetExecResultReturnsErrorOnNonZeroExitCode(t *testing.T) {
+	t.Parallel()
+
+	mock := &contextAwareMockDockerClient{
+		attachOutput: []byte("permission denied\n"),
+		inspectResp:  container.ExecInspect{ExitCode: 7},
+	}
+	term := &terminal{
+		flowID:       1,
+		containerID:  1,
+		containerLID: "test-container",
+		dockerClient: mock,
+		tlp:          &contextTestTermLogProvider{},
+	}
+
+	output, err := term.getExecResult(t.Context(), "exec-nonzero", time.Second)
+
+	if assert.Error(t, err) {
+		assert.Contains(t, err.Error(), "exited with code 7")
+		assert.Contains(t, err.Error(), "permission denied")
+	}
+	assert.Equal(t, "permission denied\n", output)
+}
+
+func TestGetExecResultReturnsSuccessOnEmptyZeroExit(t *testing.T) {
+	t.Parallel()
+
+	mock := &contextAwareMockDockerClient{
+		inspectResp: container.ExecInspect{ExitCode: 0},
+	}
+	term := &terminal{
+		flowID:       1,
+		containerID:  1,
+		containerLID: "test-container",
+		dockerClient: mock,
+		tlp:          &contextTestTermLogProvider{},
+	}
+
+	output, err := term.getExecResult(t.Context(), "exec-silent-success", time.Second)
+
+	assert.NoError(t, err)
+	assert.Equal(t, "Command completed successfully with exit code 0. No output produced (silent success)", output)
+}
+
 func TestConfiguredExecTimeout(t *testing.T) {
 	t.Parallel()
 
@@ -528,4 +573,135 @@ func TestNormalizeExecTimeout(t *testing.T) {
 			assert.Equal(t, tt.want, term.normalizeExecTimeout(tt.requested))
 		})
 	}
+}
+
+func TestTerminalHandle_blocksDangerousCommands_whenQuickScanEnabled(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		action  TerminalAction
+		wantErr string
+	}{
+		{
+			name: "detached background command",
+			action: TerminalAction{
+				Input:  "curl -I https://example.com",
+				Detach: Bool(true),
+			},
+			wantErr: "detach is disabled",
+		},
+		{
+			name: "mass scan tool",
+			action: TerminalAction{
+				Input: "masscan 10.0.0.0/8 --rate 10000",
+			},
+			wantErr: "masscan",
+		},
+		{
+			name: "post exploitation framework",
+			action: TerminalAction{
+				Input: "msfconsole -q -x 'use exploit/multi/handler'",
+			},
+			wantErr: "msfconsole",
+		},
+		{
+			name: "long directory brute force",
+			action: TerminalAction{
+				Input: "ffuf -w /usr/share/wordlists/dirb/common.txt -u https://example.com/FUZZ",
+			},
+			wantErr: "ffuf",
+		},
+		{
+			name: "tunneling command",
+			action: TerminalAction{
+				Input: "ssh -D 1080 user@example.com",
+			},
+			wantErr: "tunneling",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			args, err := json.Marshal(tt.action)
+			assert.NoError(t, err)
+
+			term := &terminal{
+				quickScanEnabled: true,
+				dockerClient:     &contextAwareMockDockerClient{},
+			}
+
+			_, err = term.Handle(t.Context(), TerminalToolName, args)
+
+			assert.Error(t, err)
+			assert.Contains(t, err.Error(), "quick scan terminal command blocked")
+			assert.Contains(t, err.Error(), tt.wantErr)
+		})
+	}
+}
+
+func TestTerminalHandle_allowsShortReconCommand_whenQuickScanEnabled(t *testing.T) {
+	t.Parallel()
+
+	action := TerminalAction{
+		Input: "curl -I --max-time 20 https://example.com",
+	}
+	args, err := json.Marshal(action)
+	assert.NoError(t, err)
+
+	mock := &contextAwareMockDockerClient{
+		isRunning:      true,
+		execCreateResp: container.ExecCreateResponse{ID: "exec-quick-recon"},
+		attachOutput:   []byte("HTTP/2 200\n"),
+		inspectResp:    container.ExecInspect{ExitCode: 0},
+	}
+	term := &terminal{
+		flowID:             1,
+		containerID:        1,
+		containerLID:       "test-container",
+		dockerClient:       mock,
+		tlp:                &contextTestTermLogProvider{},
+		quickScanEnabled:   true,
+		defaultExecTimeout: 120 * time.Second,
+	}
+
+	output, err := term.Handle(t.Context(), TerminalToolName, args)
+
+	assert.NoError(t, err)
+	assert.Contains(t, output, "HTTP/2 200")
+}
+
+func TestTerminalHandlePropagatesNonZeroExitCode_whenQuickScanEnabled(t *testing.T) {
+	t.Parallel()
+
+	action := TerminalAction{
+		Input: "curl -I --max-time 20 https://example.com/missing",
+	}
+	args, err := json.Marshal(action)
+	assert.NoError(t, err)
+
+	mock := &contextAwareMockDockerClient{
+		isRunning:      true,
+		execCreateResp: container.ExecCreateResponse{ID: "exec-quick-recon-failed"},
+		attachOutput:   []byte("curl: (22) The requested URL returned error: 404\n"),
+		inspectResp:    container.ExecInspect{ExitCode: 22},
+	}
+	term := &terminal{
+		flowID:             1,
+		containerID:        1,
+		containerLID:       "test-container",
+		dockerClient:       mock,
+		tlp:                &contextTestTermLogProvider{},
+		quickScanEnabled:   true,
+		defaultExecTimeout: 120 * time.Second,
+	}
+
+	output, err := term.Handle(t.Context(), TerminalToolName, args)
+
+	assert.NoError(t, err)
+	assert.Contains(t, output, "terminal tool 'terminal' handled with error")
+	assert.Contains(t, output, "exited with code 22")
+	assert.Contains(t, output, "requested URL returned error")
 }
