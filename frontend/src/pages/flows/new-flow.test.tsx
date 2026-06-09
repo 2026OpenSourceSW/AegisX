@@ -359,11 +359,15 @@ describe('NewFlow', () => {
         await user.click(screen.getByRole('button', { name: 'Agents 사용 도움말' }));
 
         expect(await screen.findByText('Agents 사용이란?')).toBeInTheDocument();
-        expect(screen.getByText(/자동 점검은 작업과 세부 작업을 생성해 보고서 중심으로 실행합니다/)).toBeInTheDocument();
+        expect(
+            screen.getByText(/자동 점검은 작업과 세부 작업을 생성해 보고서 중심으로 실행합니다/),
+        ).toBeInTheDocument();
         expect(screen.getByText(/어시스턴트 모드는 대화형 흐름으로 요청을 이어갑니다/)).toBeInTheDocument();
         expect(screen.getByText(/pentester, searcher, coder, memorist, installer, adviser/)).toBeInTheDocument();
         expect(screen.getByText(/더 느리고 토큰을 더 사용할 수 있습니다/)).toBeInTheDocument();
-        expect(screen.getByText(/끄면 터미널, 파일, 브라우저, 검색 같은 직접 도구 위주로 처리합니다/)).toBeInTheDocument();
+        expect(
+            screen.getByText(/끄면 터미널, 파일, 브라우저, 검색 같은 직접 도구 위주로 처리합니다/),
+        ).toBeInTheDocument();
     });
 
     it('keeps expert mode on the full control surface', async () => {
