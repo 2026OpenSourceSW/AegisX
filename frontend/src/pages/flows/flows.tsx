@@ -204,14 +204,16 @@ function Flows() {
             {
                 accessorKey: 'status',
                 cell: ({ row }) => {
-                    const status = row.getValue('status') as StatusType;
-                    const statusDisplay = getFlowStatusDisplay(status);
+                    const flow = row.original;
+                    const statusDisplay = getFlowStatusDisplay(flow.status, {
+                        stateReason: flow.stateReason,
+                    });
 
                     return (
                         <Badge variant={statusDisplay.variant}>
                             <FlowStatusIcon
                                 className="size-3"
-                                status={status}
+                                status={flow.status}
                             />
                             {statusDisplay.label}
                         </Badge>

@@ -9,6 +9,15 @@ enum StatusType {
   failed
 }
 
+enum FlowStateReason {
+  none
+  task_running
+  automation_waiting_for_input
+  assistant_running
+  assistant_idle_after_response
+  no_tasks_for_assistant_flow
+}
+
 # LLM provider types supported by PentAGI
 enum ProviderType {
   openai
@@ -230,6 +239,7 @@ type Flow {
   id: ID!
   title: String!
   status: StatusType!
+  stateReason: FlowStateReason!
   terminals: [Terminal!]
   provider: Provider!
   createdAt: Time!

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { StatusType } from '@/graphql/types';
+import { FlowStateReason, StatusType } from '@/graphql/types';
 
 import { getFlowStatusDisplay } from './flow-status-display';
 
@@ -20,6 +20,19 @@ describe('getFlowStatusDisplay', () => {
             getFlowStatusDisplay(StatusType.Waiting, {
                 hasAssistantLogs: true,
                 hasTasks: false,
+            }),
+        ).toEqual(
+            expect.objectContaining({
+                label: '어시스턴트 대기',
+                tooltip: '어시스턴트 응답 완료, 추가 입력 대기',
+            }),
+        );
+    });
+
+    it('prefers explicit flow state reason over list-page heuristics', () => {
+        expect(
+            getFlowStatusDisplay(StatusType.Waiting, {
+                stateReason: FlowStateReason.AssistantIdleAfterResponse,
             }),
         ).toEqual(
             expect.objectContaining({

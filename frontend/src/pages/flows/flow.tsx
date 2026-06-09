@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import {
     AlertTriangle,
     ChevronDown,
@@ -15,7 +17,6 @@ import {
     Star,
     Trash,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
 import { startTransition, useCallback, useEffect, useOptimistic, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -112,6 +113,7 @@ function Flow() {
         ? getFlowStatusDisplay(flow.status, {
               hasAssistantLogs: assistantLogs.length > 0,
               hasTasks: flowTasks.length > 0,
+              stateReason: flow.stateReason,
           })
         : null;
     const reportAvailability = getFlowReportAvailability({
@@ -257,6 +259,14 @@ function Flow() {
                                                 status={flow.status}
                                                 tooltip={flowStatusDisplay?.tooltip}
                                             />
+                                            {flowStatusDisplay && (
+                                                <Badge
+                                                    className="hidden shrink-0 md:inline-flex"
+                                                    variant={flowStatusDisplay.variant}
+                                                >
+                                                    {flowStatusDisplay.label}
+                                                </Badge>
+                                            )}
 
                                             <ProviderIcon
                                                 provider={flow.provider}

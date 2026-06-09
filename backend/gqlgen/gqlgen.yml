@@ -27,6 +27,11 @@ autobind:
 
 # GraphQL to Go type mappings
 models:
+  Flow:
+    fields:
+      stateReason:
+        resolver: true
+
   # Scalar type mappings for ID fields (primary: Int64)
   ID:
     model:

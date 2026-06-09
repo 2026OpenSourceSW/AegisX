@@ -197,13 +197,14 @@ type DefaultProvidersConfig struct {
 }
 
 type Flow struct {
-	ID        int64       `json:"id"`
-	Title     string      `json:"title"`
-	Status    StatusType  `json:"status"`
-	Terminals []*Terminal `json:"terminals,omitempty"`
-	Provider  *Provider   `json:"provider"`
-	CreatedAt time.Time   `json:"createdAt"`
-	UpdatedAt time.Time   `json:"updatedAt"`
+	ID          int64           `json:"id"`
+	Title       string          `json:"title"`
+	Status      StatusType      `json:"status"`
+	StateReason FlowStateReason `json:"stateReason"`
+	Terminals   []*Terminal     `json:"terminals,omitempty"`
+	Provider    *Provider       `json:"provider"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	UpdatedAt   time.Time       `json:"updatedAt"`
 }
 
 type FlowAssistant struct {
@@ -756,6 +757,55 @@ func (e *AgentType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e AgentType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type FlowStateReason string
+
+const (
+	FlowStateReasonNone                       FlowStateReason = "none"
+	FlowStateReasonTaskRunning                FlowStateReason = "task_running"
+	FlowStateReasonAutomationWaitingForInput  FlowStateReason = "automation_waiting_for_input"
+	FlowStateReasonAssistantRunning           FlowStateReason = "assistant_running"
+	FlowStateReasonAssistantIdleAfterResponse FlowStateReason = "assistant_idle_after_response"
+	FlowStateReasonNoTasksForAssistantFlow    FlowStateReason = "no_tasks_for_assistant_flow"
+)
+
+var AllFlowStateReason = []FlowStateReason{
+	FlowStateReasonNone,
+	FlowStateReasonTaskRunning,
+	FlowStateReasonAutomationWaitingForInput,
+	FlowStateReasonAssistantRunning,
+	FlowStateReasonAssistantIdleAfterResponse,
+	FlowStateReasonNoTasksForAssistantFlow,
+}
+
+func (e FlowStateReason) IsValid() bool {
+	switch e {
+	case FlowStateReasonNone, FlowStateReasonTaskRunning, FlowStateReasonAutomationWaitingForInput, FlowStateReasonAssistantRunning, FlowStateReasonAssistantIdleAfterResponse, FlowStateReasonNoTasksForAssistantFlow:
+		return true
+	}
+	return false
+}
+
+func (e FlowStateReason) String() string {
+	return string(e)
+}
+
+func (e *FlowStateReason) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FlowStateReason(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FlowStateReason", str)
+	}
+	return nil
+}
+
+func (e FlowStateReason) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
