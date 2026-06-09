@@ -116,6 +116,21 @@ func TestQuickScanProfileForTaskInput(t *testing.T) {
 	assert.False(t, nonQuickProfile.DisablePostExploit)
 }
 
+func TestQuickScanProfileForTaskInput_boundsSimpleScanMarker(t *testing.T) {
+	t.Parallel()
+
+	profile := QuickScanProfileForTaskInput(nil, "<간편 점검:web-basic>\nscan example.com")
+
+	require.True(t, profile.Enabled)
+	assert.Equal(t, SimpleScanTaskMarkerPrefix, profile.Marker)
+	assert.Equal(t, 3, profile.MaxSubtasks)
+	assert.Equal(t, 240, profile.TerminalToolTimeout)
+	assert.Equal(t, 60, profile.HTTPClientTimeout)
+	assert.Equal(t, 12, profile.MaxGeneralAgentToolCalls)
+	assert.Equal(t, 8, profile.MaxLimitedAgentToolCalls)
+	assert.True(t, profile.DisablePostExploit)
+}
+
 func TestQuickScanProfileForTaskInputFallsBackToSafeDefaults(t *testing.T) {
 	t.Parallel()
 
@@ -180,6 +195,24 @@ func TestToolConfigForTaskInput(t *testing.T) {
 	assert.Nil(t, ToolConfigForTaskInput(nil, "<빠른 점검>\nscan example.com"))
 }
 
+func TestToolConfigForTaskInputBoundsSimpleScan(t *testing.T) {
+	t.Parallel()
+
+	cfg := &config.Config{
+		TerminalToolTimeout: 1200,
+		HTTPClientTimeout:   600,
+	}
+
+	simpleScanCfg := ToolConfigForTaskInput(cfg, "<간편 점검:web-basic>\nscan example.com")
+
+	require.NotNil(t, simpleScanCfg)
+	assert.NotSame(t, cfg, simpleScanCfg)
+	assert.Equal(t, 240, simpleScanCfg.TerminalToolTimeout)
+	assert.Equal(t, 60, simpleScanCfg.HTTPClientTimeout)
+	assert.True(t, simpleScanCfg.QuickScanToolConfig)
+	assert.False(t, cfg.QuickScanToolConfig)
+}
+
 func TestToolConfigForTaskInputFallsBackToQuickTimeoutDefaults(t *testing.T) {
 	t.Parallel()
 
@@ -233,7 +266,7 @@ func TestPentesterExecutorToolNames_limitSurface_whenQuickScanEnabled(t *testing
 
 	quickNames := pentesterExecutorToolNames(true)
 
-	assert.Equal(t, []string{HackResultToolName, SearchToolName, TerminalToolName, FileToolName}, quickNames)
+	assert.Equal(t, []string{HackResultToolName, SearchToolName, TerminalToolName, FileToolName, BrowserToolName}, quickNames)
 	assert.NotContains(t, quickNames, AdviceToolName)
 	assert.NotContains(t, quickNames, CoderToolName)
 	assert.NotContains(t, quickNames, MaintenanceToolName)

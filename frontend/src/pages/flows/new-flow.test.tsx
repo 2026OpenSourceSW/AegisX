@@ -320,7 +320,10 @@ describe('NewFlow', () => {
         const webPayload = flowMocks.createFlow.mock.calls[0]?.[0];
         expect(webPayload?.message).toContain('점검 시나리오: 웹사이트 기본 점검');
         expect(webPayload?.message).not.toContain('<빠른 점검>');
-        expect(webPayload?.message?.split('\n')[0]).toBe('승인된 보안 점검 대상: example.com');
+        expect(webPayload?.message?.split('\n')[0]).toBe('<간편 점검:web-basic>');
+        expect(webPayload?.message).toContain('간편 모드 제한 범위');
+        expect(webPayload?.message).toContain('2~3개 이내의 핵심 세부 작업');
+        expect(webPayload?.message).toContain('브라우저로 첫 화면 스크린샷을 1회 이상 확보');
     });
 
     it('preserves assistant creation from expert mode', async () => {

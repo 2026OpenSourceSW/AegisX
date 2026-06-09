@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Form, FormControl, FormField } from '@/components/ui/form';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { StatusType } from '@/graphql/types';
 import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { useFlow } from '@/providers/flow-provider';
 
@@ -19,7 +20,7 @@ const searchFormSchema = z.object({
 });
 
 function FlowScreenshots() {
-    const { flowData, flowId } = useFlow();
+    const { flowData, flowId, flowStatus } = useFlow();
     const previousFlowIdRef = useRef(flowId);
 
     const screenshots = useMemo(() => flowData?.screenshots ?? [], [flowData?.screenshots]);
@@ -85,6 +86,22 @@ function FlowScreenshots() {
     }, [screenshots, debouncedSearchValue]);
 
     const hasScreenshots = filteredScreenshots && filteredScreenshots.length > 0;
+    const emptyCopy = useMemo(() => {
+        if (flowStatus === StatusType.Created || flowStatus === StatusType.Running) {
+            return {
+                descriptions: ['브라우저 점검이 실행되면 스크린샷이 자동으로 표시됩니다.'],
+                title: '스크린샷 준비 중',
+            };
+        }
+
+        return {
+            descriptions: [
+                '에이전트가 브라우저 스크린샷을 캡처하면 여기에 표시됩니다.',
+                '브라우저 도구가 실행되지 않았거나 스크린샷 캡처에 실패한 경우에는 기록이 없을 수 있습니다.',
+            ],
+            title: '스크린샷이 없습니다',
+        };
+    }, [flowStatus]);
 
     return (
         <div className="flex h-full flex-col">
@@ -168,12 +185,11 @@ function FlowScreenshots() {
                             aria-level={3}
                             role="heading"
                         >
-                            스크린샷이 없습니다
+                            {emptyCopy.title}
                         </EmptyTitle>
-                        <EmptyDescription>에이전트가 브라우저 스크린샷을 캡처하면 여기에 표시됩니다.</EmptyDescription>
-                        <EmptyDescription>
-                            어시스턴트 기반 점검은 스크린샷 없이 터미널/대화 로그만 남을 수 있습니다.
-                        </EmptyDescription>
+                        {emptyCopy.descriptions.map((description) => (
+                            <EmptyDescription key={description}>{description}</EmptyDescription>
+                        ))}
                     </EmptyHeader>
                 </Empty>
             )}

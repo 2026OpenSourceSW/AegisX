@@ -79,7 +79,29 @@ const findingSummaryTask = {
     updatedAt: '2026-01-01T00:00:00Z',
 } satisfies TaskFragmentFragment;
 
+const findingWithRemediationTask = {
+    createdAt: '2026-01-01T00:00:00Z',
+    flowId: '2',
+    id: '8',
+    input: '<빠른 점검>\n승인된 보안 점검 대상: localhost:3010',
+    result: `## 주요 발견 사항
+
+| 위험도 | OWASP Top 10:2025 유형 | 취약점 | 보완점 |
+| --- | --- | --- | --- |
+| HIGH | A02:2025 - Security Misconfiguration | CSP 누락 | Content-Security-Policy 헤더를 설정하세요. |
+| MEDIUM | 해당 없음/추가 확인 필요 | HSTS 누락 - 보완점: Strict-Transport-Security 적용 | HTTPS 강제 정책을 적용하세요. |
+
+- 🟡 MEDIUM: Referrer-Policy 누락 - 조치: no-referrer 또는 strict-origin-when-cross-origin 적용
+- LOW: X-Frame-Options 누락 - 영향: 클릭재킹 방어 약화`,
+    status: StatusType.Finished,
+    subtasks: null,
+    title: '빠른 점검 결과 정리',
+    updatedAt: '2026-01-01T00:00:00Z',
+} satisfies TaskFragmentFragment;
+
 const getHeadings = (report: string): string[] => report.split('\n').filter((line) => /^#{1,6}\s+/.test(line));
+
+const getGeneratedSummary = (report: string): string => report.split('\n## 점검 결과\n')[0] ?? report;
 
 describe('generateReport', () => {
     it('normalizes report headings for quick scan web view', () => {
@@ -145,5 +167,20 @@ describe('generateReport', () => {
         expect(report).toContain('  - [빠른 점검 결과 정리](#빠른-점검-결과-정리)');
         expect(report).toContain('    - [주요 발견 사항](#주요-발견-사항)');
         expect(report).toContain('    - [상세 근거](#상세-근거)');
+    });
+
+    it('keeps remediation text out of vulnerability summary cells', () => {
+        const report = generateReport([findingWithRemediationTask], quickScanFlow);
+        const summary = getGeneratedSummary(report);
+
+        expect(summary).toContain('| 🔴 HIGH | A02:2025 - Security Misconfiguration | CSP 누락 |');
+        expect(summary).toContain('| 🟡 MEDIUM | A02:2025 - Security Misconfiguration | HSTS 누락 |');
+        expect(summary).toContain('| 🟡 MEDIUM | A02:2025 - Security Misconfiguration | Referrer-Policy 누락 |');
+        expect(summary).toContain('| 🟢 LOW | A02:2025 - Security Misconfiguration | X-Frame-Options 누락 |');
+        expect(summary).not.toContain('| CSP 누락 | Content-Security-Policy 헤더를 설정하세요. |');
+        expect(summary).not.toContain('HSTS 누락 - 보완점');
+        expect(summary).not.toContain('Referrer-Policy 누락 - 조치');
+        expect(summary).not.toContain('X-Frame-Options 누락 - 영향');
+        expect(report).toContain('Content-Security-Policy 헤더를 설정하세요.');
     });
 });
