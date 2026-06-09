@@ -21,8 +21,7 @@ const markdownTableSeparatorPattern = /^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s
 const owaspPattern = /\bA(?:0[1-9]|10):2025(?:\s*[-–—:]\s*[^|,;\n]+)?/iu;
 const findingKeywordPattern =
     /(취약|누락|CORS|CSP|HSTS|X-Frame|X-Content-Type|Referrer-Policy|Permissions-Policy|Policy|DNSSEC|Injection|Misconfiguration)/iu;
-const remediationSuffixPattern =
-    /\s*(?:[-–—:：|,;]\s*)?(?:보완점|조치|개선|권고|대응|영향|근거)\s*[:：-].*$/iu;
+const remediationSuffixPattern = /\s*(?:[-–—:：|,;]\s*)?(?:보완점|조치|개선|권고|대응|영향|근거)\s*[:：-].*$/iu;
 
 const stripMarkdown = (value: string): string => {
     return value
@@ -80,7 +79,11 @@ const cleanFindingTitle = (value: string): string => {
 };
 
 const inferOwaspFromTitle = (title: string): string => {
-    if (/(CORS|CSP|HSTS|X-Frame|X-Content-Type|Referrer-Policy|Permissions-Policy|DNSSEC|security header|보안 헤더)/iu.test(title)) {
+    if (
+        /(CORS|CSP|HSTS|X-Frame|X-Content-Type|Referrer-Policy|Permissions-Policy|DNSSEC|security header|보안 헤더)/iu.test(
+            title,
+        )
+    ) {
         return 'A02:2025 - Security Misconfiguration';
     }
 
@@ -132,7 +135,9 @@ const parseFindingFromTableCells = (cells: readonly string[], headers?: readonly
     const owaspIndex = headers ? headerIndex(headers, /^OWASP/iu) : cells.findIndex((cell) => owaspPattern.test(cell));
     const titleIndex = headers
         ? headerIndex(headers, /^(?:취약점|항목)$/iu)
-        : cells.findIndex((cell, index) => index !== severityIndex && index !== owaspIndex && findingKeywordPattern.test(cell));
+        : cells.findIndex(
+              (cell, index) => index !== severityIndex && index !== owaspIndex && findingKeywordPattern.test(cell),
+          );
 
     if (severityIndex === -1 || titleIndex === -1) {
         return null;

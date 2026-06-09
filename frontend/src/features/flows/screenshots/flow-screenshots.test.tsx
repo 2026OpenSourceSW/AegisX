@@ -2,10 +2,9 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { TooltipProvider } from '@/components/ui/tooltip';
-
 import type { ScreenshotFragmentFragment } from '@/graphql/types';
 
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { StatusType } from '@/graphql/types';
 
 import FlowScreenshots from './flow-screenshots';
@@ -88,7 +87,9 @@ describe('FlowScreenshots', () => {
         expect(screen.getByRole('heading', { name: '스크린샷이 없습니다' })).toBeInTheDocument();
         expect(screen.getByText('에이전트가 브라우저 스크린샷을 캡처하면 여기에 표시됩니다.')).toBeInTheDocument();
         expect(
-            screen.getByText('브라우저 도구가 실행되지 않았거나 스크린샷 캡처에 실패한 경우에는 기록이 없을 수 있습니다.'),
+            screen.getByText(
+                '브라우저 도구가 실행되지 않았거나 스크린샷 캡처에 실패한 경우에는 기록이 없을 수 있습니다.',
+            ),
         ).toBeInTheDocument();
     });
 

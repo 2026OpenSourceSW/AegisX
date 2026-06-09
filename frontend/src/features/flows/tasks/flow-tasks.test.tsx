@@ -49,6 +49,8 @@ describe('FlowTasks', () => {
         render(<FlowTasks />);
 
         expect(screen.getByRole('heading', { name: '작업 생성 실패' })).toBeInTheDocument();
-        expect(screen.getByText('작업이 생성되기 전에 플로우가 실패했습니다. 터미널과 로그를 확인하세요.')).toBeInTheDocument();
+        expect(
+            screen.getByText('작업이 생성되기 전에 플로우가 실패했습니다. 터미널과 로그를 확인하세요.'),
+        ).toBeInTheDocument();
     });
 });
