@@ -36,6 +36,30 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// StateReason is the resolver for the stateReason field.
+func (r *flowResolver) StateReason(ctx context.Context, obj *model.Flow) (model.FlowStateReason, error) {
+	if obj == nil {
+		return model.FlowStateReasonNone, nil
+	}
+
+	tasks, err := r.DB.GetFlowTasks(ctx, obj.ID)
+	if err != nil {
+		return model.FlowStateReasonNone, fmt.Errorf("get flow tasks for state reason: %w", err)
+	}
+
+	assistants, err := r.DB.GetFlowAssistants(ctx, obj.ID)
+	if err != nil {
+		return model.FlowStateReasonNone, fmt.Errorf("get flow assistants for state reason: %w", err)
+	}
+
+	assistantLogs, err := r.getAssistantLogsForStateReason(ctx, obj.ID, tasks, assistants)
+	if err != nil {
+		return model.FlowStateReasonNone, err
+	}
+
+	return deriveFlowStateReason(obj.Status, tasks, assistants, assistantLogs), nil
+}
+
 // CreateFlow is the resolver for the createFlow field.
 func (r *mutationResolver) CreateFlow(ctx context.Context, modelProvider string, input string, resourceIds []int64) (*model.Flow, error) {
 	uid, _, err := validatePermission(ctx, "flows.create")
@@ -2964,6 +2988,9 @@ func (r *subscriptionResolver) KnowledgeDocumentDeleted(ctx context.Context) (<-
 	return sub.KnowledgeDocumentDeleted(ctx)
 }
 
+// Flow returns FlowResolver implementation.
+func (r *Resolver) Flow() FlowResolver { return &flowResolver{r} }
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
@@ -2973,6 +3000,7 @@ func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 // Subscription returns SubscriptionResolver implementation.
 func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
 
+type flowResolver struct{ *Resolver }
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
 type subscriptionResolver struct{ *Resolver }

@@ -1,8 +1,10 @@
 import { Activity, CheckCircle2, Clock3, GitFork, TriangleAlert } from 'lucide-react';
+
+import type { Flow } from '@/providers/flows-provider';
+
 import { Card, CardContent } from '@/components/ui/card';
 import { summarizeFlowHistory } from '@/features/flows/flow-history-summary';
 import { cn } from '@/lib/utils';
-import type { Flow } from '@/providers/flows-provider';
 
 interface FlowHistoryOverviewProps {
     flows: readonly Flow[];

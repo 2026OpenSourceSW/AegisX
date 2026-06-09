@@ -1,9 +1,11 @@
 import { ExternalLink, Image, ImageOff } from 'lucide-react';
 import { memo, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+
+import type { ScreenshotFragmentFragment } from '@/graphql/types';
+
 import { buttonVariants } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
-import type { ScreenshotFragmentFragment } from '@/graphql/types';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/utils/format';
 import { baseUrl } from '@/models/api';

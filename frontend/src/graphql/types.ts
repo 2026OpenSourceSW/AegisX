@@ -91,6 +91,15 @@ export type CreateKnowledgeDocumentInput = {
     question: string;
 };
 
+export enum FlowStateReason {
+    AssistantIdleAfterResponse = 'assistant_idle_after_response',
+    AssistantRunning = 'assistant_running',
+    AutomationWaitingForInput = 'automation_waiting_for_input',
+    NoTasksForAssistantFlow = 'no_tasks_for_assistant_flow',
+    None = 'none',
+    TaskRunning = 'task_running',
+}
+
 export enum KnowledgeAnswerType {
     Code = 'code',
     Guide = 'guide',
@@ -299,6 +308,7 @@ export type FlowFragmentFragment = {
     id: string;
     title: string;
     status: StatusType;
+    stateReason: FlowStateReason;
     createdAt: unknown;
     updatedAt: unknown;
     terminals: Array<TerminalFragmentFragment> | null;
@@ -1403,6 +1413,7 @@ export const FlowFragmentFragmentDoc = gql`
         id
         title
         status
+        stateReason
         terminals {
             ...terminalFragment
         }
