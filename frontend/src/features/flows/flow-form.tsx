@@ -30,7 +30,7 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Form, FormControl, FormField, FormItem, FormLabel } from '@/components/ui/form';
+import { Form, FormControl, FormField } from '@/components/ui/form';
 import {
     InputGroup,
     InputGroupAddon,
@@ -39,9 +39,8 @@ import {
     InputGroupTextareaAutosize,
 } from '@/components/ui/input-group';
 import { Spinner } from '@/components/ui/spinner';
-import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { AssistantAgentsControl } from '@/features/flows/assistant-agents-control';
 import { useResourcesUpload } from '@/features/resources/use-resources-upload';
 import { cn } from '@/lib/utils';
 import { getProviderDisplayName } from '@/models/provider';
@@ -690,34 +689,11 @@ export function FlowForm({
                                             control={control}
                                             name="useAgents"
                                             render={({ field: useAgentsField }) => (
-                                                <TooltipProvider>
-                                                    <Tooltip>
-                                                        <TooltipTrigger asChild>
-                                                            <FormItem className="flex flex-row items-center gap-0">
-                                                                <FormControl>
-                                                                    <Switch
-                                                                        checked={useAgentsField.value}
-                                                                        disabled={isFormDisabled}
-                                                                        onCheckedChange={useAgentsField.onChange}
-                                                                    />
-                                                                </FormControl>
-                                                                <FormLabel
-                                                                    className="flex cursor-pointer pl-2 text-xs font-normal"
-                                                                    onClick={() =>
-                                                                        useAgentsField.onChange(!useAgentsField.value)
-                                                                    }
-                                                                >
-                                                                    Agents 사용
-                                                                </FormLabel>
-                                                            </FormItem>
-                                                        </TooltipTrigger>
-                                                        <TooltipContent>
-                                                            <p className="max-w-48">
-                                                                복잡한 작업에 multi-agent 협업을 사용합니다.
-                                                            </p>
-                                                        </TooltipContent>
-                                                    </Tooltip>
-                                                </TooltipProvider>
+                                                <AssistantAgentsControl
+                                                    checked={useAgentsField.value}
+                                                    disabled={isFormDisabled}
+                                                    onCheckedChange={useAgentsField.onChange}
+                                                />
                                             )}
                                         />
                                     )}
