@@ -133,10 +133,7 @@ func (b *browser) wrapCommandResult(ctx context.Context, name, result, url, scre
 		})).Error("browser tool failed")
 		return fmt.Sprintf("browser tool '%s' handled with error: %v", name, err), nil
 	}
-	if screen != "" {
-		_, _ = b.scp.PutScreenshot(ctx, screen, url, b.taskID, b.subtaskID)
-	}
-	return result, nil
+	return b.appendScreenshotStatus(ctx, result, url, screen), nil
 }
 
 func (b *browser) Handle(ctx context.Context, name string, args json.RawMessage) (string, error) {

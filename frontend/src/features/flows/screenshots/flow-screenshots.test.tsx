@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ScreenshotFragmentFragment } from '@/graphql/types';
 
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { StatusType } from '@/graphql/types';
 
 import FlowScreenshots from './flow-screenshots';
 
@@ -13,6 +14,7 @@ const flowMock = vi.hoisted(() => ({
         screenshots: [] as ScreenshotFragmentFragment[],
     },
     flowId: '7',
+    flowStatus: 'finished' as StatusType,
 }));
 
 vi.mock('@/providers/flow-provider', () => ({
@@ -76,6 +78,7 @@ describe('FlowScreenshots', () => {
         installIntersectingObserver();
         flowMock.flowId = '7';
         flowMock.flowData = { screenshots: [] };
+        flowMock.flowStatus = StatusType.Finished;
     });
 
     it('shows a Korean empty state that explains screenshots may be absent for assistant-only runs', () => {
@@ -84,8 +87,19 @@ describe('FlowScreenshots', () => {
         expect(screen.getByRole('heading', { name: '스크린샷이 없습니다' })).toBeInTheDocument();
         expect(screen.getByText('에이전트가 브라우저 스크린샷을 캡처하면 여기에 표시됩니다.')).toBeInTheDocument();
         expect(
-            screen.getByText('어시스턴트 기반 점검은 스크린샷 없이 터미널/대화 로그만 남을 수 있습니다.'),
+            screen.getByText(
+                '브라우저 도구가 실행되지 않았거나 스크린샷 캡처에 실패한 경우에는 기록이 없을 수 있습니다.',
+            ),
         ).toBeInTheDocument();
+    });
+
+    it('shows a startup state while a running flow is waiting for browser capture', () => {
+        flowMock.flowStatus = StatusType.Running;
+
+        renderScreenshots();
+
+        expect(screen.getByRole('heading', { name: '스크린샷 준비 중' })).toBeInTheDocument();
+        expect(screen.getByText('브라우저 점검이 실행되면 스크린샷이 자동으로 표시됩니다.')).toBeInTheDocument();
     });
 
     it('renders captured screenshot images from the flow screenshot file endpoint', () => {
