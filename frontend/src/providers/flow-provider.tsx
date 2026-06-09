@@ -35,6 +35,8 @@ import {
 } from '@/graphql/types';
 import { Log } from '@/lib/log';
 
+import { useFlowArtifactHydration } from './use-flow-artifact-hydration';
+
 interface FlowContextValue {
     assistantLogs: Array<AssistantLogFragmentFragment>;
     assistants: Array<AssistantFragmentFragment>;
@@ -70,6 +72,9 @@ export function FlowProvider({ children }: FlowProviderProps) {
         data: flowData,
         error: flowError,
         loading: isLoading,
+        refetch: refetchFlow,
+        startPolling: startFlowPolling,
+        stopPolling: stopFlowPolling,
     } = useFlowQuery({
         errorPolicy: 'all',
         fetchPolicy: 'cache-first',
@@ -168,6 +173,19 @@ export function FlowProvider({ children }: FlowProviderProps) {
     const [deleteAssistantMutation] = useDeleteAssistantMutation();
 
     const flowStatus = useMemo(() => flowData?.flow?.status, [flowData?.flow?.status]);
+    const refetchFlowArtifacts = useCallback(() => {
+        void refetchFlow();
+    }, [refetchFlow]);
+
+    useFlowArtifactHydration({
+        flowId,
+        flowStatus,
+        isLoading,
+        refetch: refetchFlowArtifacts,
+        startPolling: startFlowPolling,
+        stopPolling: stopFlowPolling,
+        taskCount: flowData?.tasks?.length ?? 0,
+    });
 
     // A single Postgres "no rows in result set" surfaces here every time a sibling
     // query/subscription retries against an invalid flow id; without a stable

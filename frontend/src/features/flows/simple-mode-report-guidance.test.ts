@@ -5,12 +5,17 @@ import { buildSimpleModeMessage, owaspTopTen2025Categories } from '@/features/fl
 describe('simple mode report guidance', () => {
     it('adds OWASP Top 10:2025 classification and easy-summary guidance', () => {
         const message = buildSimpleModeMessage({
+            promptMarker: '<간편 점검:web-basic>',
             scenarioIntent: '웹 애플리케이션의 기본 보안 상태를 점검합니다.',
             scenarioTitle: '웹사이트 기본 점검',
             target: 'example.com',
         });
 
         expect(message).not.toContain('<빠른 점검>');
+        expect(message.split('\n')[0]).toBe('<간편 점검:web-basic>');
+        expect(message).toContain('간편 모드 제한 범위');
+        expect(message).toContain('2~3개 이내의 핵심 세부 작업');
+        expect(message).toContain('브라우저로 첫 화면 스크린샷을 1회 이상 확보');
         expect(message).toContain('승인된 보안 점검 대상: example.com');
         expect(message).toContain('발견 항목마다 OWASP Top 10:2025 기준으로 분류');
         expect(message).toContain('쉬운 요약');
@@ -41,6 +46,7 @@ describe('simple mode report guidance', () => {
         expect(message).toContain('5~10분');
         expect(message).toContain('긴 정밀 스캔/무차별 대입/권한 범위 밖 탐색은 수행하지 않습니다');
         expect(message).toContain('단일 terminal 명령은 120초 안에 끝나도록 timeout을 함께 사용');
+        expect(message).toContain('브라우저로 대상 첫 화면 스크린샷을 1회 확보');
         expect(message).toContain('외부 검색/API 호출이 지연되면 "추가 확인 필요"로 표시');
     });
 });

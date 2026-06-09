@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
 import { Form, FormControl, FormField } from '@/components/ui/form';
 import { InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput } from '@/components/ui/input-group';
+import { StatusType } from '@/graphql/types';
 import { useAutoScroll } from '@/hooks/use-auto-scroll';
 import { useFlow } from '@/providers/flow-provider';
 
@@ -27,7 +28,7 @@ const containsSearchValue = (text: null | string | undefined, searchValue: strin
 };
 
 function FlowTasks() {
-    const { flowData, flowId } = useFlow();
+    const { flowData, flowId, flowStatus } = useFlow();
 
     const tasks = useMemo(() => flowData?.tasks ?? [], [flowData?.tasks]);
     const [debouncedSearchValue, setDebouncedSearchValue] = useState('');
@@ -66,6 +67,10 @@ function FlowTasks() {
     }, [debouncedUpdateSearch]);
 
     useEffect(() => {
+        if (!flowId) {
+            return;
+        }
+
         form.reset({ search: '' });
         setDebouncedSearchValue('');
         debouncedUpdateSearch.cancel();
@@ -95,6 +100,26 @@ function FlowTasks() {
 
     const sortedTasks = [...(filteredTasks || [])].sort((a, b) => +a.id - +b.id);
     const hasTasks = filteredTasks && filteredTasks.length > 0;
+    const emptyCopy = useMemo(() => {
+        if (flowStatus === StatusType.Created || flowStatus === StatusType.Running) {
+            return {
+                description: '점검 작업을 생성하고 있습니다. 잠시 후 자동으로 표시됩니다.',
+                title: '작업 준비 중',
+            };
+        }
+
+        if (flowStatus === StatusType.Failed) {
+            return {
+                description: '작업이 생성되기 전에 플로우가 실패했습니다. 터미널과 로그를 확인하세요.',
+                title: '작업 생성 실패',
+            };
+        }
+
+        return {
+            description: '에이전트가 작업을 시작하면 여기에 표시됩니다.',
+            title: '작업이 없습니다',
+        };
+    }, [flowStatus]);
 
     return (
         <div className="flex h-full flex-col">
@@ -175,8 +200,13 @@ function FlowTasks() {
                         <EmptyMedia variant="icon">
                             <ListTodo />
                         </EmptyMedia>
-                        <EmptyTitle>No tasks found for this flow</EmptyTitle>
-                        <EmptyDescription>Tasks will appear here once the agent starts working</EmptyDescription>
+                        <EmptyTitle
+                            aria-level={3}
+                            role="heading"
+                        >
+                            {emptyCopy.title}
+                        </EmptyTitle>
+                        <EmptyDescription>{emptyCopy.description}</EmptyDescription>
                     </EmptyHeader>
                 </Empty>
             )}

@@ -44,7 +44,7 @@ func IsQuickScanTaskInput(input string) bool {
 
 func QuickScanProfileForTaskInput(cfg *config.Config, input string) QuickScanProfile {
 	if !IsQuickScanTaskInput(input) {
-		return QuickScanProfile{}
+		return SimpleScanProfileForTaskInput(input)
 	}
 
 	profile := QuickScanProfile{
@@ -89,17 +89,23 @@ func QuickScanProfileForTaskInput(cfg *config.Config, input string) QuickScanPro
 }
 
 func ToolConfigForTaskInput(cfg *config.Config, input string) *config.Config {
-	if cfg == nil || !IsQuickScanTaskInput(input) {
+	if cfg == nil || !IsBoundedScanTaskInput(input) {
 		return cfg
 	}
 
 	quickScanCfg := *cfg
 	quickScanCfg.QuickScanToolConfig = true
-	quickScanCfg.TerminalToolTimeout = defaultQuickScanTerminalToolTimeout
+	quickScanCfg.TerminalToolTimeout = defaultSimpleScanTerminalToolTimeout
+	if IsQuickScanTaskInput(input) {
+		quickScanCfg.TerminalToolTimeout = defaultQuickScanTerminalToolTimeout
+	}
 	if cfg.QuickScanTerminalToolTimeout > 0 {
 		quickScanCfg.TerminalToolTimeout = cfg.QuickScanTerminalToolTimeout
 	}
-	quickScanCfg.HTTPClientTimeout = defaultQuickScanHTTPClientTimeout
+	quickScanCfg.HTTPClientTimeout = defaultSimpleScanHTTPClientTimeout
+	if IsQuickScanTaskInput(input) {
+		quickScanCfg.HTTPClientTimeout = defaultQuickScanHTTPClientTimeout
+	}
 	if cfg.QuickScanHTTPClientTimeout > 0 {
 		quickScanCfg.HTTPClientTimeout = cfg.QuickScanHTTPClientTimeout
 	}
@@ -137,7 +143,7 @@ func primaryExecutorBarrierNames(quickScanEnabled, askUserEnabled bool) []string
 
 func pentesterExecutorToolNames(quickScanEnabled bool) []string {
 	if quickScanEnabled {
-		return []string{HackResultToolName, SearchToolName, TerminalToolName, FileToolName}
+		return []string{HackResultToolName, SearchToolName, TerminalToolName, FileToolName, BrowserToolName}
 	}
 
 	return []string{
@@ -282,7 +288,7 @@ func (fte *flowToolsExecutor) newTerminalToolForTask(
 		fte.docker,
 		fte.tlp,
 		TerminalToolTimeoutForTaskInput(fte.cfg, taskInput),
-		IsQuickScanTaskInput(taskInput),
+		IsBoundedScanTaskInput(taskInput),
 	)
 }
 

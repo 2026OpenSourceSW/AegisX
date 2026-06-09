@@ -87,7 +87,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 # Generate license reports for backend dependencies
 RUN mkdir -p /licenses/backend && \
     go list -m all > /licenses/backend/dependencies.txt && \
-    GOROOT=$(go env GOROOT) GOTOOLCHAIN=auto go-licenses csv ./cmd/pentagi > /licenses/backend/licenses.csv 2>/dev/null || true
+    timeout 180s sh -c 'GOROOT=$(go env GOROOT) GOTOOLCHAIN=auto go-licenses csv ./cmd/pentagi > /licenses/backend/licenses.csv 2>/dev/null' || true
 
 # Compile main application binary with embedded version metadata
 RUN go build -trimpath \
