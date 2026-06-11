@@ -396,10 +396,15 @@ At minimum configure:
 
 Do not commit `.env`. It is ignored and should stay local.
 
-### 3. Run with Docker Compose
+### 3. Build and run with Docker Compose
+
+Build the AegisX image from this checkout before starting the stack. The compose
+file still keeps the inherited `vxcontrol/pentagi:latest` fallback for upstream
+compatibility, so Quick Start must set `PENTAGI_IMAGE` explicitly.
 
 ```bash
-docker compose up -d
+docker build -t aegisx:develop .
+PENTAGI_IMAGE=aegisx:develop docker compose up -d --force-recreate
 ```
 
 Open:
@@ -416,15 +421,17 @@ admin@pentagi.com / admin
 
 ### 4. Optional stacks
 
+Use the same `PENTAGI_IMAGE` override when enabling optional stacks.
+
 ```bash
 # Monitoring
-docker compose -f docker-compose.yml -f docker-compose-observability.yml up -d
+PENTAGI_IMAGE=aegisx:develop docker compose -f docker-compose.yml -f docker-compose-observability.yml up -d
 
 # LLM analytics
-docker compose -f docker-compose.yml -f docker-compose-langfuse.yml up -d
+PENTAGI_IMAGE=aegisx:develop docker compose -f docker-compose.yml -f docker-compose-langfuse.yml up -d
 
 # Knowledge graph
-docker compose -f docker-compose.yml -f docker-compose-graphiti.yml up -d
+PENTAGI_IMAGE=aegisx:develop docker compose -f docker-compose.yml -f docker-compose-graphiti.yml up -d
 ```
 
 ## Development
