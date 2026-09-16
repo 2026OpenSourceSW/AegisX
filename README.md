@@ -35,7 +35,7 @@
 **AegisX**는 [PentAGI](https://github.com/vxcontrol/pentagi)를 기반으로 한 AI 보안 점검 프로젝트입니다. 기존 PentAGI의 Go Backend, React Frontend, Docker 실행 환경, LLM Provider, Observability 구조를 유지하면서 AegisX의 목적에 맞게 다음 기능을 보강했습니다.
 
 - **Simple Mode(간편 모드)**: 보안 비전문가도 승인된 대상의 기본 보안 상태를 빠르게 확인할 수 있는 한국어 중심 점검 흐름
-- **Quick Scan(빠른 점검)**: `<빠른 점검>` 마커를 기반으로 5~10분 내에 진행하는 제한적 점검과 OWASP Top 10:2025 기준 요약 보고서
+- **Quick Scan(빠른 점검)**: `<빠른 점검>` 마커를 기반으로 5~10분을 목표로 설계한 제한적 점검과 OWASP Top 10:2025 기준 요약 보고서
 - **Expert Mode(전문가 모드)**: 기존 PentAGI의 Flow, Task, Agent, Terminal, Resource 기능을 유지하는 전문가용 점검 화면
 - **Shannon 통합**: Shannon 소스 코드를 AegisX 내부에 복사하지 않고, 외부 CLI 또는 Docker 워커 경계에서 호출해 Markdown 보고서를 flow 결과로 가져오는 보조 기능
 - **보고서 흐름**: 웹 보기, Markdown 내려받기, PDF 내려받기를 지원하는 AegisX 보안 보고서 기능
