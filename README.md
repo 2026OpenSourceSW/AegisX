@@ -55,8 +55,6 @@
         <sub><b>@Jany0</b></sub>
       </a>
     </td>
-  </tr>
-  <tr>
     <td align="center">
       <a href="https://github.com/kso060528-pixel">
         <img src="https://github.com/kso060528-pixel.png" width="72" height="72" alt="ooxxd 프로필 이미지" />
