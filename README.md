@@ -26,6 +26,66 @@
       </a>
     </td>
   </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/kimwm5377">
+        <img src="https://github.com/kimwm5377.png" width="72" height="72" alt="kimwm5377 프로필 이미지" />
+        <br />
+        <sub><b>@kimwm5377</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Clotilde030603">
+        <img src="https://github.com/Clotilde030603.png" width="72" height="72" alt="Clotilde 프로필 이미지" />
+        <br />
+        <sub><b>@Clotilde</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/Limchangbeom">
+        <img src="https://github.com/Limchangbeom.png" width="72" height="72" alt="Limchangbeom 프로필 이미지" />
+        <br />
+        <sub><b>@Limchangbeom</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/jeonagan">
+        <img src="https://github.com/jeonagan.png" width="72" height="72" alt="Jany0 프로필 이미지" />
+        <br />
+        <sub><b>@Jany0</b></sub>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/kso060528-pixel">
+        <img src="https://github.com/kso060528-pixel.png" width="72" height="72" alt="ooxxd 프로필 이미지" />
+        <br />
+        <sub><b>@ooxxd</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/eye510224">
+        <img src="https://github.com/eye510224.png" width="72" height="72" alt="eye510224 프로필 이미지" />
+        <br />
+        <sub><b>@eye510224</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/doo513">
+        <img src="https://github.com/doo513.png" width="72" height="72" alt="doo 프로필 이미지" />
+        <br />
+        <sub><b>@doo</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/kkalelek">
+        <img src="https://github.com/kkalelek.png" width="72" height="72" alt="CHO JUA 프로필 이미지" />
+        <br />
+        <sub><b>@kkalelek</b></sub>
+      </a>
+    </td>
+  </tr>
 </table>
 
 > 이 목록은 AegisX 포크 프로젝트 참여자입니다. 원본 PentAGI 기여자 표기는 [CONTRIBUTORS.md](CONTRIBUTORS.md)에 보존합니다.
